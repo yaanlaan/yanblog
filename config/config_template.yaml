@@ -1,0 +1,20 @@
+server:
+  AppMode: 
+  HttpPort: 
+
+database:
+  Db: 
+  DbHost: 
+  DbPort: 
+  DbUser: 
+  DbPassWord: 
+  DbName: 
+
+JwtKey: 
+
+QiNiu:
+  Zone: 
+  AccessKey: 
+  SecretKey: 
+  Bucket: 
+  Server: 
