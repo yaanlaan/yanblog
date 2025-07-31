@@ -8,7 +8,15 @@ import (
 )
 
 func UpLoad(c *gin.Context) {
-	file, fileHeader, _ := c.Request.FormFile("file")
+	file, fileHeader, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "文件上传失败: " + err.Error(),
+			"url":     "",
+		})
+		return
+	}
 
 	fileSize := fileHeader.Size
 
@@ -19,5 +27,4 @@ func UpLoad(c *gin.Context) {
 		"message": errmsg.GetErrMsg(code),
 		"url":     url,
 	})
-
 }

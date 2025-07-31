@@ -46,6 +46,7 @@
             action="/api/v1/upload"
             :show-file-list="false"
             :on-success="handleAvatarSuccess"
+            :on-error="handleAvatarError"
             :before-upload="beforeAvatarUpload"
             :headers="uploadHeaders"
           >
@@ -136,14 +137,25 @@ const handleAvatarSuccess: UploadProps['onSuccess'] = (
   response,
   uploadFile
 ) => {
+  console.log('Upload response:', response); // 调试信息
   // 从响应中获取图片URL
-  if (response && response.data && response.data.url) {
-    publishData.img = response.data.url
+  if (response && response.url) {
+    // 后端直接返回url字段
+    publishData.img = response.url
   } else {
-    // 如果响应格式不正确，使用本地URL
-    publishData.img = URL.createObjectURL(uploadFile.raw!)
+    // 如果响应格式不正确，显示错误信息
+    ElMessage.error('上传失败：服务器响应格式不正确')
+    return
   }
   handleFormChange()
+}
+
+// 处理上传错误
+const handleAvatarError: UploadProps['onError'] = (
+  error
+) => {
+  console.error('Upload error:', error) // 调试信息
+  ElMessage.error('上传失败：' + (error.message || '未知错误'))
 }
 
 // 上传前检查

@@ -4,9 +4,9 @@ import (
 	"yanblog/utils"
 	"yanblog/utils/errmsg"
 
-	"fmt"
 	"context"
 	"mime/multipart"
+
 	"github.com/qiniu/go-sdk/v7/auth/qbox"
 	"github.com/qiniu/go-sdk/v7/storage"
 )

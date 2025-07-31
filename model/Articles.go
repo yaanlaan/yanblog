@@ -16,6 +16,7 @@ type Article struct {
 	Desc    string `gorm:"type:varchar(200)" json:"desc"`
 	Content string `gorm:"type:longtext" json:"content"`
 	Img     string `gorm:"type:varchar(100)" json:"img"`
+
 }
 
 // CreateArt 新增文章
@@ -70,7 +71,11 @@ func GetArt(pageSize int, pageNum int) ([]Article, int, int64) {
 	var articleList []Article
 	var err error
 	var total int64
-	err = db.Preload("Category").Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&articleList).Count(&total).Error
+	if pageSize == -1 && pageNum == -1 { // 查询所有文章
+		err = db.Find(&articleList).Count(&total).Error
+	} else { // 分页查询	
+		err = db.Preload("Category").Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&articleList).Count(&total).Error	
+	}
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errmsg.ERROR, 0
 	}

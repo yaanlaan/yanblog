@@ -50,7 +50,16 @@
         <el-table-column prop="title" label="标题" show-overflow-tooltip />
         <el-table-column prop="desc" label="简介" show-overflow-tooltip />
         <el-table-column prop="categoryName" label="分类" width="120" />
-        <el-table-column prop="createdAt" label="创建时间" width="120" />
+        <el-table-column prop="createdAt" label="创建时间" width="170">
+          <template #default="scope">
+            {{ formatDateTime(scope.row.createdAt) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="updatedAt" label="更新时间" width="170">
+          <template #default="scope">
+            {{ formatDateTime(scope.row.updatedAt) }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="200">
           <template #default="scope">
             <ArticleActions
@@ -99,6 +108,7 @@ interface Article {
   content: string
   img: string
   createdAt: string
+  updatedAt: string
 }
 
 // 分类数据类型
@@ -132,6 +142,20 @@ const loading = ref(false)
 // 错误状态
 const error = ref(false)
 
+// 格式化日期时间
+const formatDateTime = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }).replace(/\//g, '-')
+}
+
 // 获取文章列表
 const getArticleList = async () => {
   loading.value = true
@@ -153,7 +177,8 @@ const getArticleList = async () => {
       desc: item.desc,
       content: item.content,
       img: item.img,
-      createdAt: item.CreatedAt
+      createdAt: item.CreatedAt || item.created_at,
+      updatedAt: item.UpdatedAt || item.updated_at
     }))
     pagination.total = total
   } catch (err) {
