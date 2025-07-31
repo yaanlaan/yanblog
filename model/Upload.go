@@ -28,10 +28,10 @@ func UpLoadFile(file multipart.File, fileSize int64) (string, int) {
 	}
 	
 	// 打印调试信息
-	fmt.Println(Bucket)
-	fmt.Println(ImgUrl)
-	fmt.Println(AccessKey)
-	fmt.Println(SecretKey)
+	// fmt.Println(Bucket)
+	// fmt.Println(ImgUrl)
+	// fmt.Println(AccessKey)
+	// fmt.Println(SecretKey)
 
 	mac := qbox.NewMac(AccessKey, SecretKey)
 	upToken := putPolicy.UploadToken(mac)

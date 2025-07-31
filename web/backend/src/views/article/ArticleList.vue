@@ -25,7 +25,30 @@
         :empty-text="error ? '数据加载失败，请检查网络连接' : '暂无数据'"
       >
         <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column label="封面" width="120">
+          <template #default="scope">
+            <el-image
+              v-if="scope.row.img"
+              :src="scope.row.img"
+              class="article-cover"
+              fit="cover"
+              :preview-src-list="[scope.row.img]"
+              preview-teleported
+            >
+              <template #error>
+                <div class="image-slot">
+                  <el-icon><Picture /></el-icon>
+                </div>
+              </template>
+            </el-image>
+            <div v-else class="no-cover">
+              <el-icon><Picture /></el-icon>
+              <span>无封面</span>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="title" label="标题" show-overflow-tooltip />
+        <el-table-column prop="desc" label="简介" show-overflow-tooltip />
         <el-table-column prop="categoryName" label="分类" width="120" />
         <el-table-column prop="createdAt" label="创建时间" width="120" />
         <el-table-column label="操作" width="200">
@@ -58,6 +81,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { Picture } from '@element-plus/icons-vue'
 import { articleApi, categoryApi } from '@/services/api'
 import ArticleSearchForm from '@/components/article/ArticleSearchForm.vue'
 import ArticleActions from '@/components/article/ArticleActions.vue'
@@ -241,6 +265,38 @@ onMounted(() => {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+}
+
+.article-cover {
+  width: 80px;
+  height: 60px;
+  border-radius: 4px;
+}
+
+.no-cover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 60px;
+  color: #909399;
+  font-size: 12px;
+}
+
+.no-cover .el-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.image-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: #f5f7fa;
+  color: #909399;
 }
 
 /* mavon-editor样式调整 */

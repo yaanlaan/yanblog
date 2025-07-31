@@ -19,6 +19,7 @@
             clearable
             filterable
             style="width: 100%"
+            @change="handleFormChange"
           >
             <el-option 
               v-for="category in categories" 
@@ -35,6 +36,7 @@
             type="textarea" 
             :rows="4" 
             placeholder="请输入文章摘要"
+            @input="handleFormChange"
           />
         </el-form-item>
         
@@ -120,6 +122,15 @@ const uploadHeaders = {
   Authorization: `Bearer ${localStorage.getItem('token')}`
 }
 
+// 处理表单变化
+const handleFormChange = () => {
+  emit('update:modelValue', {
+    categoryId: publishData.categoryId,
+    desc: publishData.desc,
+    img: publishData.img
+  })
+}
+
 // 处理上传成功
 const handleAvatarSuccess: UploadProps['onSuccess'] = (
   response,
@@ -132,7 +143,7 @@ const handleAvatarSuccess: UploadProps['onSuccess'] = (
     // 如果响应格式不正确，使用本地URL
     publishData.img = URL.createObjectURL(uploadFile.raw!)
   }
-  emit('update:modelValue', {...publishData})
+  handleFormChange()
 }
 
 // 上传前检查
@@ -140,8 +151,8 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
   if (rawFile.type !== 'image/jpeg' && rawFile.type !== 'image/png') {
     ElMessage.error('头像图片必须是 JPG 或 PNG 格式!')
     return false
-  } else if (rawFile.size / 1024 / 1024 > 2) {
-    ElMessage.error('图片大小不能超过 2MB!')
+  } else if (rawFile.size / 1024 / 1024 > 10) {
+    ElMessage.error('图片大小不能超过 10MB!')
     return false
   }
   return true
@@ -153,7 +164,7 @@ const handleSubmit = () => {
   formRef.value.validate((valid) => {
     if (valid) {
       emit('submit')
-      emit('update:modelValue', {...publishData})
+      handleFormChange()
     }
   })
 }

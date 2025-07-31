@@ -48,6 +48,7 @@
                 v-if="!showMarkdownEditor"
                 ref="textareaRef"
                 @scroll="handleTextareaScroll"
+                class="content-textarea"
               />
               
               <!-- Markdown编辑模式 -->
@@ -56,6 +57,7 @@
                 v-model="articleForm.content"
                 :preview-only="previewOnly"
                 ref="markdownEditorRef"
+                class="content-editor"
               />
             </el-form-item>
           </el-form>
@@ -68,6 +70,7 @@
             :is-edit="isEdit"
             :submit-loading="submitLoading"
             @submit="submitArticle"
+            @update:modelValue="handlePublishFormUpdate"
           />
         </el-col>
       </el-row>
@@ -168,6 +171,13 @@ const getCategoryList = async () => {
   }
 }
 
+// 处理发布表单更新
+const handlePublishFormUpdate = (value: {categoryId: number | undefined, desc: string, img: string}) => {
+  publishForm.categoryId = value.categoryId
+  publishForm.desc = value.desc
+  publishForm.img = value.img
+}
+
 // 提交文章
 const submitArticle = async () => {
   // 先验证文章内容表单
@@ -257,5 +267,10 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.content-textarea,
+.content-editor {
+  width: 100%;
 }
 </style>
