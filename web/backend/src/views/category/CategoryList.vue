@@ -72,7 +72,6 @@ import CategoryForm from '@/components/category/CategoryForm.vue'
 interface Category {
   id: number
   name: string
-  createdAt: string
 }
 
 // 搜索表单
@@ -121,7 +120,7 @@ const getCategoryList = async () => {
     const { data, total } = response.data
     console.log('分类列表数据:', data, total) // 调试信息
     categoryList.value = data.map((item: any) => ({
-      id: item.ID,
+      id: item.id,
       name: item.name,
       createdAt: item.CreatedAt
     }))
