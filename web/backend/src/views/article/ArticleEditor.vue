@@ -162,7 +162,7 @@ const getCategoryList = async () => {
     // 解析后端返回的数据
     const { data } = response.data
     categories.value = data.map((item: any) => ({
-      id: parseInt(item.id, 10),
+      id: item.ID !== undefined ? parseInt(item.ID, 10) : parseInt(item.id, 10),
       name: item.name
     }))
   } catch (error) {

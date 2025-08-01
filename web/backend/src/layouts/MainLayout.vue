@@ -61,7 +61,6 @@
         <div class="header-right">
           <el-dropdown @command="handleCommand">
             <span class="user-info">
-              <el-avatar :size="30" icon="User" />
               <span class="username">{{ username }}</span>
             </span>
             <template #dropdown>
@@ -93,6 +92,36 @@ const router = useRouter()
 
 // 用户名
 const username = ref('')
+
+// 解析JWT token获取用户信息
+const parseJwt = (token: string) => {
+  try {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(jsonPayload)
+  } catch (error) {
+    console.error('解析token失败:', error)
+    return null
+  }
+}
+
+// 从token获取用户名
+const getUsernameFromToken = () => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    const payload = parseJwt(token)
+    if (payload && payload.username) {
+      return payload.username
+    }
+  }
+  return '未知用户'
+}
 
 // 面包屑导航项
 const breadcrumbItems = computed(() => {
@@ -126,9 +155,8 @@ const handleCommand = (command: string) => {
 
 // 组件挂载时获取用户信息
 onMounted(() => {
-  // 从token或其他方式获取用户名
-  // 这里简化处理，实际项目中应该解析token获取用户信息
-  username.value = 'admin'
+  // 从token解析获取用户名
+  username.value = getUsernameFromToken()
 })
 </script>
 

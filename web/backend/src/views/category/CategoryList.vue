@@ -1,4 +1,4 @@
-<template>
+，<template>
   <div class="category-list">
     <el-card>
       <template #header>
@@ -124,9 +124,9 @@ const getCategoryList = async () => {
     const { data, total } = response.data
     console.log('分类列表数据:', data, total) // 调试信息
     allCategories.value = data.map((item: any) => ({
-      id: item.id,
+      id: item.ID,
       name: item.name,
-      createdAt: item.CreatedAt
+      createdAt: item.CreatedAt || item.created_at || ''  // 修复创建时间字段
     }))
     pagination.total = total
     

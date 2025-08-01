@@ -72,7 +72,7 @@ func GetArt(pageSize int, pageNum int) ([]Article, int, int64) {
 	var err error
 	var total int64
 	if pageSize == -1 && pageNum == -1 { // 查询所有文章
-		err = db.Find(&articleList).Count(&total).Error
+		err = db.Preload("Category").Find(&articleList).Count(&total).Error
 	} else { // 分页查询	
 		err = db.Preload("Category").Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&articleList).Count(&total).Error	
 	}

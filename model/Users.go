@@ -11,6 +11,7 @@ import (
 
 // User 用户模型结构体
 type User struct {
+	
 	gorm.Model
 	Username string `gorm:"type:varchar(20);not null " json:"username" validate:"required,min=4,max=12" label:"用户名"`  // 用户名（4-12位）
 	Password string `gorm:"type:varchar(20);not null" json:"password" validate:"required,min=6,max=20" label:"密码"`     // 密码（6-20位）

@@ -176,7 +176,7 @@ const getArticleList = async () => {
       id: item.ID,
       title: item.title,
       categoryId: item.cid !== undefined ? parseInt(item.cid, 10) : undefined,
-      categoryName: item.Category?.name || '',
+      categoryName: (item.Category?.name || item.category?.name || '未分类') as string,  // 增强分类名称解析
       desc: item.desc,
       content: item.content,
       img: item.img,

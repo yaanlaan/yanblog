@@ -41,7 +41,11 @@ const generateLast7Days = () => {
   for (let i = 6; i >= 0; i--) {
     const date = new Date()
     date.setDate(date.getDate() - i)
-    dates.push(date.toISOString().split('T')[0])
+    // 修复日期格式化，确保使用正确的本地日期格式
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    dates.push(`${year}-${month}-${day}`)
   }
   return dates
 }
