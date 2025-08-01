@@ -83,6 +83,9 @@ interface User {
   createdAt: string
 }
 
+// 所有用户数据（用于前端分页）
+const allUsers = ref<User[]>([])
+
 // 搜索表单
 const searchForm = reactive({
   username: '',
@@ -96,7 +99,7 @@ const pagination = reactive({
   total: 0
 })
 
-// 用户列表
+// 用户列表（当前页数据）
 const userList = ref<User[]>([])
 
 // 加载状态
@@ -118,26 +121,29 @@ const userForm = reactive({
   role: 3 // 默认为普通用户
 })
 
-// 获取用户列表
+// 获取用户列表（获取所有数据）
 const getUserList = async () => {
   loading.value = true
   error.value = false
   try {
     const response = await userApi.getUsers({
-      pagesize: pagination.pageSize,
-      pagenum: pagination.currentPage
+      pagesize: -1,  // 获取所有数据
+      pagenum: -1    // 获取所有数据
     })
     
     // 解析后端返回的数据
     const { data, total } = response.data
     console.log('用户列表数据:', data, total) // 调试信息
-    userList.value = data.map((item: any) => ({
+    allUsers.value = data.map((item: any) => ({
       id: item.ID,
       username: item.username,
       role: item.role,
       createdAt: item.CreatedAt
     }))
     pagination.total = total
+    
+    // 更新当前页数据
+    updateCurrentPageData()
   } catch (err) {
     error.value = true
     ElMessage.error('获取用户列表失败')
@@ -147,16 +153,42 @@ const getUserList = async () => {
   }
 }
 
+// 更新当前页数据（前端分页）
+const updateCurrentPageData = () => {
+  // 应用搜索过滤
+  let filteredUsers = allUsers.value
+  if (searchForm.username) {
+    filteredUsers = filteredUsers.filter(user => 
+      user.username.includes(searchForm.username)
+    )
+  }
+  if (searchForm.role !== undefined) {
+    filteredUsers = filteredUsers.filter(user => 
+      user.role === searchForm.role
+    )
+  }
+  
+  // 更新总数
+  pagination.total = filteredUsers.length
+  
+  // 计算当前页数据
+  const start = (pagination.currentPage - 1) * pagination.pageSize
+  const end = start + pagination.pageSize
+  userList.value = filteredUsers.slice(start, end)
+}
+
 // 处理搜索
 const handleSearch = () => {
   pagination.currentPage = 1
-  getUserList()
+  updateCurrentPageData()
 }
 
 // 处理重置
 const handleReset = () => {
+  searchForm.username = ''
+  searchForm.role = undefined
   pagination.currentPage = 1
-  getUserList()
+  updateCurrentPageData()
 }
 
 // 处理新增
@@ -241,13 +273,14 @@ const submitUserForm = async (formData: {id: number, username: string, password:
 // 处理分页大小变化
 const handleSizeChange = (val: number) => {
   pagination.pageSize = val
-  getUserList()
+  pagination.currentPage = 1
+  updateCurrentPageData()
 }
 
 // 处理当前页变化
 const handleCurrentChange = (val: number) => {
   pagination.currentPage = val
-  getUserList()
+  updateCurrentPageData()
 }
 
 // 组件挂载时获取数据

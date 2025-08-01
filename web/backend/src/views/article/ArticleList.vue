@@ -117,6 +117,9 @@ interface Category {
   name: string
 }
 
+// 所有文章数据（用于前端分页）
+const allArticles = ref<Article[]>([])
+
 // 搜索表单
 const searchForm = reactive({
   title: '',
@@ -130,7 +133,7 @@ const pagination = reactive({
   total: 0
 })
 
-// 文章列表
+// 文章列表（当前页数据）
 const articleList = ref<Article[]>([])
 
 // 分类列表
@@ -156,20 +159,20 @@ const formatDateTime = (dateString: string) => {
   }).replace(/\//g, '-')
 }
 
-// 获取文章列表
+// 获取文章列表（获取所有数据）
 const getArticleList = async () => {
   loading.value = true
   error.value = false
   try {
     const response = await articleApi.getArticles({
-      pagesize: pagination.pageSize,
-      pagenum: pagination.currentPage
+      pagesize: -1,  // 获取所有数据
+      pagenum: -1    // 获取所有数据
     })
     
     // 解析后端返回的数据
     const { data, total } = response.data
     console.log('文章列表数据:', data, total) // 调试信息
-    articleList.value = data.map((item: any) => ({
+    allArticles.value = data.map((item: any) => ({
       id: item.ID,
       title: item.title,
       categoryId: item.cid !== undefined ? parseInt(item.cid, 10) : undefined,
@@ -181,6 +184,9 @@ const getArticleList = async () => {
       updatedAt: item.UpdatedAt || item.updated_at
     }))
     pagination.total = total
+    
+    // 更新当前页数据
+    updateCurrentPageData()
   } catch (err) {
     error.value = true
     ElMessage.error('获取文章列表失败')
@@ -188,6 +194,30 @@ const getArticleList = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// 更新当前页数据（前端分页）
+const updateCurrentPageData = () => {
+  // 应用搜索过滤
+  let filteredArticles = allArticles.value
+  if (searchForm.title) {
+    filteredArticles = filteredArticles.filter(article => 
+      article.title.includes(searchForm.title)
+    )
+  }
+  if (searchForm.categoryId !== undefined) {
+    filteredArticles = filteredArticles.filter(article => 
+      article.categoryId === searchForm.categoryId
+    )
+  }
+  
+  // 更新总数
+  pagination.total = filteredArticles.length
+  
+  // 计算当前页数据
+  const start = (pagination.currentPage - 1) * pagination.pageSize
+  const end = start + pagination.pageSize
+  articleList.value = filteredArticles.slice(start, end)
 }
 
 // 获取分类列表
@@ -213,13 +243,15 @@ const getCategoryList = async () => {
 // 处理搜索
 const handleSearch = () => {
   pagination.currentPage = 1
-  getArticleList()
+  updateCurrentPageData()
 }
 
 // 处理重置
 const handleReset = () => {
+  searchForm.title = ''
+  searchForm.categoryId = undefined
   pagination.currentPage = 1
-  getArticleList()
+  updateCurrentPageData()
 }
 
 // 处理新增
@@ -259,13 +291,14 @@ const handleDelete = (row: Article) => {
 // 处理分页大小变化
 const handleSizeChange = (val: number) => {
   pagination.pageSize = val
-  getArticleList()
+  pagination.currentPage = 1
+  updateCurrentPageData()
 }
 
 // 处理当前页变化
 const handleCurrentChange = (val: number) => {
   pagination.currentPage = val
-  getArticleList()
+  updateCurrentPageData()
 }
 
 // 组件挂载时获取数据

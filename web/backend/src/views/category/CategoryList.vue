@@ -72,7 +72,11 @@ import CategoryForm from '@/components/category/CategoryForm.vue'
 interface Category {
   id: number
   name: string
+  createdAt: string
 }
+
+// 所有分类数据（用于前端分页）
+const allCategories = ref<Category[]>([])
 
 // 搜索表单
 const searchForm = reactive({
@@ -86,7 +90,7 @@ const pagination = reactive({
   total: 0
 })
 
-// 分类列表
+// 分类列表（当前页数据）
 const categoryList = ref<Category[]>([])
 
 // 加载状态
@@ -106,25 +110,28 @@ const categoryForm = reactive({
   name: ''
 })
 
-// 获取分类列表
+// 获取分类列表（获取所有数据）
 const getCategoryList = async () => {
   loading.value = true
   error.value = false
   try {
     const response = await categoryApi.getCategories({
-      pagesize: pagination.pageSize,
-      pagenum: pagination.currentPage
+      pagesize: -1,  // 获取所有数据
+      pagenum: -1    // 获取所有数据
     })
     
     // 解析后端返回的数据
     const { data, total } = response.data
     console.log('分类列表数据:', data, total) // 调试信息
-    categoryList.value = data.map((item: any) => ({
+    allCategories.value = data.map((item: any) => ({
       id: item.id,
       name: item.name,
       createdAt: item.CreatedAt
     }))
     pagination.total = total
+    
+    // 更新当前页数据
+    updateCurrentPageData()
   } catch (err) {
     error.value = true
     ElMessage.error('获取分类列表失败')
@@ -134,16 +141,36 @@ const getCategoryList = async () => {
   }
 }
 
+// 更新当前页数据（前端分页）
+const updateCurrentPageData = () => {
+  // 应用搜索过滤
+  let filteredCategories = allCategories.value
+  if (searchForm.name) {
+    filteredCategories = filteredCategories.filter(category => 
+      category.name.includes(searchForm.name)
+    )
+  }
+  
+  // 更新总数
+  pagination.total = filteredCategories.length
+  
+  // 计算当前页数据
+  const start = (pagination.currentPage - 1) * pagination.pageSize
+  const end = start + pagination.pageSize
+  categoryList.value = filteredCategories.slice(start, end)
+}
+
 // 处理搜索
 const handleSearch = () => {
   pagination.currentPage = 1
-  getCategoryList()
+  updateCurrentPageData()
 }
 
 // 处理重置
 const handleReset = () => {
+  searchForm.name = ''
   pagination.currentPage = 1
-  getCategoryList()
+  updateCurrentPageData()
 }
 
 // 处理新增
@@ -221,13 +248,14 @@ const submitCategoryForm = async (formData: {id: number, name: string}) => {
 // 处理分页大小变化
 const handleSizeChange = (val: number) => {
   pagination.pageSize = val
-  getCategoryList()
+  pagination.currentPage = 1
+  updateCurrentPageData()
 }
 
 // 处理当前页变化
 const handleCurrentChange = (val: number) => {
   pagination.currentPage = val
-  getCategoryList()
+  updateCurrentPageData()
 }
 
 // 组件挂载时获取数据
