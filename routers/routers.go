@@ -55,6 +55,7 @@ func InitRouter() {
 		router.GET("article/top", v1.GetTopArt) // 获取置顶文章
 		router.GET("article/list/:id", v1.GetCateArt)
 		router.GET("article/info/:id", v1.GetArtInfo)
+		router.GET("weather", v1.GetWeather) // 获取天气信息
 		router.POST("login", v1.Login)
 	}
 

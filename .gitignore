@@ -75,3 +75,5 @@ web/frontend/src/assets/*
 web/backend/dist/
 web/backend/node_modules/*
 web/backend/src/assets/*
+
+test

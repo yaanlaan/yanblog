@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { articleApi, categoryApi } from '@/services/api'
 import MainLayout from '@/components/layout/MainLayout.vue'
@@ -228,8 +228,14 @@ onMounted(() => {
 })
 
 // 监听路由参数变化
-import { watch } from 'vue'
-watch(() => route.params, () => {
+watch(() => route.params, (newParams, oldParams) => {
+  // 当路由参数变化时，重新获取文章数据
+  pagination.currentPage = 1
+  getArticles()
+}, { deep: true })
+
+// 监听路由查询参数变化（如果有的话）
+watch(() => route.query, () => {
   pagination.currentPage = 1
   updateDisplayedArticles()
 }, { deep: true })

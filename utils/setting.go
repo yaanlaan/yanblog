@@ -35,6 +35,19 @@ type Config struct {
 		Bucket    string `yaml:"Bucket"`
 		Server    string `yaml:"Server"`
 	} `yaml:"QiNiu"`
+	
+	// Weather 天气API配置
+	Weather struct {
+		Provider    string `yaml:"Provider"`
+		ApiKey      string `yaml:"ApiKey"`
+		DefaultCity string `yaml:"DefaultCity"`
+	} `yaml:"weather"`
+	
+	// Cities 城市配置
+	Cities []struct {
+		Name     string `yaml:"Name"`
+		Alias    string `yaml:"Alias"`
+	} `yaml:"cities"`
 }
 
 var ServerConfig = Config{}
