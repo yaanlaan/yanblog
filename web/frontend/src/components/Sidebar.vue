@@ -106,6 +106,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { articleApi } from '@/services/api'
 
 // 定义类型
 interface Weather {
@@ -118,7 +119,13 @@ interface Weather {
 interface Article {
   id: number
   title: string
+  categoryId: number
+  categoryName: string
+  desc: string
+  content: string
+  img: string
   createdAt: string
+  updatedAt: string
 }
 
 interface Tag {
@@ -174,16 +181,33 @@ const fetchWeather = () => {
   }, 500)
 }
 
-// 模拟获取置顶文章
-const fetchFeaturedArticles = () => {
-  // 模拟API调用
-  setTimeout(() => {
-    featuredArticles.value = [
-      { id: 1, title: 'Go语言并发编程指南', createdAt: '2025-07-20T10:00:00Z' },
-      { id: 2, title: 'Vue 3状态管理最佳实践', createdAt: '2025-07-15T14:30:00Z' },
-      { id: 3, title: '数据库设计优化技巧', createdAt: '2025-07-10T09:15:00Z' }
-    ]
-  }, 800)
+// 获取置顶文章
+const fetchFeaturedArticles = async () => {
+  try {
+    const response = await articleApi.getTopArticles({ num: 5 })
+    const { data } = response.data
+    featuredArticles.value = data.map((item: any) => ({
+      id: item.ID,
+      title: item.title,
+      categoryId: item.cid,
+      categoryName: item.Category?.name || '未分类',
+      desc: item.desc,
+      content: item.content,
+      img: item.img,
+      createdAt: item.CreatedAt || item.created_at,
+      updatedAt: item.UpdatedAt || item.updated_at
+    }))
+  } catch (error) {
+    console.error('获取置顶文章失败:', error)
+    // 如果API调用失败，使用模拟数据
+    setTimeout(() => {
+      featuredArticles.value = [
+        { id: 1, title: 'Go语言并发编程指南', categoryId: 1, categoryName: '技术', desc: '', content: '', img: '', createdAt: '2025-07-20T10:00:00Z', updatedAt: '2025-07-20T10:00:00Z' },
+        { id: 2, title: 'Vue 3状态管理最佳实践', categoryId: 1, categoryName: '技术', desc: '', content: '', img: '', createdAt: '2025-07-15T14:30:00Z', updatedAt: '2025-07-15T14:30:00Z' },
+        { id: 3, title: '数据库设计优化技巧', categoryId: 1, categoryName: '技术', desc: '', content: '', img: '', createdAt: '2025-07-10T09:15:00Z', updatedAt: '2025-07-10T09:15:00Z' }
+      ]
+    }, 800)
+  }
 }
 
 // 模拟获取标签数据

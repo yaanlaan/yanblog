@@ -11,6 +11,7 @@ import (
 // 添加分类
 func AddCategory(c *gin.Context) {
 	var data model.Category
+	var code int
 	_ = c.ShouldBindJSON(&data)
 	code = model.CheckCategory(data.Name)
 	if code == errmsg.SUCCESS {
@@ -33,6 +34,7 @@ func AddCategory(c *gin.Context) {
 func GetCate(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.Query("pagesize"))
 	pageNum, _ := strconv.Atoi(c.Query("pagenum"))
+	var code int
 
 	if pageSize <= 0 {
 		pageSize = -1
@@ -53,9 +55,36 @@ func GetCate(c *gin.Context) {
 	})
 }
 
+// 搜索分类
+func SearchCate(c *gin.Context) {
+	pageSize, _ := strconv.Atoi(c.Query("pagesize"))
+	pageNum, _ := strconv.Atoi(c.Query("pagenum"))
+	keyword := c.Query("keyword")
+	var code int
+
+	if pageSize <= 0 {
+		pageSize = -1
+	}
+	if pageNum <= 0 {
+		pageNum = -1
+	}
+
+	data, total := model.SearchCategory(keyword, pageSize, pageNum)
+
+	code = errmsg.SUCCESS
+	
+	c.JSON(http.StatusOK, gin.H{
+		"status":  code,
+		"data":    data,
+		"total":   total,
+		"message": errmsg.GetErrMsg(code),
+	})
+}
+
 // 编辑分类名
 func EditCate(c *gin.Context) {
 	var data model.Category
+	var code int
 	id, _ := strconv.Atoi(c.Param("id"))
 	_ = c.ShouldBindJSON(&data)
 
@@ -77,6 +106,7 @@ func EditCate(c *gin.Context) {
 // 删除用户
 func DeleteCate(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
+	var code int
 
 	code = model.DeleteCate(id)
 

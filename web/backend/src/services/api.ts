@@ -54,6 +54,10 @@ export const userApi = {
   getUsers: (params: { pagesize: number; pagenum: number }) => 
     apiClient.get('/v1/users', { params }),
   
+  // 搜索用户
+  searchUsers: (params: { pagesize: number; pagenum: number; keyword?: string; role?: number }) => 
+    apiClient.get('/v1/users/search', { params }),
+  
   // 创建用户
   createUser: (data: { username: string; password: string; role: number }) => 
     apiClient.post('/v1/user/add', data),
@@ -72,6 +76,10 @@ export const categoryApi = {
   // 获取分类列表
   getCategories: (params: { pagesize: number; pagenum: number }) => 
     apiClient.get('/v1/category', { params }),
+  
+  // 搜索分类
+  searchCategories: (params: { pagesize: number; pagenum: number; keyword?: string }) => 
+    apiClient.get('/v1/category/search', { params }),
   
   // 创建分类
   createCategory: (data: { name: string }) => 
@@ -92,6 +100,10 @@ export const articleApi = {
   getArticles: (params: { pagesize: number; pagenum: number }) => 
     apiClient.get('/v1/article', { params }),
   
+  // 搜索文章
+  searchArticles: (params: { pagesize: number; pagenum: number; keyword?: string; cid?: number }) => 
+    apiClient.get('/v1/article/search', { params }),
+  
   // 获取分类下的文章
   getCategoryArticles: (id: number, params: { pagesize: number; pagenum: number }) => 
     apiClient.get(`/v1/article/list/${id}`, { params }),
@@ -106,7 +118,8 @@ export const articleApi = {
     cid: number; 
     desc: string; 
     content: string; 
-    img: string 
+    img: string;
+    top: number;
   }) => 
     apiClient.post('/v1/article/add', data),
   
@@ -116,7 +129,8 @@ export const articleApi = {
     cid: number; 
     desc: string; 
     content: string; 
-    img: string 
+    img: string;
+    top: number;
   }) => 
     apiClient.put(`/v1/article/${id}`, data),
   

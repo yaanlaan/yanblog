@@ -2,6 +2,7 @@ package model
 
 import (
 	"yanblog/utils/errmsg"
+	"strings"
 
 	"log"
 	"golang.org/x/crypto/scrypt"
@@ -52,8 +53,42 @@ func CheckUserWithID(id int, name string) int {
     return errmsg.ERROR
 }
 
+// SearchUser 搜索用户
+// 参数: keyword - 搜索关键词, role - 角色筛选, pageSize - 每页数量, pageNum - 页码
+// 返回: 用户列表和总记录数
+func SearchUser(keyword string, role int, pageSize int, pageNum int) ([]User, int64) {
+	var users []User
+	var total int64
+	var err error
 
+	// 构建查询条件
+	query := db
 
+	// 如果有关键词，则添加用户名的模糊搜索
+	if keyword != "" {
+		searchTerm := "%" + strings.ToLower(keyword) + "%"
+		query = query.Where("LOWER(username) LIKE ?", searchTerm)
+	}
+
+	// 如果有角色筛选条件，则添加角色筛选
+	if role != 0 {
+		query = query.Where("role = ?", role)
+	}
+
+	// 执行查询
+	if pageSize == -1 || pageNum == -1 {
+		err = query.Find(&users).Count(&total).Error
+	} else {
+		err = query.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&users).Count(&total).Error
+	}
+
+	// 处理错误情况
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, 0
+	}
+
+	return users, total
+}
 
 // CreateUser 创建新用户
 // 参数: data - 用户数据指针
@@ -106,12 +141,11 @@ func EditUser(id int, data *User) int {
 	return errmsg.SUCCESS
 }
 
-// DeleteUser 删除用户（软删除）
-// 参数: id - 要删除的用户ID
+// DeleteUser 删除用户
+// 参数: id - 用户ID
 // 返回: 状态码
 func DeleteUser(id int) int {
 	var user User
-
 	err = db.Where("id = ? ", id).Delete(&user).Error
 	if err != nil {
 		return errmsg.ERROR

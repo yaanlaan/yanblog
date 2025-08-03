@@ -40,6 +40,25 @@
           />
         </el-form-item>
         
+        <el-form-item label="置顶等级">
+          <el-select 
+            v-model="publishData.top" 
+            placeholder="请选择置顶等级"
+            clearable
+            style="width: 100%"
+            @change="handleFormChange"
+          >
+            <el-option label="不置顶" :value="0" />
+            <el-option label="等级1 (最高)" :value="1" />
+            <el-option label="等级2" :value="2" />
+            <el-option label="等级3" :value="3" />
+            <el-option label="等级4" :value="4" />
+            <el-option label="等级5" :value="5" />
+            <el-option label="等级6 (最低)" :value="6" />
+          </el-select>
+          <div class="top-tip">数字越小等级越高，0表示不置顶</div>
+        </el-form-item>
+        
         <el-form-item label="封面图">
           <el-upload
             class="avatar-uploader"
@@ -82,6 +101,7 @@ const props = defineProps<{
     categoryId: number | undefined
     desc: string
     img: string
+    top: number
   }
   categories: {id: number, name: string}[]
   isEdit: boolean
@@ -90,7 +110,7 @@ const props = defineProps<{
 
 // 定义事件
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: {categoryId: number | undefined, desc: string, img: string}): void
+  (e: 'update:modelValue', value: {categoryId: number | undefined, desc: string, img: string, top: number}): void
   (e: 'submit'): void
 }>()
 
@@ -101,7 +121,8 @@ const formRef = ref<FormInstance>()
 const publishData = reactive({
   categoryId: props.modelValue.categoryId,
   desc: props.modelValue.desc,
-  img: props.modelValue.img
+  img: props.modelValue.img,
+  top: props.modelValue.top || 0
 })
 
 // 监听属性变化
@@ -109,6 +130,7 @@ watch(() => props.modelValue, (newVal) => {
   publishData.categoryId = newVal.categoryId
   publishData.desc = newVal.desc
   publishData.img = newVal.img
+  publishData.top = newVal.top || 0
 }, { deep: true })
 
 // 表单验证规则
@@ -128,7 +150,8 @@ const handleFormChange = () => {
   emit('update:modelValue', {
     categoryId: publishData.categoryId,
     desc: publishData.desc,
-    img: publishData.img
+    img: publishData.img,
+    top: publishData.top
   })
 }
 
@@ -154,7 +177,7 @@ const handleAvatarSuccess: UploadProps['onSuccess'] = (
 const handleAvatarError: UploadProps['onError'] = (
   error
 ) => {
-  console.error('Upload error:', error) // 调试信息
+  console.error('Upload error:', error); // 调试信息
   ElMessage.error('上传失败：' + (error.message || '未知错误'))
 }
 
@@ -203,5 +226,11 @@ const handleSubmit = () => {
   width: 178px;
   height: 178px;
   text-align: center;
+}
+
+.top-tip {
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
 }
 </style>

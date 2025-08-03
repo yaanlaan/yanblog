@@ -10,12 +10,11 @@ import (
 	"strconv"
 )
 
-var code int
-
 // 添加用户
 func AddUser(c *gin.Context) {
 	var data model.User
 	var msg string
+	var code int
 
 	_ = c.ShouldBindJSON(&data)
 	//fmt.Printf("data: %+v\n", data) 
@@ -44,6 +43,7 @@ func AddUser(c *gin.Context) {
 func GetUsers(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.Query("pagesize"))
 	pageNum, _ := strconv.Atoi(c.Query("pagenum"))
+	var code int
 
 	if pageSize <=0 {
 		pageSize = -1
@@ -62,9 +62,40 @@ func GetUsers(c *gin.Context) {
 	})
 }
 
+// 搜索用户
+func SearchUsers(c *gin.Context) {
+	pageSize, _ := strconv.Atoi(c.Query("pagesize"))
+	pageNum, _ := strconv.Atoi(c.Query("pagenum"))
+	keyword := c.Query("keyword")
+	roleStr := c.Query("role")
+	var role int
+	var code int
+
+	if roleStr != "" {
+		role, _ = strconv.Atoi(roleStr)
+	}
+
+	if pageSize <=0 {
+		pageSize = -1
+	}
+	if pageNum <= 0 {
+		pageNum = -1
+	}
+
+	data, total := model.SearchUser(keyword, role, pageSize, pageNum)
+	code = errmsg.SUCCESS
+	c.JSON(http.StatusOK, gin.H{
+		"status":  code,
+		"data":    data,
+		"total":   total,
+		"message": errmsg.GetErrMsg(code),
+	})
+}
+
 // 编辑用户
 func EditUser(c *gin.Context) {
 	var data model.User
+	var code int
 	id, _ := strconv.Atoi(c.Param("id"))
 	_ = c.ShouldBindJSON(&data)
 	code = model.CheckUser(data.Username)
@@ -92,6 +123,7 @@ func EditUser(c *gin.Context) {
 // 删除用户
 func DeleteUser(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
+	var code int
 
 	code = model.DeleteUser(id)
 

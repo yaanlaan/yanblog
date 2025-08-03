@@ -14,13 +14,21 @@ export const articleApi = {
   getArticles: (params: { pagesize: number; pagenum: number }) => 
     apiClient.get('/article', { params }),
   
+  // 搜索文章
+  searchArticles: (params: { pagesize: number; pagenum: number; keyword?: string; cid?: number }) => 
+    apiClient.get('/article/search', { params }),
+  
   // 获取分类下的文章
   getCategoryArticles: (id: number, params: { pagesize: number; pagenum: number }) => 
     apiClient.get(`/article/list/${id}`, { params }),
   
   // 获取文章详情
   getArticle: (id: number) => 
-    apiClient.get(`/article/info/${id}`)
+    apiClient.get(`/article/info/${id}`),
+    
+  // 获取置顶文章
+  getTopArticles: (params?: { num: number }) => 
+    apiClient.get('/article/top', { params })
 }
 
 // 分类相关API

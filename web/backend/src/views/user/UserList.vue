@@ -25,13 +25,18 @@
       >
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="username" label="用户名" />
-        <el-table-column prop="role" label="角色">
+        <el-table-column label="角色" width="120">
           <template #default="scope">
-            <el-tag v-if="scope.row.role === 2" type="danger">管理员</el-tag>
-            <el-tag v-else type="success">普通用户</el-tag>
+            <el-tag v-if="scope.row.role === 1" type="danger">超级管理员</el-tag>
+            <el-tag v-else-if="scope.row.role === 2" type="warning">管理员</el-tag>
+            <el-tag v-else type="info">普通用户</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" />
+        <el-table-column prop="createdAt" label="创建时间" width="180">
+          <template #default="scope">
+            {{ formatDateTime(scope.row.createdAt) }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="200">
           <template #default="scope">
             <UserActions
@@ -60,8 +65,8 @@
     <UserForm
       v-model="dialogVisible"
       :title="dialogTitle"
-      :is-add="isAdd"
       :user="userForm"
+      :is-add="isAdd"
       @submit="submitUserForm"
     />
   </div>
@@ -95,7 +100,7 @@ const searchForm = reactive({
 // 分页信息
 const pagination = reactive({
   currentPage: 1,
-  pageSize: 10,
+  pageSize: 5,
   total: 0
 })
 
@@ -121,6 +126,20 @@ const userForm = reactive({
   role: 3 // 默认为普通用户
 })
 
+// 格式化日期时间
+const formatDateTime = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }).replace(/\//g, '-')
+}
+
 // 获取用户列表（获取所有数据）
 const getUserList = async () => {
   loading.value = true
@@ -132,15 +151,13 @@ const getUserList = async () => {
     })
     
     // 解析后端返回的数据
-    const { data, total } = response.data
-    console.log('用户列表数据:', data, total) // 调试信息
+    const { data } = response.data
     allUsers.value = data.map((item: any) => ({
       id: item.ID,
       username: item.username,
       role: item.role,
       createdAt: item.CreatedAt
     }))
-    pagination.total = total
     
     // 更新当前页数据
     updateCurrentPageData()
@@ -153,18 +170,23 @@ const getUserList = async () => {
   }
 }
 
-// 更新当前页数据（前端分页）
+// 更新当前页数据（前端分页和筛选）
 const updateCurrentPageData = () => {
-  // 应用搜索过滤
-  let filteredUsers = allUsers.value
+  // 应用搜索和筛选
+  let filteredUsers = [...allUsers.value]
+  
+  // 用户名搜索
   if (searchForm.username) {
     filteredUsers = filteredUsers.filter(user => 
-      user.username.includes(searchForm.username)
+      user.username.toLowerCase().includes(searchForm.username.toLowerCase())
     )
   }
-  if (searchForm.role !== undefined) {
+  
+  // 角色筛选
+  if (searchForm.role !== undefined && searchForm.role !== null) {
+    const role = Number(searchForm.role)
     filteredUsers = filteredUsers.filter(user => 
-      user.role === searchForm.role
+      user.role === role
     )
   }
   
@@ -221,6 +243,11 @@ const handleEdit = (row: User) => {
 
 // 处理删除
 const handleDelete = (row: User) => {
+  if (row.role === 1) {
+    ElMessage.warning('不能删除超级管理员')
+    return
+  }
+  
   ElMessageBox.confirm(
     `确定要删除用户 "${row.username}" 吗？`,
     '确认删除',
@@ -244,32 +271,73 @@ const handleDelete = (row: User) => {
 }
 
 // 提交用户表单
-const submitUserForm = async (formData: {id: number, username: string, password: string, role: number}) => {
+const submitUserForm = async (formData: { username: string; role: number; password?: string }) => {
   try {
     if (isAdd.value) {
       // 新增用户
       await userApi.createUser({
         username: formData.username,
-        password: formData.password,
+        password: formData.password || '123456', // 默认密码
         role: formData.role
       })
-      ElMessage.success('新增成功')
+      ElMessage.success('用户创建成功')
     } else {
       // 编辑用户
-      await userApi.updateUser(formData.id, {
+      await userApi.updateUser(userForm.id, {
         username: formData.username,
         role: formData.role
       })
-      ElMessage.success('修改成功')
+      ElMessage.success('用户更新成功')
     }
+    
+    // 关闭对话框
     dialogVisible.value = false
-    getUserList()
-  } catch (error) {
-    ElMessage.error(isAdd.value ? '新增失败' : '修改失败')
-    console.error(error)
+    
+    // 重新加载数据
+    await getUserList()
+  } catch (error: any) {
+    console.error('提交用户表单失败:', error)
+    ElMessage.error(isAdd.value ? '用户创建失败' : '用户更新失败')
   }
 }
 
+// 处理分页大小变化
+const handleSizeChange = (val: number) => {
+  pagination.pageSize = val
+  pagination.currentPage = 1
+  getUserList()
+}
+
+// 处理当前页变化
+const handleCurrentChange = (val: number) => {
+  pagination.currentPage = val
+  getUserList()
+}
+
+// 组件挂载时获取数据
+onMounted(() => {
+  getUserList()
+})
+</script>
+```
+
+需要确保在`handleSizeChange`和`handleCurrentChange`方法中也调用更新方法：
+
+c:\Users\yaanlaan\Documents\code_workbench\web\yaanlaan_blog\web\backend\src\views\user\UserList.vue
+```vue
+<<<<<<< SEARCH
+// 处理分页大小变化
+const handleSizeChange = (val: number) => {
+  pagination.pageSize = val
+  pagination.currentPage = 1
+  getUserList()
+}
+
+// 处理当前页变化
+const handleCurrentChange = (val: number) => {
+  pagination.currentPage = val
+  getUserList()
+}
 // 处理分页大小变化
 const handleSizeChange = (val: number) => {
   pagination.pageSize = val
@@ -282,12 +350,6 @@ const handleCurrentChange = (val: number) => {
   pagination.currentPage = val
   updateCurrentPageData()
 }
-
-// 组件挂载时获取数据
-onMounted(() => {
-  getUserList()
-})
-</script>
 
 <style scoped>
 .user-list {

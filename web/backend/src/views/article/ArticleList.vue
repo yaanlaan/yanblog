@@ -50,6 +50,12 @@
         <el-table-column prop="title" label="标题" show-overflow-tooltip />
         <el-table-column prop="desc" label="简介" show-overflow-tooltip />
         <el-table-column prop="categoryName" label="分类" width="120" />
+        <el-table-column prop="top" label="置顶等级" width="100">
+          <template #default="scope">
+            <el-tag v-if="scope.row.top > 0" type="danger">等级{{ scope.row.top }}</el-tag>
+            <el-tag v-else type="info">未置顶</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="createdAt" label="创建时间" width="170">
           <template #default="scope">
             {{ formatDateTime(scope.row.createdAt) }}
@@ -107,6 +113,7 @@ interface Article {
   desc: string
   content: string
   img: string
+  top: number
   createdAt: string
   updatedAt: string
 }
@@ -126,10 +133,39 @@ const searchForm = reactive({
   categoryId: undefined as number | undefined
 })
 
+// 更新当前页数据（前端分页和筛选）
+const updateCurrentPageData = () => {
+  // 应用搜索和筛选
+  let filteredArticles = [...allArticles.value]
+  
+  // 标题搜索
+  if (searchForm.title) {
+    filteredArticles = filteredArticles.filter(article => 
+      article.title.toLowerCase().includes(searchForm.title.toLowerCase())
+    )
+  }
+  
+  // 分类筛选
+  if (searchForm.categoryId !== undefined && searchForm.categoryId !== null) {
+    const categoryId = Number(searchForm.categoryId)
+    filteredArticles = filteredArticles.filter(article => 
+      article.categoryId === categoryId
+    )
+  }
+  
+  // 更新总数
+  pagination.total = filteredArticles.length
+  
+  // 计算当前页数据
+  const start = (pagination.currentPage - 1) * pagination.pageSize
+  const end = start + pagination.pageSize
+  articleList.value = filteredArticles.slice(start, end)
+}
+
 // 分页信息
 const pagination = reactive({
   currentPage: 1,
-  pageSize: 10,
+  pageSize: 5,
   total: 0
 })
 
@@ -159,7 +195,7 @@ const formatDateTime = (dateString: string) => {
   }).replace(/\//g, '-')
 }
 
-// 获取文章列表（获取所有数据）
+// 获取文章列表
 const getArticleList = async () => {
   loading.value = true
   error.value = false
@@ -170,20 +206,19 @@ const getArticleList = async () => {
     })
     
     // 解析后端返回的数据
-    const { data, total } = response.data
-    console.log('文章列表数据:', data, total) // 调试信息
+    const { data } = response.data
     allArticles.value = data.map((item: any) => ({
       id: item.ID,
       title: item.title,
       categoryId: item.cid !== undefined ? parseInt(item.cid, 10) : undefined,
-      categoryName: (item.Category?.name || item.category?.name || '未分类') as string,  // 增强分类名称解析
+      categoryName: (item.Category?.name || item.category?.name || '未分类') as string,
       desc: item.desc,
       content: item.content,
       img: item.img,
+      top: item.top || 0,
       createdAt: item.CreatedAt || item.created_at,
       updatedAt: item.UpdatedAt || item.updated_at
     }))
-    pagination.total = total
     
     // 更新当前页数据
     updateCurrentPageData()
@@ -196,48 +231,17 @@ const getArticleList = async () => {
   }
 }
 
-// 更新当前页数据（前端分页）
-const updateCurrentPageData = () => {
-  // 应用搜索过滤
-  let filteredArticles = allArticles.value
-  if (searchForm.title) {
-    filteredArticles = filteredArticles.filter(article => 
-      article.title.includes(searchForm.title)
-    )
-  }
-  if (searchForm.categoryId !== undefined) {
-    filteredArticles = filteredArticles.filter(article => 
-      article.categoryId === searchForm.categoryId
-    )
-  }
-  
-  // 更新总数
-  pagination.total = filteredArticles.length
-  
-  // 计算当前页数据
-  const start = (pagination.currentPage - 1) * pagination.pageSize
-  const end = start + pagination.pageSize
-  articleList.value = filteredArticles.slice(start, end)
+// 处理分页大小变化
+const handleSizeChange = (val: number) => {
+  pagination.pageSize = val
+  pagination.currentPage = 1
+  updateCurrentPageData()
 }
 
-// 获取分类列表
-const getCategoryList = async () => {
-  try {
-    const response = await categoryApi.getCategories({
-      pagesize: -1,
-      pagenum: -1
-    })
-    
-    // 解析后端返回的数据
-    const { data } = response.data
-    categories.value = data.map((item: any) => ({
-      id: parseInt(item.id, 10), // 后端返回的是id而不是ID
-      name: item.name
-    }))
-  } catch (error) {
-    ElMessage.error('获取分类列表失败')
-    console.error(error)
-  }
+// 处理当前页变化
+const handleCurrentChange = (val: number) => {
+  pagination.currentPage = val
+  updateCurrentPageData()
 }
 
 // 处理搜索
@@ -254,51 +258,63 @@ const handleReset = () => {
   updateCurrentPageData()
 }
 
-// 处理新增
+// 获取分类列表
+const getCategoryList = async () => {
+  try {
+    const response = await categoryApi.getCategories({
+      pagesize: -1,
+      pagenum: -1
+    })
+    
+    // 解析后端返回的数据
+    const { data } = response.data
+    console.log('从后端获取的分类数据:', data)
+    
+    categories.value = data.map((item: any) => ({
+      id: item.ID !== undefined ? parseInt(item.ID, 10) : parseInt(item.id, 10),
+      name: item.name
+    }))
+    
+    console.log('处理后的分类数据:', categories.value)
+  } catch (error) {
+    ElMessage.error('获取分类列表失败')
+    console.error(error)
+  }
+}
+
+// 处理新增文章
 const handleAdd = () => {
   router.push('/article/add')
 }
 
-// 处理编辑
-const handleEdit = (row: Article) => {
-  router.push(`/article/edit/${row.id}`)
+// 处理编辑文章
+const handleEdit = (article: Article) => {
+  router.push(`/article/edit/${article.id}`)
 }
 
-// 处理删除
-const handleDelete = (row: Article) => {
+// 处理删除文章
+const handleDelete = (article: Article) => {
   ElMessageBox.confirm(
-    `确定要删除文章 "${row.title}" 吗？`,
-    '确认删除',
+    `确定要删除文章《${article.title}》吗？此操作不可恢复！`,
+    '删除确认',
     {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'warning'
+      type: 'warning',
     }
   ).then(async () => {
     try {
-      await articleApi.deleteArticle(row.id)
-      ElMessage.success('删除成功')
-      getArticleList()
+      await articleApi.deleteArticle(article.id)
+      ElMessage.success('文章删除成功')
+      // 重新加载数据
+      await getArticleList()
     } catch (error) {
-      ElMessage.error('删除失败')
+      ElMessage.error('文章删除失败')
       console.error(error)
     }
   }).catch(() => {
-    ElMessage.info('已取消删除')
+    // 用户取消删除
   })
-}
-
-// 处理分页大小变化
-const handleSizeChange = (val: number) => {
-  pagination.pageSize = val
-  pagination.currentPage = 1
-  updateCurrentPageData()
-}
-
-// 处理当前页变化
-const handleCurrentChange = (val: number) => {
-  pagination.currentPage = val
-  updateCurrentPageData()
 }
 
 // 组件挂载时获取数据
@@ -319,32 +335,10 @@ onMounted(() => {
   align-items: center;
 }
 
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
-
 .article-cover {
-  width: 80px;
+  width: 100%;
   height: 60px;
   border-radius: 4px;
-}
-
-.no-cover {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 60px;
-  color: #909399;
-  font-size: 12px;
-}
-
-.no-cover .el-icon {
-  font-size: 24px;
-  margin-bottom: 4px;
 }
 
 .image-slot {
@@ -354,11 +348,22 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   background: #f5f7fa;
-  color: #909399;
+  color: #999;
 }
 
-/* mavon-editor样式调整 */
-.markdown-body {
-  font-size: 14px;
+.no-cover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  color: #999;
+  font-size: 12px;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

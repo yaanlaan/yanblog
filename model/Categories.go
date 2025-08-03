@@ -2,6 +2,7 @@ package model
 
 import (
 	"yanblog/utils/errmsg"
+	"strings"
 	"gorm.io/gorm"
 )
 
@@ -33,6 +34,36 @@ func CreateCate(data *Category) int {
 	return errmsg.SUCCESS
 }
 
+// SearchCategory 搜索分类
+// 参数: keyword - 搜索关键词, pageSize - 每页数量, pageNum - 页码
+// 返回: 分类列表和总数
+func SearchCategory(keyword string, pageSize int, pageNum int) ([]Category, int64) {
+	var cate []Category
+	var total int64
+	var err error
+
+	// 构建查询条件
+	query := db
+
+	// 如果有关键词，则添加分类名的模糊搜索
+	if keyword != "" {
+		searchTerm := "%" + strings.ToLower(keyword) + "%"
+		query = query.Where("LOWER(name) LIKE ?", searchTerm)
+	}
+
+	// 执行查询
+	if pageSize == -1 && pageNum == -1 {
+		err = query.Find(&cate).Count(&total).Error
+	} else {
+		err = query.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&cate).Count(&total).Error
+	}
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, 0
+	}
+	
+	return cate, total
+}
 
 // GetCate 查询分类列表
 // 参数: pageSize - 每页数量, pageNum - 页码

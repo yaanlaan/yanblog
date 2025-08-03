@@ -118,7 +118,8 @@ const articleForm = reactive({
 const publishForm = reactive({
   categoryId: undefined as number | undefined,
   desc: '',
-  img: ''
+  img: '',
+  top: 0
 })
 
 // 分类列表
@@ -172,10 +173,11 @@ const getCategoryList = async () => {
 }
 
 // 处理发布表单更新
-const handlePublishFormUpdate = (value: {categoryId: number | undefined, desc: string, img: string}) => {
+const handlePublishFormUpdate = (value: {categoryId: number | undefined, desc: string, img: string, top: number}) => {
   publishForm.categoryId = value.categoryId
   publishForm.desc = value.desc
   publishForm.img = value.img
+  publishForm.top = value.top
 }
 
 // 提交文章
@@ -197,7 +199,8 @@ const submitArticle = async () => {
         cid: publishForm.categoryId!,
         desc: publishForm.desc,
         content: articleForm.content,
-        img: publishForm.img
+        img: publishForm.img,
+        top: publishForm.top
       })
       ElMessage.success('文章更新成功')
     } else {
@@ -207,7 +210,8 @@ const submitArticle = async () => {
         cid: publishForm.categoryId!,
         desc: publishForm.desc,
         content: articleForm.content,
-        img: publishForm.img
+        img: publishForm.img,
+        top: publishForm.top
       })
       ElMessage.success('文章发布成功')
     }
@@ -239,6 +243,7 @@ const getArticleDetail = async (id: number) => {
     publishForm.categoryId = parseInt(article.cid, 10)
     publishForm.desc = article.desc
     publishForm.img = article.img
+    publishForm.top = article.top || 0
   } catch (error) {
     ElMessage.error('获取文章详情失败')
     console.error(error)

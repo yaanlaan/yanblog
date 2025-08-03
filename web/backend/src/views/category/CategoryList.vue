@@ -1,4 +1,4 @@
-，<template>
+<template>
   <div class="category-list">
     <el-card>
       <template #header>
@@ -75,22 +75,36 @@ interface Category {
   createdAt: string
 }
 
-// 所有分类数据（用于前端分页）
+// 搜索表单数据类型
+interface SearchForm {
+  name: string
+}
+
+// 分页数据类型
+interface Pagination {
+  currentPage: number
+  pageSize: number
+  total: number
+}
+
+// 所有分类数据（用于前端分页和筛选）
 const allCategories = ref<Category[]>([])
+// 过滤后的分类数据（用于前端筛选）
+const filteredCategories = ref<Category[]>([])
 
 // 搜索表单
-const searchForm = reactive({
+const searchForm = reactive<SearchForm>({
   name: ''
 })
 
 // 分页信息
-const pagination = reactive({
+const pagination = reactive<Pagination>({
   currentPage: 1,
-  pageSize: 10,
+  pageSize: 5,
   total: 0
 })
 
-// 分类列表（当前页数据）
+// 当前页的分类数据
 const categoryList = ref<Category[]>([])
 
 // 加载状态
@@ -121,16 +135,20 @@ const getCategoryList = async () => {
     })
     
     // 解析后端返回的数据
-    const { data, total } = response.data
-    console.log('分类列表数据:', data, total) // 调试信息
+    const { data } = response.data
+    
+    // 转换数据格式
     allCategories.value = data.map((item: any) => ({
       id: item.ID,
       name: item.name,
-      createdAt: item.CreatedAt || item.created_at || ''  // 修复创建时间字段
+      createdAt: item.CreatedAt || item.created_at || ''
     }))
-    pagination.total = total
+    
+    // 初始化时所有数据都是过滤后的数据
+    filteredCategories.value = [...allCategories.value]
     
     // 更新当前页数据
+    updatePagination()
     updateCurrentPageData()
   } catch (err) {
     error.value = true
@@ -141,35 +159,78 @@ const getCategoryList = async () => {
   }
 }
 
-// 更新当前页数据（前端分页）
+// 更新分页信息
+const updatePagination = () => {
+  pagination.total = filteredCategories.value.length
+  // 确保当前页不会超出范围
+  const maxPage = Math.ceil(pagination.total / pagination.pageSize) || 1
+  if (pagination.currentPage > maxPage) {
+    pagination.currentPage = maxPage
+  }
+}
+
+// 更新当前页数据（前端分页和筛选）
 const updateCurrentPageData = () => {
   // 应用搜索过滤
-  let filteredCategories = allCategories.value
-  if (searchForm.name) {
-    filteredCategories = filteredCategories.filter(category => 
-      category.name.includes(searchForm.name)
-    )
-  }
+  let resultCategories = filteredCategories.value
   
   // 更新总数
-  pagination.total = filteredCategories.length
+  pagination.total = resultCategories.length
   
   // 计算当前页数据
   const start = (pagination.currentPage - 1) * pagination.pageSize
   const end = start + pagination.pageSize
-  categoryList.value = filteredCategories.slice(start, end)
+  categoryList.value = resultCategories.slice(start, end)
 }
 
-// 处理搜索
-const handleSearch = () => {
+// 应用筛选条件
+const applyFilters = () => {
+  // 应用搜索过滤
+  let filtered = allCategories.value
+  if (searchForm.name) {
+    filtered = filtered.filter(category => 
+      category.name.toLowerCase().includes(searchForm.name.toLowerCase())
+    )
+  }
+  
+  filteredCategories.value = filtered
+  
+  // 重置到第一页
+  pagination.currentPage = 1
+  
+  // 更新分页信息和当前页数据
+  updatePagination()
+  updateCurrentPageData()
+}
+
+// 处理分页大小变化
+const handleSizeChange = (val: number) => {
+  pagination.pageSize = val
   pagination.currentPage = 1
   updateCurrentPageData()
 }
 
+// 处理当前页变化
+const handleCurrentChange = (val: number) => {
+  pagination.currentPage = val
+  updateCurrentPageData()
+}
+
+// 处理搜索
+const handleSearch = () => {
+  applyFilters()
+}
+
 // 处理重置
 const handleReset = () => {
+  // 重置搜索表单
   searchForm.name = ''
-  pagination.currentPage = 1
+  
+  // 恢复所有数据
+  filteredCategories.value = [...allCategories.value]
+  
+  // 更新分页信息和当前页数据
+  updatePagination()
   updateCurrentPageData()
 }
 
@@ -222,41 +283,29 @@ const handleDelete = (row: Category) => {
 }
 
 // 提交分类表单
-const submitCategoryForm = async (formData: {id: number, name: string}) => {
+const submitCategoryForm = async (formData: { name: string }) => {
   try {
-    if (isAdd.value) {
+    if (categoryForm.id === 0) {
       // 新增分类
-      await categoryApi.createCategory({
-        name: formData.name
-      })
-      ElMessage.success('新增成功')
+      await categoryApi.createCategory(formData)
+      ElMessage.success('分类创建成功')
     } else {
       // 编辑分类
-      await categoryApi.updateCategory(formData.id, {
-        name: formData.name
-      })
-      ElMessage.success('修改成功')
+      await categoryApi.updateCategory(categoryForm.id, formData)
+      ElMessage.success('分类更新成功')
     }
+    
+    // 关闭对话框
     dialogVisible.value = false
-    getCategoryList()
-  } catch (error) {
-    ElMessage.error(isAdd.value ? '新增失败' : '修改失败')
-    console.error(error)
+    
+    // 重新加载数据
+    await getCategoryList()
+  } catch (error: any) {
+    console.error('提交分类表单失败:', error)
+    ElMessage.error(categoryForm.id === 0 ? '分类创建失败' : '分类更新失败')
   }
 }
 
-// 处理分页大小变化
-const handleSizeChange = (val: number) => {
-  pagination.pageSize = val
-  pagination.currentPage = 1
-  updateCurrentPageData()
-}
-
-// 处理当前页变化
-const handleCurrentChange = (val: number) => {
-  pagination.currentPage = val
-  updateCurrentPageData()
-}
 
 // 组件挂载时获取数据
 onMounted(() => {

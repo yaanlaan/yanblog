@@ -9,7 +9,10 @@
         <ArticleFilter 
           :categories="categories"
           :selected-category="selectedCategory"
+          :search-keyword="searchKeyword"
           @category-change="handleCategoryChange"
+          @search="handleSearch"
+          @reset="handleReset"
         />
         
         <ArticleListContent
@@ -60,11 +63,13 @@ interface Category {
 const route = useRoute()
 
 // 响应式数据
-const articles = ref<Article[]>([])
+const allArticles = ref<Article[]>([]) // 存储所有文章数据
+const articles = ref<Article[]>([]) // 存储当前显示的文章数据
 const categories = ref<Category[]>([])
 const loading = ref(false)
 const total = ref(0)
 const selectedCategory = ref('')
+const searchKeyword = ref('')
 
 const pagination = reactive({
   currentPage: 1,
@@ -88,29 +93,14 @@ const pageTitle = computed(() => {
 const getArticles = async () => {
   loading.value = true
   try {
-    let response
-    if (selectedCategory.value) {
-      // 获取指定分类下的文章
-      response = await articleApi.getCategoryArticles(Number(selectedCategory.value), {
-        pagesize: pagination.pageSize,
-        pagenum: pagination.currentPage
-      })
-    } else if (activeCategoryId.value) {
-      // 获取路由参数指定的分类下的文章
-      response = await articleApi.getCategoryArticles(activeCategoryId.value, {
-        pagesize: pagination.pageSize,
-        pagenum: pagination.currentPage
-      })
-    } else {
-      // 获取所有文章
-      response = await articleApi.getArticles({
-        pagesize: pagination.pageSize,
-        pagenum: pagination.currentPage
-      })
-    }
+    // 一次性获取所有文章数据
+    const response = await articleApi.getArticles({
+      pagesize: -1,
+      pagenum: -1
+    })
     
-    const { data, total: totalCount } = response.data
-    articles.value = data.map((item: any) => ({
+    const { data } = response.data
+    allArticles.value = data.map((item: any) => ({
       id: item.ID,
       title: item.title,
       categoryId: item.cid,
@@ -121,12 +111,9 @@ const getArticles = async () => {
       createdAt: item.CreatedAt || item.created_at,
       updatedAt: item.UpdatedAt || item.updated_at
     }))
-    total.value = totalCount
     
-    // 更新选中的分类
-    if (activeCategoryId.value) {
-      selectedCategory.value = String(activeCategoryId.value)
-    }
+    // 初始化显示数据
+    updateDisplayedArticles()
   } catch (error) {
     console.error('获取文章列表失败:', error)
   } finally {
@@ -152,24 +139,70 @@ const getCategories = async () => {
   }
 }
 
+// 更新显示的文章列表（前端筛选和分页）
+const updateDisplayedArticles = () => {
+  // 应用筛选条件
+  let filteredArticles = [...allArticles.value]
+  
+  // 应用分类筛选
+  const categoryId = selectedCategory.value ? Number(selectedCategory.value) : null
+  if (categoryId) {
+    filteredArticles = filteredArticles.filter(article => article.categoryId === categoryId)
+  } else if (activeCategoryId.value) {
+    filteredArticles = filteredArticles.filter(article => article.categoryId === activeCategoryId.value)
+  }
+  
+  // 应用搜索关键词筛选
+  if (searchKeyword.value) {
+    const keyword = searchKeyword.value.toLowerCase()
+    filteredArticles = filteredArticles.filter(article => 
+      article.title.toLowerCase().includes(keyword) || 
+      article.desc.toLowerCase().includes(keyword)
+    )
+  }
+  
+  // 更新总数
+  total.value = filteredArticles.length
+  
+  // 应用分页
+  const start = (pagination.currentPage - 1) * pagination.pageSize
+  const end = start + pagination.pageSize
+  articles.value = filteredArticles.slice(start, end)
+}
+
 // 处理分类变化
 const handleCategoryChange = (value: string) => {
   selectedCategory.value = value
   pagination.currentPage = 1
-  getArticles()
+  updateDisplayedArticles()
+}
+
+// 处理搜索
+const handleSearch = (keyword: string) => {
+  searchKeyword.value = keyword
+  pagination.currentPage = 1
+  updateDisplayedArticles()
+}
+
+// 处理重置
+const handleReset = () => {
+  searchKeyword.value = ''
+  selectedCategory.value = ''
+  pagination.currentPage = 1
+  updateDisplayedArticles()
 }
 
 // 处理分页大小变化
 const handleSizeChange = (val: number) => {
   pagination.pageSize = val
   pagination.currentPage = 1
-  getArticles()
+  updateDisplayedArticles()
 }
 
 // 处理当前页变化
 const handleCurrentChange = (val: number) => {
   pagination.currentPage = val
-  getArticles()
+  updateDisplayedArticles()
 }
 
 // 组件挂载时获取数据
@@ -182,7 +215,7 @@ onMounted(() => {
 import { watch } from 'vue'
 watch(() => route.params, () => {
   pagination.currentPage = 1
-  getArticles()
+  updateDisplayedArticles()
 }, { deep: true })
 </script>
 
