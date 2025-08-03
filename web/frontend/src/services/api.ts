@@ -87,4 +87,11 @@ export const weatherApi = {
     apiClient.get('/weather', { params })
 }
 
+// 系统状态相关API
+export const systemApi = {
+  // 获取系统状态信息
+  getSystemStatus: () => 
+    apiClient.get('/system/status')
+}
+
 export default apiClient

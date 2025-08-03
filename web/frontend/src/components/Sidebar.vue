@@ -16,6 +16,10 @@
         </div>
         <div class="weather-info" v-else-if="weather">
           <div class="weather-main">
+            <div class="city">{{ weather.city }}</div>
+            <div class="weather-icon">
+              <span class="icon">{{ getWeatherIcon(weather.description) }}</span>
+            </div>
             <div class="temperature">{{ weather.temperature.toFixed(1) }}°C</div>
             <div class="weather-description">{{ weather.description }}</div>
           </div>
@@ -116,23 +120,32 @@
         <h3>服务器状态</h3>
       </div>
       <div class="card-content">
-        <div class="status-item">
-          <span class="label">状态:</span>
-          <span class="value" :class="serverStatus.status">
-            {{ serverStatus.status === 'online' ? '在线' : '离线' }}
-          </span>
+        <div v-if="loading.serverStatus" class="loading-placeholder">
+          <p>状态加载中...</p>
         </div>
-        <div class="status-item">
-          <span class="label">运行时间:</span>
-          <span class="value">{{ serverStatus.uptime }}</span>
+        <div v-else-if="!errors.serverStatus">
+          <div class="status-item">
+            <span class="label">状态:</span>
+            <span class="value" :class="serverStatus.status">
+              {{ serverStatus.status === 'online' ? '在线' : '离线' }}
+            </span>
+          </div>
+          <div class="status-item">
+            <span class="label">运行时间:</span>
+            <span class="value">{{ serverStatus.uptime }}</span>
+          </div>
+          <div class="status-item">
+            <span class="label">内存使用:</span>
+            <span class="value">{{ serverStatus.memoryUsage }}%</span>
+          </div>
+          <div class="status-item">
+            <span class="label">CPU使用:</span>
+            <span class="value">{{ serverStatus.cpuUsage }}%</span>
+          </div>
         </div>
-        <div class="status-item">
-          <span class="label">内存使用:</span>
-          <span class="value">{{ serverStatus.memoryUsage }}%</span>
-        </div>
-        <div class="status-item">
-          <span class="label">CPU使用:</span>
-          <span class="value">{{ serverStatus.cpuUsage }}%</span>
+        <div class="error-message" v-else>
+          <p>❌ {{ errors.serverStatus }}</p>
+          <button @click="fetchServerStatus" class="retry-button">重试</button>
         </div>
       </div>
     </div>
@@ -141,7 +154,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { articleApi, categoryApi, weatherApi } from '@/services/api'
+import { articleApi, categoryApi, weatherApi, systemApi } from '@/services/api'
 
 // 类型定义
 interface Weather {
@@ -175,6 +188,7 @@ interface ServerStatus {
   uptime: string
   memoryUsage: number
   cpuUsage: number
+  startTime: number // 添加服务器启动时间戳
 }
 
 // 响应式数据
@@ -185,21 +199,24 @@ const serverStatus = ref<ServerStatus>({
   status: 'offline',
   uptime: '未知',
   memoryUsage: 0,
-  cpuUsage: 0
+  cpuUsage: 0,
+  startTime: 0 // 初始化启动时间戳
 })
 
 // 错误状态
 const errors = ref({
   weather: '',
   articles: '',
-  categories: ''
+  categories: '',
+  serverStatus: ''
 })
 
 // 加载状态
 const loading = ref({
   weather: false,
   articles: false,
-  categories: false
+  categories: false,
+  serverStatus: false
 })
 
 // 计算字体大小（基于文章数量）
@@ -211,6 +228,45 @@ const calculateFontSize = (count: number) => {
   const maxCount = 50
   const size = minSize + (maxSize - minSize) * Math.min(count / maxCount, 1)
   return `${size}px`
+}
+
+// 获取天气图标
+const getWeatherIcon = (description: string) => {
+  // 根据天气描述返回对应的图标
+  switch (description) {
+    case '晴':
+      return '☀️';
+    case '多云':
+      return '☁️';
+    case '阴':
+      return '⛅';
+    case '阵雨':
+      return '🌦️';
+    case '雷阵雨':
+      return '⛈️';
+    case '小雨':
+      return '🌧️';
+    case '中雨':
+      return '🌧️';
+    case '大雨':
+      return '🌧️';
+    case '暴雨':
+      return '🌧️';
+    case '小雪':
+      return '🌨️';
+    case '中雪':
+      return '🌨️';
+    case '大雪':
+      return '🌨️';
+    case '暴雪':
+      return '🌨️';
+    case '雾':
+      return '🌫️';
+    case '霾':
+      return '🌫️';
+    default:
+      return '🌈'; // 默认图标
+  }
 }
 
 // 获取天气信息
@@ -359,21 +415,105 @@ const fetchCategories = async () => {
   }
 }
 
-// 模拟获取服务器状态
-const fetchServerStatus = () => {
-  // 模拟API调用
-  setTimeout(() => {
-    serverStatus.value = {
-      status: 'online',
-      uptime: '15天6小时32分钟',
-      memoryUsage: 65,
-      cpuUsage: 28
+// 获取服务器状态
+const fetchServerStatus = async () => {
+  try {
+    loading.value.serverStatus = true
+    errors.value.serverStatus = ''
+    
+    const response = await systemApi.getSystemStatus()
+    const { data, status } = response.data
+    
+    // 检查API返回状态
+    if (status !== 200) {
+      errors.value.serverStatus = response.data.message || '获取服务器状态失败'
+      console.error('获取服务器状态失败:', response.data.message)
+      return
     }
-  }, 300)
+    
+    // 设置服务器状态数据
+    serverStatus.value = {
+      status: data.status,
+      uptime: data.uptime,
+      memoryUsage: Math.round(data.memory_usage * 100) / 100, // 保留两位小数
+      cpuUsage: Math.round(data.cpu_usage * 100) / 100, // 保留两位小数
+      startTime: Date.now() - parseUptimeToMilliseconds(data.uptime) // 计算启动时间戳
+    }
+  } catch (error: any) {
+    errors.value.serverStatus = error.message || '获取服务器状态失败'
+    console.error('获取服务器状态失败:', error)
+    // 即使获取失败，也保持在线状态
+    serverStatus.value.status = 'online'
+  } finally {
+    loading.value.serverStatus = false
+  }
+}
+
+// 将运行时间字符串解析为毫秒数
+const parseUptimeToMilliseconds = (uptime: string): number => {
+  // 解析格式如"1天2小时3分钟4秒"或"2小时3分钟4秒"等
+  let totalMilliseconds = 0;
+  
+  // 匹配天数
+  const daysMatch = uptime.match(/(\d+)天/);
+  if (daysMatch) {
+    totalMilliseconds += parseInt(daysMatch[1]) * 24 * 60 * 60 * 1000;
+  }
+  
+  // 匹配小时
+  const hoursMatch = uptime.match(/(\d+)小时/);
+  if (hoursMatch) {
+    totalMilliseconds += parseInt(hoursMatch[1]) * 60 * 60 * 1000;
+  }
+  
+  // 匹配分钟
+  const minutesMatch = uptime.match(/(\d+)分钟/);
+  if (minutesMatch) {
+    totalMilliseconds += parseInt(minutesMatch[1]) * 60 * 1000;
+  }
+  
+  // 匹配秒数
+  const secondsMatch = uptime.match(/(\d+)秒/);
+  if (secondsMatch) {
+    totalMilliseconds += parseInt(secondsMatch[1]) * 1000;
+  }
+  
+  return totalMilliseconds;
+}
+
+// 计算实时运行时间
+const calculateRealTimeUptime = () => {
+  if (serverStatus.value.startTime <= 0) return '未知';
+  
+  const elapsed = Date.now() - serverStatus.value.startTime;
+  return formatUptime(elapsed);
+}
+
+// 格式化运行时间
+const formatUptime = (milliseconds: number): string => {
+  const seconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  
+  const remainingSeconds = seconds % 60;
+  const remainingMinutes = minutes % 60;
+  const remainingHours = hours % 24;
+  
+  if (days > 0) {
+    return `${days}天${remainingHours}小时${remainingMinutes}分钟${remainingSeconds}秒`;
+  } else if (hours > 0) {
+    return `${remainingHours}小时${remainingMinutes}分钟${remainingSeconds}秒`;
+  } else if (minutes > 0) {
+    return `${remainingMinutes}分钟${remainingSeconds}秒`;
+  } else {
+    return `${remainingSeconds}秒`;
+  }
 }
 
 // 定时器引用
 let serverStatusTimer: number | null = null
+let uptimeTimer: number | null = null
 
 // 组件挂载时获取数据（并行执行，不阻塞）
 onMounted(() => {
@@ -383,23 +523,32 @@ onMounted(() => {
   Promise.allSettled([
     fetchWeather(),
     fetchFeaturedArticles(),
-    fetchCategories()
+    fetchCategories(),
+    fetchServerStatus()
   ]).then(() => {
     console.log('所有Sidebar数据加载完成')
   })
   
-  // 初始加载服务器状态
-  fetchServerStatus()
-  
-  // 定期更新服务器状态
+  // 定期更新服务器状态（CPU、内存等）
   serverStatusTimer = window.setInterval(fetchServerStatus, 30000)
+  
+  // 每秒更新运行时间显示
+  uptimeTimer = window.setInterval(() => {
+    if (serverStatus.value.startTime > 0) {
+      serverStatus.value.uptime = calculateRealTimeUptime();
+    }
+  }, 1000);
 })
 
 // 组件卸载时清理定时器
 onBeforeUnmount(() => {
   if (serverStatusTimer) {
-    clearInterval(serverStatusTimer)
-    serverStatusTimer = null
+    clearInterval(serverStatusTimer);
+    serverStatusTimer = null;
+  }
+  if (uptimeTimer) {
+    clearInterval(uptimeTimer);
+    uptimeTimer = null;
   }
 })
 
@@ -409,6 +558,7 @@ const formatDate = (dateString: string) => {
   const date = new Date(dateString)
   return date.toLocaleDateString('zh-CN')
 }
+
 </script>
 
 <style scoped>
@@ -450,6 +600,18 @@ const formatDate = (dateString: string) => {
 
 .weather-main {
   margin-bottom: 15px;
+}
+
+.city {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.weather-icon {
+  font-size: 48px;
+  margin: 10px 0;
 }
 
 .temperature {
@@ -592,65 +754,71 @@ const formatDate = (dateString: string) => {
   font-size: 0.9rem;
 }
 
-/* 骨架屏样式 */
+/* ==================== 加载状态样式 ==================== */
 .skeleton-loader {
-  padding: 1rem;
+  animation: skeleton-loading 1s linear infinite alternate;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-color: hsl(200, 20%, 80%);
+  }
+  100% {
+    background-color: hsl(200, 20%, 95%);
+  }
 }
 
 .skeleton-header {
-  width: 40%;
-  height: 1.2rem;
-  margin-bottom: 1.5rem;
-  background: var(--el-fill-color-light);
+  height: 20px;
+  width: 60%;
+  margin-bottom: 10px;
   border-radius: 4px;
 }
 
 .skeleton-body {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 8px;
 }
 
 .skeleton-line {
-  width: 100%;
-  height: 1rem;
-  background: var(--el-fill-color-light);
+  height: 16px;
   border-radius: 4px;
+}
+
+.skeleton-line:first-child {
+  width: 100%;
+}
+
+.skeleton-line:nth-child(2) {
+  width: 80%;
 }
 
 .skeleton-tag {
-  width: 30%;
-  height: 1.2rem;
-  background: var(--el-fill-color-light);
-  border-radius: 20px;
-  display: inline-block;
-  margin: 0.2rem;
+  height: 24px;
+  width: 60px;
+  border-radius: 12px;
 }
 
-/* 错误信息样式 */
 .error-message {
   text-align: center;
-  padding: 1rem;
-  color: var(--el-color-danger);
-}
-
-.error-message p {
-  margin: 0 0 1rem 0;
+  padding: 20px 0;
+  color: #dc3545;
 }
 
 .retry-button {
-  background: var(--el-color-primary);
+  margin-top: 10px;
+  padding: 6px 12px;
+  background-color: #007bff;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.3s;
+  font-size: 14px;
 }
 
 .retry-button:hover {
-  background: var(--el-color-primary-light-3);
+  background-color: #0056b3;
 }
 
 /* ==================== 响应式样式 ==================== */
