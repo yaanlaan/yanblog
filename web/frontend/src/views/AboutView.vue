@@ -1,30 +1,29 @@
 <template>
   <div class="about-page">
-    <div class="container">
-      <div class="content-wrapper">
-        <div class="main-content">
-          <div class="about-content">
-            <h1>关于我们</h1>
-            <p>这是一个使用 Vue 3 和 Go 语言构建的博客系统。</p>
-            <p>该系统提供了完整的博客功能，包括文章发布、分类管理、用户管理等。</p>
-            <h2>技术栈</h2>
-            <ul>
-              <li>前端：Vue 3, TypeScript, Element Plus</li>
-              <li>后端：Go, Gin 框架</li>
-              <li>数据库：MySQL</li>
-              <li>部署：Docker</li>
-            </ul>
-            <h2>功能特性</h2>
-            <ul>
-              <li>响应式设计，支持各种设备</li>
-              <li>Markdown 文章编辑</li>
-              <li>文章分类管理</li>
-              <li>用户权限管理</li>
-              <li>文件上传（七牛云）</li>
-            </ul>
-          </div>
+    <MainLayout>
+      <template #main>
+        <div class="about-content">
+          <h1>关于我们</h1>
+          <p>这是一个使用 Vue 3 和 Go 语言构建的博客系统。</p>
+          <p>该系统提供了完整的博客功能，包括文章发布、分类管理、用户管理等。</p>
+          <h2>技术栈</h2>
+          <ul>
+            <li>前端：Vue 3, TypeScript, Element Plus</li>
+            <li>后端：Go, Gin 框架</li>
+            <li>数据库：MySQL</li>
+            <li>部署：Docker</li>
+          </ul>
+          <h2>功能特性</h2>
+          <ul>
+            <li>响应式设计，支持各种设备</li>
+            <li>Markdown 文章编辑</li>
+            <li>文章分类管理</li>
+            <li>用户权限管理</li>
+            <li>文件上传（七牛云）</li>
+          </ul>
         </div>
-        
+      </template>
+      <template>
         <div class="sidebar">
           <div class="sidebar-card">
             <div class="card-header">
@@ -35,10 +34,14 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </template>
+    </MainLayout>
   </div>
 </template>
+
+<script setup lang="ts">
+import MainLayout from '@/components/layout/MainLayout.vue'
+</script>
 
 <style scoped>
 .about-page {
@@ -46,16 +49,6 @@
   min-height: calc(100vh - 200px);
 }
 
-.content-wrapper {
-  display: flex;
-  gap: 30px;
-  min-height: calc(100vh - 280px);
-}
-
-.main-content {
-  flex: 1;
-  min-width: 0;
-}
 
 .about-content {
   background: white;

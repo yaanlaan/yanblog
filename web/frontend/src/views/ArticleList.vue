@@ -1,95 +1,41 @@
 <template>
   <div class="article-list-page">
-    <div class="container">
-      <div class="content-wrapper">
-        <div class="main-content">
-          <div class="page-header">
-            <h1>{{ pageTitle }}</h1>
-          </div>
-          
-          <div class="filters">
-            <!-- 分类筛选 -->
-            <div class="filter-group">
-              <label>分类:</label>
-              <select v-model="selectedCategory" @change="handleCategoryChange">
-                <option value="">全部分类</option>
-                <option 
-                  v-for="category in categories" 
-                  :key="category.id" 
-                  :value="category.id"
-                >
-                  {{ category.name }}
-                </option>
-              </select>
-            </div>
-          </div>
-          
-          <!-- 文章列表 -->
-          <div class="articles" v-loading="loading">
-            <div 
-              v-for="article in articles" 
-              :key="article.id" 
-              class="article-item"
-            >
-              <div class="article-header">
-                <h2 class="article-title">
-                  <router-link :to="`/article/${article.id}`">
-                    {{ article.title }}
-                  </router-link>
-                </h2>
-                <div class="article-meta">
-                  <span class="category">
-                    分类: {{ article.categoryName }}
-                  </span>
-                  <span class="date">
-                    发布时间: {{ formatDate(article.createdAt) }}
-                  </span>
-                </div>
-              </div>
-              
-              <div class="article-summary">
-                <p>{{ article.desc || '暂无简介' }}</p>
-              </div>
-              
-              <div class="article-footer">
-                <router-link :to="`/article/${article.id}`" class="read-more">
-                  阅读全文 »
-                </router-link>
-              </div>
-            </div>
-            
-            <!-- 分页 -->
-            <div class="pagination" v-if="total > 0">
-              <el-pagination
-                v-model:current-page="pagination.currentPage"
-                v-model:page-size="pagination.pageSize"
-                :page-sizes="[5, 10, 20, 50]"
-                :total="total"
-                layout="total, sizes, prev, pager, next, jumper"
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-              />
-            </div>
-            
-            <!-- 空状态 -->
-            <div class="empty-state" v-if="!loading && articles.length === 0">
-              <p>暂无文章</p>
-            </div>
-          </div>
+    <MainLayout>
+      <template #main>
+        <div class="page-header">
+          <h1>{{ pageTitle }}</h1>
         </div>
         
-        <!-- 右侧边栏 -->
+        <ArticleFilter 
+          :categories="categories"
+          :selected-category="selectedCategory"
+          @category-change="handleCategoryChange"
+        />
+        
+        <ArticleListContent
+          :articles="articles"
+          :loading="loading"
+          :total="total"
+          :current-page="pagination.currentPage"
+          :page-size="pagination.pageSize"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </template>
+      <template #sidebar>
         <Sidebar />
-      </div>
-    </div>
+      </template>
+    </MainLayout>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElPagination } from 'element-plus'
+import { useRoute } from 'vue-router'
 import { articleApi, categoryApi } from '@/services/api'
+import MainLayout from '@/components/layout/MainLayout.vue'
+import ArticleFilter from '@/components/article/ArticleFilter.vue'
+import ArticleListContent from '@/components/article/ArticleListContent.vue'
 import Sidebar from '@/components/Sidebar.vue'
 
 // 类型定义
@@ -112,7 +58,6 @@ interface Category {
 
 // 路由信息
 const route = useRoute()
-const router = useRouter()
 
 // 响应式数据
 const articles = ref<Article[]>([])
@@ -138,13 +83,6 @@ const pageTitle = computed(() => {
   }
   return '所有文章'
 })
-
-// 格式化日期
-const formatDate = (dateString: string) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN')
-}
 
 // 获取文章列表
 const getArticles = async () => {
@@ -215,7 +153,8 @@ const getCategories = async () => {
 }
 
 // 处理分类变化
-const handleCategoryChange = () => {
+const handleCategoryChange = (value: string) => {
+  selectedCategory.value = value
   pagination.currentPage = 1
   getArticles()
 }
@@ -253,130 +192,9 @@ watch(() => route.params, () => {
   min-height: calc(100vh - 200px);
 }
 
-.content-wrapper {
-  display: flex;
-  gap: 30px;
-  min-height: calc(100vh - 280px);
-}
-
-.main-content {
-  flex: 1;
-  min-width: 0;
-}
-
 .page-header h1 {
   font-size: 24px;
   color: #333;
   margin-bottom: 20px;
-}
-
-.filters {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin-bottom: 25px;
-}
-
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.filter-group label {
-  font-weight: 500;
-  color: #333;
-}
-
-.filter-group select {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-}
-
-.article-item {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 25px;
-  margin-bottom: 25px;
-  transition: box-shadow 0.3s;
-}
-
-.article-item:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-.article-header {
-  margin-bottom: 15px;
-}
-
-.article-title {
-  font-size: 22px;
-  margin: 0 0 10px 0;
-}
-
-.article-title a {
-  text-decoration: none;
-  color: #333;
-  transition: color 0.3s;
-}
-
-.article-title a:hover {
-  color: #007bff;
-}
-
-.article-meta {
-  display: flex;
-  gap: 15px;
-  font-size: 14px;
-  color: #888;
-}
-
-.article-summary p {
-  color: #666;
-  line-height: 1.6;
-  margin: 0;
-}
-
-.article-footer {
-  margin-top: 20px;
-}
-
-.read-more {
-  color: #007bff;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.read-more:hover {
-  text-decoration: underline;
-}
-
-.pagination {
-  margin-top: 30px;
-  display: flex;
-  justify-content: center;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 40px 0;
-  color: #888;
-}
-
-@media (max-width: 992px) {
-  .content-wrapper {
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 768px) {
-  .filter-group {
-    flex-direction: column;
-    align-items: flex-start;
-  }
 }
 </style>
