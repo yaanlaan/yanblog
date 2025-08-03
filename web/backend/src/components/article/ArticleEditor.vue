@@ -131,7 +131,6 @@ const renderMathInElement = () => {
 // 分割面板相关
 const splitPaneRef = ref<HTMLDivElement | null>(null)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
-const previewRef = ref<HTMLDivElement | null>(null)
 
 // 面板宽度状态
 const leftPanelWidth = ref('50%')
