@@ -102,7 +102,7 @@ import MainLayout from '@/components/layout/MainLayout.vue'
 }
 
 .card-header {
-  padding: 15px 20px;
+  padding: 100px 100px;
   border-bottom: 1px solid #eee;
   background: #f8f9fa;
 }
