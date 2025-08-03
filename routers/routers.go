@@ -49,6 +49,7 @@ func InitRouter() {
 		router.GET("users/search", v1.SearchUsers) // 搜索用户
 		router.GET("category", v1.GetCate)
 		router.GET("category/search", v1.SearchCate) // 搜索分类
+		router.GET("category/info/:id", v1.GetCateInfo) // 获取分类信息
 		router.GET("article", v1.GetArt)
 		router.GET("article/search", v1.SearchArt) // 搜索文章
 		router.GET("article/top", v1.GetTopArt) // 获取置顶文章

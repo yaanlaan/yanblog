@@ -4,13 +4,15 @@
       <blockquote>{{ article.desc }}</blockquote>
     </div>
     
-    <div class="content" v-html="renderedContent"></div>
+    <div class="content" v-html="renderedContent" ref="contentRef"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUpdated } from 'vue'
 import { marked } from 'marked'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
 
 // 定义Props
 interface Article {
@@ -30,11 +32,73 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const contentRef = ref<HTMLElement | null>(null)
 
 // 渲染Markdown内容
 const renderedContent = computed(() => {
   if (!props.article.content) return ''
-  return marked.parse(props.article.content)
+  
+  // 首先使用marked解析Markdown
+  let html: string = marked.parse(props.article.content) as string
+  
+  // 然后处理数学公式
+  html = renderMath(html)
+  
+  return html
+})
+
+// 渲染数学公式
+const renderMath = (html: string) => {
+  // 处理块级公式（$$...$$）
+  html = html.replace(/\$\$([\s\S]*?)\$\$/g, (_, formula) => {
+    try {
+      return katex.renderToString(formula.trim(), { displayMode: true })
+    } catch (error) {
+      console.error('KaTeX渲染错误:', error)
+      return `<span style="color: red;">公式渲染错误: ${formula}</span>`
+    }
+  })
+  
+  // 处理行内公式（$...$）
+  html = html.replace(/\$([^\$\n]+?)\$/g, (_, formula) => {
+    try {
+      return katex.renderToString(formula.trim(), { displayMode: false })
+    } catch (error) {
+      console.error('KaTeX渲染错误:', error)
+      return `<span style="color: red;">公式渲染错误: ${formula}</span>`
+    }
+  })
+  
+  return html
+}
+
+// 渲染完成后的数学公式处理
+const renderMathInElement = () => {
+  if (contentRef.value) {
+    // 处理块级公式（$$...$$）
+    const blockFormulas = contentRef.value.querySelectorAll('p')
+    blockFormulas.forEach(element => {
+      const text = element.textContent || ''
+      if (text.startsWith('$$') && text.endsWith('$$')) {
+        try {
+          const formula = text.substring(2, text.length - 2)
+          const katexHtml = katex.renderToString(formula.trim(), { displayMode: true })
+          element.innerHTML = katexHtml
+        } catch (error) {
+          console.error('KaTeX渲染错误:', error)
+        }
+      }
+    })
+  }
+}
+
+// 在组件挂载和更新时渲染数学公式
+onMounted(() => {
+  renderMathInElement()
+})
+
+onUpdated(() => {
+  renderMathInElement()
 })
 </script>
 
@@ -147,5 +211,16 @@ const renderedContent = computed(() => {
 .content :deep(th) {
   background: #f8f9fa;
   font-weight: bold;
+}
+
+/* KaTeX 样式修复 */
+.content :deep(.katex-display) {
+  margin: 20px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.content :deep(.katex) {
+  white-space: nowrap;
 }
 </style>

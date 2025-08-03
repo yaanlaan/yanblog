@@ -35,7 +35,11 @@ export const articleApi = {
 export const categoryApi = {
   // 获取分类列表
   getCategories: (params: { pagesize: number; pagenum: number }) => 
-    apiClient.get('/category', { params })
+    apiClient.get('/category', { params }),
+    
+  // 获取分类信息
+  getCategoryInfo: (id: number) => 
+    apiClient.get(`/category/info/${id}`)
 }
 
 export default apiClient

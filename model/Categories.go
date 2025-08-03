@@ -9,6 +9,8 @@ import (
 type Category struct {
 	gorm.Model
 	Name string `gorm:"type:varchar(20);not null" json:"name"`
+	// 添加文章计数字段
+	ArticleCount int `gorm:"-" json:"article_count"` // 使用gorm:"-"标记，表示不直接映射到数据库字段
 }
 
 // CheckCategory 查询分类是否存在
@@ -83,7 +85,32 @@ func GetCate(pageSize int, pageNum int) ([]Category, int64) {
 		return nil, 0
 	}
 	
+	// 为每个分类获取文章数量
+	for i := range cate {
+		var count int64
+		db.Model(&Article{}).Where("cid = ?", cate[i].ID).Count(&count)
+		cate[i].ArticleCount = int(count)
+	}
+	
 	return cate, total
+}
+
+// GetCateInfo 获取单个分类信息（包含文章数量）
+// 参数: id - 分类ID
+// 返回: 分类信息和状态码
+func GetCateInfo(id int) (Category, int) {
+	var cate Category
+	err := db.Where("id = ?", id).First(&cate).Error
+	if err != nil {
+		return cate, errmsg.ERROR_CATE_NOT_EXIST
+	}
+	
+	// 获取该分类下的文章数量
+	var count int64
+	db.Model(&Article{}).Where("cid = ?", id).Count(&count)
+	cate.ArticleCount = int(count)
+	
+	return cate, errmsg.SUCCESS
 }
 
 // EditCate 编辑分类信息

@@ -1,7 +1,7 @@
 <template>
   <div class="article-item">
-    <div class="article-image" v-if="article.img">
-      <img :src="article.img" :alt="article.title" />
+    <div class="article-image">
+      <img :src="article.img || defaultImage" :alt="article.title" />
     </div>
     <div class="article-content">
       <div class="article-header">
@@ -52,6 +52,9 @@ interface Props {
 }
 
 defineProps<Props>()
+
+// 默认图片
+const defaultImage = new URL('../../assets/img/无封面.jpg', import.meta.url).href
 
 // 格式化日期
 const formatDate = (dateString: string) => {

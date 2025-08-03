@@ -44,8 +44,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onBeforeUnmount } from 'vue'
+import { ref, computed, onBeforeUnmount, watch } from 'vue'
 import { marked } from 'marked'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
 
 // 定义组件属性
 const props = defineProps<{
@@ -68,9 +70,63 @@ const content = computed({
 const previewOnly = computed(() => props.previewOnly || false)
 
 // 预览相关
+const previewRef = ref<HTMLDivElement | null>(null)
+
 const renderedMarkdown = computed(() => {
-  return marked(content.value || '')
+  const markdown = content.value || ''
+  // 首先使用marked解析Markdown
+  let html: string = marked.parse(markdown) as string
+  
+  // 然后处理数学公式
+  html = renderMath(html)
+  
+  return html
 })
+
+// 渲染数学公式
+const renderMath = (html: string) => {
+  // 处理块级公式（$$...$$）
+  html = html.replace(/\$\$([\s\S]*?)\$\$/g, (_, formula) => {
+    try {
+      return katex.renderToString(formula.trim(), { displayMode: true })
+    } catch (error) {
+      console.error('KaTeX渲染错误:', error)
+      return `<span style="color: red;">公式渲染错误: ${formula}</span>`
+    }
+  })
+  
+  // 处理行内公式（$...$）
+  html = html.replace(/\$([^\$\n]+?)\$/g, (_, formula) => {
+    try {
+      return katex.renderToString(formula.trim(), { displayMode: false })
+    } catch (error) {
+      console.error('KaTeX渲染错误:', error)
+      return `<span style="color: red;">公式渲染错误: ${formula}</span>`
+    }
+  })
+  
+  return html
+}
+
+// 渲染完成后的数学公式处理
+const renderMathInElement = () => {
+  if (previewRef.value) {
+    // 处理块级公式（$$...$$）
+    const blockFormulas = previewRef.value.querySelectorAll('p')
+    blockFormulas.forEach(element => {
+      const text = element.textContent || ''
+      if (text.startsWith('$$') && text.endsWith('$$')) {
+        try {
+          const formula = text.substring(2, text.length - 2)
+          const katexHtml = katex.renderToString(formula.trim(), { displayMode: true })
+          element.innerHTML = katexHtml
+        } catch (error) {
+          console.error('KaTeX渲染错误:', error)
+        }
+      }
+    })
+  }
+}
 
 // 分割面板相关
 const splitPaneRef = ref<HTMLDivElement | null>(null)
@@ -161,6 +217,14 @@ const handlePreviewScroll = () => {
 const togglePreviewOnly = () => {
   previewOnly.value = !previewOnly.value
 }
+
+// 监听内容变化，重新渲染数学公式
+watch(renderedMarkdown, () => {
+  // 使用nextTick确保DOM更新后再处理数学公式
+  setTimeout(() => {
+    renderMathInElement()
+  }, 0)
+})
 
 // 组件销毁前清理事件监听器
 onBeforeUnmount(() => {

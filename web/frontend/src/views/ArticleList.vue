@@ -93,11 +93,21 @@ const pageTitle = computed(() => {
 const getArticles = async () => {
   loading.value = true
   try {
-    // 一次性获取所有文章数据
-    const response = await articleApi.getArticles({
-      pagesize: -1,
-      pagenum: -1
-    })
+    let response;
+    
+    // 如果是分类文章页面，使用分类文章API
+    if (activeCategoryId.value) {
+      response = await articleApi.getCategoryArticles(activeCategoryId.value, {
+        pagesize: -1,
+        pagenum: -1
+      });
+    } else {
+      // 否则使用普通文章列表API
+      response = await articleApi.getArticles({
+        pagesize: -1,
+        pagenum: -1
+      });
+    }
     
     const { data } = response.data
     allArticles.value = data.map((item: any) => ({
@@ -111,6 +121,12 @@ const getArticles = async () => {
       createdAt: item.CreatedAt || item.created_at,
       updatedAt: item.UpdatedAt || item.updated_at
     }))
+    // 按创建时间倒序排列
+    .sort((a: Article, b: Article) => {
+      const dateA = new Date(a.createdAt).getTime()
+      const dateB = new Date(b.createdAt).getTime()
+      return dateB - dateA
+    })
     
     // 初始化显示数据
     updateDisplayedArticles()

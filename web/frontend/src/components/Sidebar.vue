@@ -59,15 +59,16 @@
         <h3>标签云</h3>
       </div>
       <div class="card-content">
-        <div class="tags" v-if="tags.length > 0">
-          <span 
-            v-for="tag in tags" 
-            :key="tag.id" 
+        <div class="tags" v-if="categories.length > 0">
+          <router-link
+            v-for="category in categories" 
+            :key="category.id" 
+            :to="`/category/${category.id}`"
             class="tag"
-            :style="{ fontSize: calculateFontSize(tag.count) }"
+            :style="{ fontSize: calculateFontSize(category.articleCount) }"
           >
-            {{ tag.name }}
-          </span>
+            {{ category.name }}
+          </router-link>
         </div>
         <div class="empty-state" v-else>
           <p>暂无标签</p>
@@ -106,9 +107,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { articleApi } from '@/services/api'
+import { articleApi, categoryApi } from '@/services/api'
 
-// 定义类型
+// 类型定义
 interface Weather {
   temperature: number
   description: string
@@ -134,6 +135,12 @@ interface Tag {
   count: number
 }
 
+interface Category {
+  id: number
+  name: string
+  articleCount: number
+}
+
 interface ServerStatus {
   status: 'online' | 'offline'
   uptime: string
@@ -144,47 +151,45 @@ interface ServerStatus {
 // 响应式数据
 const weather = ref<Weather | null>(null)
 const featuredArticles = ref<Article[]>([])
-const tags = ref<Tag[]>([])
+const categories = ref<Category[]>([])
 const serverStatus = ref<ServerStatus>({
-  status: 'online',
-  uptime: '0天0小时0分钟',
+  status: 'offline',
+  uptime: '未知',
   memoryUsage: 0,
   cpuUsage: 0
 })
 
-// 格式化日期
-const formatDate = (dateString: string) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN')
-}
-
-// 计算标签字体大小
+// 计算字体大小（基于文章数量）
 const calculateFontSize = (count: number) => {
-  // 假设标签计数在1-100之间
+  // 基础字体大小12px，最大字体大小24px
   const minSize = 12
   const maxSize = 24
-  const size = minSize + (count / 100) * (maxSize - minSize)
+  // 使用对数函数使字体大小变化更平滑
+  const size = minSize + (maxSize - minSize) * (Math.log(count + 1) / Math.log(100))
   return `${size}px`
 }
 
-// 模拟获取天气信息
-const fetchWeather = () => {
-  // 模拟API调用
-  setTimeout(() => {
-    weather.value = {
-      temperature: 22,
-      description: '晴',
-      humidity: 65,
-      windSpeed: 3.5
-    }
-  }, 500)
+// 获取天气信息
+const fetchWeather = async () => {
+  try {
+    // 模拟API调用
+    setTimeout(() => {
+      weather.value = {
+        temperature: 22,
+        description: '晴',
+        humidity: 65,
+        windSpeed: 3.5
+      }
+    }, 500)
+  } catch (error) {
+    console.error('获取天气信息失败:', error)
+  }
 }
 
 // 获取置顶文章
 const fetchFeaturedArticles = async () => {
   try {
-    const response = await articleApi.getTopArticles({ num: 5 })
+    const response = await articleApi.getTopArticles({ num: 3 })
     const { data } = response.data
     featuredArticles.value = data.map((item: any) => ({
       id: item.ID,
@@ -210,21 +215,43 @@ const fetchFeaturedArticles = async () => {
   }
 }
 
-// 模拟获取标签数据
-const fetchTags = () => {
-  // 模拟API调用
-  setTimeout(() => {
-    tags.value = [
-      { id: 1, name: 'Go', count: 80 },
-      { id: 2, name: 'Vue', count: 70 },
-      { id: 3, name: '数据库', count: 60 },
-      { id: 4, name: 'Docker', count: 50 },
-      { id: 5, name: 'Kubernetes', count: 40 },
-      { id: 6, name: '微服务', count: 45 },
-      { id: 7, name: '测试', count: 30 },
-      { id: 8, name: '部署', count: 35 }
-    ]
-  }, 600)
+// 获取分类列表（用于标签云）
+const fetchCategories = async () => {
+  try {
+    const response = await categoryApi.getCategories({
+      pagesize: -1, // 获取所有分类
+      pagenum: -1
+    })
+    
+    const { data } = response.data
+    // 获取每个分类的文章数量
+    const categoriesWithCount = await Promise.all(
+      data.map(async (item: any) => {
+        return {
+          id: item.ID,
+          name: item.name,
+          articleCount: item.article_count || 0
+        }
+      })
+    )
+    
+    categories.value = categoriesWithCount
+  } catch (error) {
+    console.error('获取分类列表失败:', error)
+    // 如果API调用失败，使用模拟数据
+    setTimeout(() => {
+      categories.value = [
+        { id: 1, name: '技术', articleCount: 80 },
+        { id: 2, name: '生活', articleCount: 70 },
+        { id: 3, name: '旅行', articleCount: 60 },
+        { id: 4, name: '美食', articleCount: 50 },
+        { id: 5, name: '摄影', articleCount: 40 },
+        { id: 6, name: '读书', articleCount: 45 },
+        { id: 7, name: '电影', articleCount: 30 },
+        { id: 8, name: '音乐', articleCount: 35 }
+      ]
+    }, 600)
+  }
 }
 
 // 模拟获取服务器状态
@@ -244,12 +271,19 @@ const fetchServerStatus = () => {
 onMounted(() => {
   fetchWeather()
   fetchFeaturedArticles()
-  fetchTags()
+  fetchCategories()
   fetchServerStatus()
   
   // 定期更新服务器状态
   setInterval(fetchServerStatus, 30000)
 })
+
+// 格式化日期
+const formatDate = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleDateString('zh-CN')
+}
 </script>
 
 <style scoped>

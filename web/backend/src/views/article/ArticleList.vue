@@ -28,11 +28,10 @@
         <el-table-column label="封面" width="120">
           <template #default="scope">
             <el-image
-              v-if="scope.row.img"
-              :src="scope.row.img"
+              :src="scope.row.img || defaultImage"
               class="article-cover"
               fit="cover"
-              :preview-src-list="[scope.row.img]"
+              :preview-src-list="[scope.row.img || defaultImage]"
               preview-teleported
             >
               <template #error>
@@ -41,10 +40,6 @@
                 </div>
               </template>
             </el-image>
-            <div v-else class="no-cover">
-              <el-icon><Picture /></el-icon>
-              <span>无封面</span>
-            </div>
           </template>
         </el-table-column>
         <el-table-column prop="title" label="标题" show-overflow-tooltip />
@@ -103,6 +98,9 @@ import ArticleActions from '@/components/article/ArticleActions.vue'
 
 // 路由
 const router = useRouter()
+
+// 默认图片
+const defaultImage = new URL('../../assets/img/无封面.jpg', import.meta.url).href
 
 // 文章数据类型
 interface Article {

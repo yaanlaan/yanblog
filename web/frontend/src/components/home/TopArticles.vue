@@ -1,6 +1,6 @@
 <template>
-  <div class="latest-articles">
-    <h2 class="section-title">最新文章</h2>
+  <div class="top-articles">
+    <h2 class="section-title">置顶文章</h2>
     
     <!-- 加载状态 -->
     <div v-if="loading" class="loading-state">
@@ -10,23 +10,22 @@
     
     <!-- 文章列表 -->
     <div v-else>
-      <div class="articles-grid" v-if="displayArticles.length > 0">
-        <ArticleCard 
-          v-for="article in displayArticles" 
+      <div class="articles-list" v-if="articles.length > 0">
+        <TopArticleCard 
+          v-for="article in articles" 
           :key="article.id" 
           :article="article"
         />
       </div>
       <div class="empty-state" v-else>
-        <p>暂无文章</p>
+        <p>暂无置顶文章</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import ArticleCard from './ArticleCard.vue'
+import TopArticleCard from './TopArticleCard.vue'
 
 // 定义Props
 interface Article {
@@ -37,6 +36,7 @@ interface Article {
   desc: string
   content: string
   img: string
+  top: number
   createdAt: string
   updatedAt: string
 }
@@ -44,18 +44,9 @@ interface Article {
 interface Props {
   articles: Article[]
   loading: boolean
-  limit?: number // 限制显示的文章数量
 }
 
-const props = defineProps<Props>()
-
-// 计算属性，根据limit属性限制显示的文章数量
-const displayArticles = computed(() => {
-  if (props.limit && props.limit > 0) {
-    return props.articles.slice(0, props.limit)
-  }
-  return props.articles
-})
+defineProps<Props>()
 </script>
 
 <style scoped>
@@ -89,10 +80,10 @@ const displayArticles = computed(() => {
   100% { transform: rotate(360deg); }
 }
 
-.articles-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 30px;
+.articles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .empty-state {
@@ -102,19 +93,8 @@ const displayArticles = computed(() => {
 }
 
 @media (max-width: 768px) {
-  .articles-grid {
-    grid-template-columns: 1fr;
-  }
-  
   .section-title {
     font-size: 28px;
-  }
-}
-
-@media (max-width: 480px) {
-  .articles-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
   }
 }
 </style>

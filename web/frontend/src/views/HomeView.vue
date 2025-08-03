@@ -3,7 +3,8 @@
     <MainLayout>
       <template #main>
         <HeroSection />
-        <LatestArticles :articles="articles" :loading="loading" />
+        <TopArticles :articles="topArticles" :loading="topLoading" />
+        <LatestArticles :articles="latestArticles" :loading="latestLoading" :limit="6" />
       </template>
       <template #sidebar>
         <Sidebar />
@@ -17,6 +18,7 @@ import { ref, onMounted } from 'vue'
 import { articleApi } from '@/services/api'
 import MainLayout from '@/components/layout/MainLayout.vue'
 import HeroSection from '@/components/home/HeroSection.vue'
+import TopArticles from '@/components/home/TopArticles.vue'
 import LatestArticles from '@/components/home/LatestArticles.vue'
 import Sidebar from '@/components/Sidebar.vue'
 
@@ -29,25 +31,27 @@ interface Article {
   desc: string
   content: string
   img: string
+  top: number
   createdAt: string
   updatedAt: string
 }
 
 // 响应式数据
-const articles = ref<Article[]>([])
-const loading = ref(false)
+const topArticles = ref<Article[]>([])
+const latestArticles = ref<Article[]>([])
+const topLoading = ref(false)
+const latestLoading = ref(false)
 
-// 获取最新文章
-const getLatestArticles = async () => {
-  loading.value = true
+// 获取置顶文章
+const getTopArticles = async () => {
+  topLoading.value = true
   try {
-    const response = await articleApi.getArticles({
-      pagesize: 6,
-      pagenum: 1
+    const response = await articleApi.getTopArticles({
+      num: 3 // 获取3篇置顶文章
     })
     
     const { data } = response.data
-    articles.value = data.map((item: any) => ({
+    topArticles.value = data.map((item: any) => ({
       id: item.ID,
       title: item.title,
       categoryId: item.cid,
@@ -55,18 +59,60 @@ const getLatestArticles = async () => {
       desc: item.desc,
       content: item.content,
       img: item.img,
+      top: item.top,
       createdAt: item.CreatedAt || item.created_at,
       updatedAt: item.UpdatedAt || item.updated_at
     }))
   } catch (error) {
+    console.error('获取置顶文章失败:', error)
+  } finally {
+    topLoading.value = false
+  }
+}
+
+// 获取最新文章
+const getLatestArticles = async () => {
+  latestLoading.value = true
+  try {
+    const response = await articleApi.getArticles({
+      pagesize: 10, // 获取更多文章，然后在组件中限制显示数量
+      pagenum: 1
+    })
+    
+    const { data } = response.data
+    // 过滤掉置顶文章，只显示非置顶文章
+    const nonTopArticles = data
+      .filter((item: any) => !item.top || item.top === 0)
+      .map((item: any) => ({
+        id: item.ID,
+        title: item.title,
+        categoryId: item.cid,
+        categoryName: item.Category?.name || '未分类',
+        desc: item.desc,
+        content: item.content,
+        img: item.img,
+        top: item.top,
+        createdAt: item.CreatedAt || item.created_at,
+        updatedAt: item.UpdatedAt || item.updated_at
+      }))
+      // 按创建时间倒序排列
+      .sort((a: Article, b: Article) => {
+        const dateA = new Date(a.createdAt).getTime()
+        const dateB = new Date(b.createdAt).getTime()
+        return dateB - dateA
+      })
+    
+    latestArticles.value = nonTopArticles
+  } catch (error) {
     console.error('获取最新文章失败:', error)
   } finally {
-    loading.value = false
+    latestLoading.value = false
   }
 }
 
 // 组件挂载时获取数据
 onMounted(() => {
+  getTopArticles()
   getLatestArticles()
 })
 </script>

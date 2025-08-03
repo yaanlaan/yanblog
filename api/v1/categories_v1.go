@@ -28,7 +28,19 @@ func AddCategory(c *gin.Context) {
 	})
 }
 
-// todo 查询分类下的所有文章
+// 查询分类下的所有文章
+func GetCateInfo(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	var code int
+
+	data, code := model.GetCateInfo(id)
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  code,
+		"data":    data,
+		"message": errmsg.GetErrMsg(code),
+	})
+}
 
 // 查询分类列表
 func GetCate(c *gin.Context) {
