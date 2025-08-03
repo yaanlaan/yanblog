@@ -29,6 +29,28 @@
             
             <ArticleContent v-if="article" :article="article" />
             
+            <!-- 上一篇/下一篇导航 -->
+            <div class="article-navigation" v-if="article">
+              <div class="nav-item previous" v-if="previousArticle">
+                <router-link :to="`/article/${previousArticle.id}`" class="nav-link">
+                  <div class="nav-cover">
+                    <img :src="previousArticle.img || defaultImage" :alt="previousArticle.title" />
+                  </div>
+                  <span class="nav-label">上一篇</span>
+                  <span class="nav-title">{{ previousArticle.title }}</span>
+                </router-link>
+              </div>
+              <div class="nav-item next" v-if="nextArticle">
+                <router-link :to="`/article/${nextArticle.id}`" class="nav-link">
+                  <div class="nav-cover">
+                    <img :src="nextArticle.img || defaultImage" :alt="nextArticle.title" />
+                  </div>
+                  <span class="nav-label">下一篇</span>
+                  <span class="nav-title">{{ nextArticle.title }}</span>
+                </router-link>
+              </div>
+            </div>
+            
             <div class="empty-state" v-if="!article">
               <p>文章不存在或已被删除</p>
             </div>
@@ -53,6 +75,9 @@ import ArticleContent from '@/components/article/ArticleContent.vue'
 import ArticleToc from '@/components/article/ArticleToc.vue'
 import Sidebar from '@/components/Sidebar.vue'
 
+// 默认图片
+const defaultImage = new URL('@/assets/img/无封面.jpg', import.meta.url).href
+
 // 类型定义
 interface Article {
   id: number
@@ -73,6 +98,8 @@ const tocRef = ref<InstanceType<typeof ArticleToc> | null>(null)
 // 响应式数据
 const article = ref<Article | null>(null)
 const loading = ref(false)
+const previousArticle = ref<Article | null>(null)
+const nextArticle = ref<Article | null>(null)
 
 // 获取文章详情
 const getArticleDetail = async (id: number) => {
@@ -93,6 +120,9 @@ const getArticleDetail = async (id: number) => {
       updatedAt: data.UpdatedAt || data.updated_at
     }
     
+    // 获取相邻文章
+    await getAdjacentArticles(id)
+    
     // 更新目录
     setTimeout(() => {
       if (tocRef.value) {
@@ -104,6 +134,55 @@ const getArticleDetail = async (id: number) => {
     article.value = null
   } finally {
     loading.value = false
+  }
+}
+
+// 获取相邻文章
+const getAdjacentArticles = async (currentId: number) => {
+  try {
+    // 由于后端没有提供专门的API，我们通过获取文章列表来模拟相邻文章功能
+    // 这里只是简单实现，实际项目中应该由后端提供专门的API
+    
+    // 获取所有文章列表
+    const response = await articleApi.getArticles({
+      pagesize: -1,
+      pagenum: -1
+    })
+    
+    const articles = response.data.data.map((item: any) => ({
+      id: item.ID,
+      title: item.title,
+      categoryId: item.cid,
+      categoryName: item.Category?.name || '未分类',
+      desc: item.desc,
+      content: item.content,
+      img: item.img,
+      createdAt: item.CreatedAt || item.created_at,
+      updatedAt: item.UpdatedAt || item.updated_at
+    }))
+    
+    // 按ID排序（实际项目中应该按创建时间排序）
+    articles.sort((a: Article, b: Article) => a.id - b.id)
+    
+    // 查找当前文章的索引
+    const currentIndex = articles.findIndex((article: Article) => article.id === currentId)
+    
+    // 设置上一篇和下一篇文章
+    if (currentIndex > 0) {
+      previousArticle.value = articles[currentIndex - 1]
+    } else {
+      previousArticle.value = null
+    }
+    
+    if (currentIndex < articles.length - 1) {
+      nextArticle.value = articles[currentIndex + 1]
+    } else {
+      nextArticle.value = null
+    }
+  } catch (error) {
+    console.error('获取相邻文章失败:', error)
+    previousArticle.value = null
+    nextArticle.value = null
   }
 }
 
@@ -184,9 +263,97 @@ onMounted(() => {
   color: #888;
 }
 
+/* 上一篇/下一篇导航样式 */
+.article-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.nav-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-item.previous {
+  padding-right: 10px;
+}
+
+.nav-item.next {
+  padding-left: 10px;
+  text-align: right;
+}
+
+.nav-link {
+  display: block;
+  text-decoration: none;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #007bff;
+}
+
+.nav-label {
+  display: block;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 5px;
+}
+
+.nav-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 封面预览样式 */
+.nav-cover {
+  width: 100%;
+  height: 120px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 @media (max-width: 992px) {
   .article-content {
     padding: 20px;
+  }
+  
+  .article-navigation {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .nav-item.previous,
+  .nav-item.next {
+    padding: 0;
+    text-align: left;
+  }
+  
+  .nav-item.next {
+    text-align: left;
+  }
+  
+  .nav-cover {
+    height: 80px;
   }
 }
 </style>
