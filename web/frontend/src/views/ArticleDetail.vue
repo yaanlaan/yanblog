@@ -1,6 +1,14 @@
 <template>
   <div class="article-detail-page">
     <MainLayout>
+      <template #leftSidebar>
+        <ArticleToc 
+          v-if="article" 
+          :content="article.content" 
+          ref="tocRef"
+        />
+      </template>
+      
       <template #main>
         <div class="page-header">
           <router-link to="/articles" class="back-link">
@@ -27,6 +35,7 @@
           </div>
         </article>
       </template>
+      
       <template #sidebar>
         <Sidebar />
       </template>
@@ -35,12 +44,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { articleApi } from '@/services/api'
 import MainLayout from '@/components/layout/MainLayout.vue'
 import ArticleHeader from '@/components/article/ArticleHeader.vue'
 import ArticleContent from '@/components/article/ArticleContent.vue'
+import ArticleToc from '@/components/article/ArticleToc.vue'
 import Sidebar from '@/components/Sidebar.vue'
 
 // 类型定义
@@ -58,6 +68,7 @@ interface Article {
 
 // 路由信息
 const route = useRoute()
+const tocRef = ref<InstanceType<typeof ArticleToc> | null>(null)
 
 // 响应式数据
 const article = ref<Article | null>(null)
@@ -81,6 +92,13 @@ const getArticleDetail = async (id: number) => {
       createdAt: data.CreatedAt || data.created_at,
       updatedAt: data.UpdatedAt || data.updated_at
     }
+    
+    // 更新目录
+    setTimeout(() => {
+      if (tocRef.value) {
+        tocRef.value.extractHeaders()
+      }
+    }, 0)
   } catch (error) {
     console.error('获取文章详情失败:', error)
     article.value = null
@@ -88,6 +106,17 @@ const getArticleDetail = async (id: number) => {
     loading.value = false
   }
 }
+
+// 监听路由变化
+watch(
+  () => route.params.id,
+  (newId) => {
+    const articleId = Number(newId)
+    if (articleId) {
+      getArticleDetail(articleId)
+    }
+  }
+)
 
 // 组件挂载时获取数据
 onMounted(() => {

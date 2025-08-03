@@ -38,14 +38,27 @@ const contentRef = ref<HTMLElement | null>(null)
 const renderedContent = computed(() => {
   if (!props.article.content) return ''
   
+  // 添加ID到标题
+  let contentWithIds = addIdsToHeadings(props.article.content)
+  
   // 首先使用marked解析Markdown
-  let html: string = marked.parse(props.article.content) as string
+  let html: string = marked.parse(contentWithIds) as string
   
   // 然后处理数学公式
   html = renderMath(html)
   
   return html
 })
+
+// 为标题添加ID
+const addIdsToHeadings = (content: string) => {
+  let headingCounter = 0
+  return content.replace(/^(#{1,6})\s+(.+)$/gm, (_, hashes, text) => {
+    headingCounter++
+    const id = `heading-${headingCounter}`
+    return `${hashes} <span id="${id}" class="heading-anchor"></span>${text}`
+  })
+}
 
 // 渲染数学公式
 const renderMath = (html: string) => {
@@ -222,5 +235,14 @@ onUpdated(() => {
 
 .content :deep(.katex) {
   white-space: nowrap;
+}
+
+/* 标题锚点样式 */
+.content :deep(.heading-anchor) {
+  position: relative;
+  top: -80px; /* 修正锚点位置 */
+  display: block;
+  height: 0;
+  visibility: hidden;
 }
 </style>

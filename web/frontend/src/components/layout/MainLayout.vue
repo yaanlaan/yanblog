@@ -1,10 +1,13 @@
 <template>
   <div class="container">
     <div class="content-wrapper">
+      <div class="sidebar left-sidebar" v-if="$slots.leftSidebar">
+        <slot name="leftSidebar"></slot>
+      </div>
       <div class="main-content">
         <slot name="main"></slot>
       </div>
-      <div class="sidebar">
+      <div class="sidebar right-sidebar" v-if="$slots.sidebar">
         <slot name="sidebar"></slot>
       </div>
     </div>
@@ -18,7 +21,7 @@
 <style scoped>
 .container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px; /* 扩大最大宽度以适应三栏布局 */
   margin: 0 auto;
   padding: 0 20px;
 }
@@ -34,7 +37,15 @@
   min-width: 0;
 }
 
-.sidebar {
+.left-sidebar {
+  width: 250px; /* 目录栏宽度 */
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.right-sidebar {
   width: 300px;
   flex-shrink: 0;
   display: flex;
@@ -42,12 +53,23 @@
   gap: 20px;
 }
 
+@media (max-width: 1200px) {
+  .left-sidebar {
+    width: 200px;
+  }
+  
+  .right-sidebar {
+    width: 250px;
+  }
+}
+
 @media (max-width: 992px) {
   .content-wrapper {
     flex-direction: column;
   }
   
-  .sidebar {
+  .left-sidebar,
+  .right-sidebar {
     width: 100%;
     flex-direction: row;
     flex-wrap: wrap;
@@ -64,7 +86,8 @@
     padding: 0 15px;
   }
   
-  .sidebar {
+  .left-sidebar,
+  .right-sidebar {
     flex-direction: column;
   }
   
