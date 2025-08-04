@@ -11,6 +11,7 @@
 ## 功能特性
 
 ### 后端功能
+
 - 用户管理（注册、登录、权限控制）
 - 文章管理（创建、编辑、删除、分类）
 - 分类管理
@@ -21,6 +22,7 @@
 - RESTful API 设计
 
 ### 前端功能
+
 - 响应式设计，适配不同设备
 - 文章列表展示与分类筛选
 - 文章详情页面
@@ -32,6 +34,7 @@
 ## 技术栈
 
 ### 后端
+
 - Go 语言
 - Gin Web 框架
 - GORM ORM 库
@@ -40,6 +43,7 @@
 - YAML 配置文件
 
 ### 前端
+
 - Vue 3 (Composition API)
 - TypeScript
 - Vite 构建工具
@@ -71,19 +75,21 @@ yaanlaan_blog/
 ### 后端
 
 1. 克隆项目
+
 ```bash
 git clone <项目地址>
 ```
 
 2. 安装依赖
+
 ```bash
 go mod tidy
 ```
 
 3. 配置数据库
-在 `config/config.yaml` 中配置数据库连接信息
-
+   在 `config/config.yaml` 中配置数据库连接信息
 4. 运行项目
+
 ```bash
 go run main.go
 ```
@@ -91,17 +97,20 @@ go run main.go
 ### 前端
 
 1. 进入前端目录
-frontend和backend相同
+   frontend和backend相同
+
 ```bash
 cd web/frontend（backend）
 ```
 
 2. 安装依赖
+
 ```bash
 npm install
 ```
 
 3. 运行开发服务器
+
 ```bash
 npm run dev
 ```
@@ -113,6 +122,7 @@ npm run dev
 ## 配置说明
 
 项目使用 YAML 格式进行配置，主要配置项包括：
+
 - 服务器配置（端口、运行模式等）
 - 数据库配置（地址、用户名、密码等）
 - 天气 API 配置
@@ -120,11 +130,30 @@ npm run dev
 ## 部署
 
 1. 构建前端项目
+
 ```bash
 cd web/frontend
 npm run build
 ```
 
 2. 将构建产物部署到服务器
-
 3. 配置反向代理（如 Nginx）将前端请求代理到后端
+
+## 预览
+
+### 前端
+
+![首页1](./readme_src/前端预览/首页1.png)
+![首页2](./readme_src/前端预览/首页2.png)
+![文章](./readme_src/前端预览/文章.png)
+![测试文章1](./readme_src/前端预览/测试文章1.png)
+![测试文章2](./readme_src/前端预览/测试文章2.png)
+![关于](./readme_src/前端预览/关于.png)
+
+### 后端
+
+![仪表盘](./readme_src/后端预览/仪表盘.png)
+![用户列表](./readme_src/后端预览/用户列表.png)
+![分类列表](./readme_src/后端预览/分类列表.png)
+![文章列表](./readme_src/后端预览/文章列表.png)
+![文章编辑](./readme_src/后端预览/文章编辑.png)
