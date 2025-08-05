@@ -1,0 +1,61 @@
+@import './base.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f5f7fa;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .container {
+    width: 90%;
+    padding: 0 15px;
+  }
+}
+
+a,
+.green {
+  text-decoration: none;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+  padding: 3px;
+}
+
+@media (hover: hover) {
+  /* a{
+    border-radius: 10px;
+  }
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  } */
+}
+
+/* 容器样式 */
+.container {
+  width: 70%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
