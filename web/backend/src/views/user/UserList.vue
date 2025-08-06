@@ -319,37 +319,6 @@ onMounted(() => {
   getUserList()
 })
 </script>
-```
-
-需要确保在`handleSizeChange`和`handleCurrentChange`方法中也调用更新方法：
-
-c:\Users\yaanlaan\Documents\code_workbench\web\yaanlaan_blog\web\backend\src\views\user\UserList.vue
-```vue
-<<<<<<< SEARCH
-// 处理分页大小变化
-const handleSizeChange = (val: number) => {
-  pagination.pageSize = val
-  pagination.currentPage = 1
-  getUserList()
-}
-
-// 处理当前页变化
-const handleCurrentChange = (val: number) => {
-  pagination.currentPage = val
-  getUserList()
-}
-// 处理分页大小变化
-const handleSizeChange = (val: number) => {
-  pagination.pageSize = val
-  pagination.currentPage = 1
-  updateCurrentPageData()
-}
-
-// 处理当前页变化
-const handleCurrentChange = (val: number) => {
-  pagination.currentPage = val
-  updateCurrentPageData()
-}
 
 <style scoped>
 .user-list {
