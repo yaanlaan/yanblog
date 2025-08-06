@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"fmt"
 )
 
 // 添加分类
@@ -15,6 +16,10 @@ func AddCategory(c *gin.Context) {
 	_ = c.ShouldBindJSON(&data)
 	code = model.CheckCategory(data.Name)
 	if code == errmsg.SUCCESS {
+		// 仅设置top字段的默认值
+		if data.Top < 0 {
+			data.Top = 0
+		}
 		model.CreateCate(&data)
 	}
 	if code == errmsg.ERROR_CATENAME_USED {
@@ -93,17 +98,30 @@ func SearchCate(c *gin.Context) {
 	})
 }
 
-// 编辑分类名
+// 编辑分类信息
 func EditCate(c *gin.Context) {
 	var data model.Category
 	var code int
 	id, _ := strconv.Atoi(c.Param("id"))
 	_ = c.ShouldBindJSON(&data)
+	
+	// 添加日志以便调试
+	fmt.Printf("EditCate called with id: %d, data: %+v\n", id, data)
 
-	code = model.CheckCategory(data.Name)
+	code = model.CheckCategoryWithID(id, data.Name)
+	
+	// 添加日志以便调试
+	fmt.Printf("CheckCategoryWithID result: %d\n", code)
 
 	if code == errmsg.SUCCESS {
-		model.EditCate(id, &data)
+		// 不再设置默认值，保持 img 字段为空或用户输入的值
+		// 仅确保 top 字段有效
+		if data.Top < 0 {
+			data.Top = 0
+		}
+		result := model.EditCate(id, &data)
+		// 添加日志以便调试
+		fmt.Printf("EditCate result: %d\n", result)
 	}
 	if code == errmsg.ERROR_CATENAME_USED {
 		c.Abort()

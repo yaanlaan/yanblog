@@ -60,6 +60,11 @@
         </el-form-item>
         
         <el-form-item label="封面图">
+          <el-input 
+            v-model="publishData.img" 
+            placeholder="请输入图片URL或上传图片" 
+            @input="handleFormChange"
+          />
           <el-upload
             class="avatar-uploader"
             action="/api/v1/upload"
@@ -72,6 +77,7 @@
             <img v-if="publishData.img" :src="publishData.img" class="avatar" />
             <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
           </el-upload>
+          <div class="upload-tip">点击上传文章封面图片或直接输入图片URL</div>
         </el-form-item>
         
         <el-form-item>
@@ -229,6 +235,12 @@ const handleSubmit = () => {
 }
 
 .top-tip {
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
+}
+
+.upload-tip {
   font-size: 12px;
   color: #999;
   margin-top: 5px;

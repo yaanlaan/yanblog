@@ -15,6 +15,13 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config: AxiosRequestConfig) => {
     // 在发送请求之前做些什么
+    console.log('API Request:', {
+      method: config.method,
+      url: config.url,
+      data: config.data,
+      params: config.params
+    });
+    
     const token = localStorage.getItem('token')
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
@@ -23,6 +30,7 @@ apiClient.interceptors.request.use(
   },
   (error) => {
     // 对请求错误做些什么
+    console.error('API Request Error:', error);
     return Promise.reject(error)
   }
 )
@@ -31,10 +39,22 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     // 对响应数据做点什么
+    console.log('API Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      data: response.data,
+      url: response.config.url
+    });
     return response
   },
   (error) => {
     // 对响应错误做点什么
+    console.error('API Response Error:', {
+      message: error.message,
+      response: error.response,
+      request: error.request
+    });
+    
     if (error.response?.status === 401) {
       // token过期或无效，清除本地存储并跳转到登录页
       localStorage.removeItem('token')
@@ -82,11 +102,11 @@ export const categoryApi = {
     apiClient.get('/v1/category/search', { params }),
   
   // 创建分类
-  createCategory: (data: { name: string }) => 
+  createCategory: (data: { name: string; img: string; top: number }) => 
     apiClient.post('/v1/category/add', data),
   
   // 更新分类
-  updateCategory: (id: number, data: { name: string }) => 
+  updateCategory: (id: number, data: { name: string; img: string; top: number }) => 
     apiClient.put(`/v1/category/${id}`, data),
   
   // 删除分类
