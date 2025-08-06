@@ -146,6 +146,7 @@ npm run build
 ![首页1](./readme_src/前端预览/首页1.png)
 ![首页2](./readme_src/前端预览/首页2.png)
 ![文章](./readme_src/前端预览/文章.png)
+![分类](./readme_src/前端预览/分类.png)
 ![测试文章1](./readme_src/前端预览/测试文章1.png)
 ![测试文章2](./readme_src/前端预览/测试文章2.png)
 ![关于](./readme_src/前端预览/关于.png)

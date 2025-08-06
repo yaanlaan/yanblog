@@ -4,16 +4,15 @@ import (
 	"yanblog/utils/errmsg"
 	"strings"
 	"gorm.io/gorm"
-	"fmt"
 )
 
 type Category struct {
 	gorm.Model
-	Name string `gorm:"type:varchar(20);not null" json:"na	Img  string `gorm:"type:varchar(255)" json:"img"`
+	Name string `gorm:"type:varchar(20);not null" json:"name"`
+	Img  string `gorm:"type:varchar(255)" json:"img"`
 	Top  int    `gorm:"type:int;not null;default:0" json:"top"`
-	// 添加文章计数字段
-	ArticleCount int `gorm:"-" json:"article_count"` 
-	// 使用gorm:"-"标记，表示不直接映射到数据库字段， 保证数据一致性（免得操作文章需要操作分类）
+	// 添加文章计数字段（使用gorm:"-"标记，表示不直接映射到数据库字段，保证数据一致性）
+	ArticleCount int `gorm:"-" json:"article_count"`
 }
 
 // CheckCategory 查询分类是否存在
@@ -144,14 +143,9 @@ func EditCate(id int, data *Category) int {
 	maps["name"] = data.Name
 	maps["img"] = data.Img
 	maps["top"] = data.Top
-	
-	// 添加日志以便调试
-	fmt.Printf("EditCate in model called with id: %d, maps: %+v\n", id, maps)
 
 	err = db.Model(&cate).Where("id = ? ", id).Updates(maps).Error
 	if err != nil {
-		// 添加错误日志
-		fmt.Printf("EditCate error: %v\n", err)
 		return errmsg.ERROR
 	}
 	return errmsg.SUCCESS

@@ -65,24 +65,39 @@ const fetchCategories = async () => {
       pagesize: 100,
       pagenum: 1
     })
-    const { data, status } = response.data
     
-    // 检查API返回状态
-    if (status !== 200) {
-      error.value = response.data.message || '获取分类列表失败'
-      console.error('获取分类列表失败:', response.data.message)
+    console.log('Category API Response:', response)
+    
+    // 检查响应状态
+    if (response.status !== 200) {
+      error.value = '网络请求失败'
       return
     }
     
-    // 设置分类数据 - 修复数据结构问题
+    const { data, status, message } = response.data
+    
+    // 检查API返回状态 - 根据后端API响应，0表示成功
+    if (status !== 0) {
+      error.value = message || '获取分类列表失败'
+      console.error('获取分类列表失败:', message)
+      return
+    }
+    
+    // 确保data是数组
+    if (!Array.isArray(data)) {
+      error.value = '数据格式错误'
+      console.error('数据格式错误，期望数组但得到:', typeof data)
+      return
+    }
+    
+    // 设置分类数据 - 修复数据结构问题，兼容不同字段名
     categories.value = data.map((item: any) => ({
-      id: item.ID,
+      id: item.ID !== undefined ? item.ID : item.id,
       name: item.name,
-      articleCount: item.article_count || 0
+      articleCount: item.article_count !== undefined ? item.article_count : (item.ArticleCount || 0)
     }))
   } catch (err: any) {
     error.value = err.message || '获取分类列表失败'
-    console.error('获取分类列表失败:', err)
   } finally {
     loading.value = false
     emit('loading', false)

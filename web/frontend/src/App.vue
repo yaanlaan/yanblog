@@ -19,6 +19,11 @@
                 </router-link>
               </li>
               <li class="nav-item">
+                <router-link to="/categories" class="nav-link" exact-active-class="active">
+                  分类
+                </router-link>
+              </li>
+              <li class="nav-item">
                 <router-link to="/about" class="nav-link" exact-active-class="active">
                   关于
                 </router-link>
@@ -108,7 +113,7 @@ body {
 .navbar-nav {
   display: flex;
   list-style: none;
-  gap: 30px;
+  gap: 2rem;
 }
 
 .nav-link {
@@ -157,7 +162,7 @@ body {
   }
   
   .navbar-nav {
-    gap: 15px;
+    gap: 1rem;
   }
   
   .container {

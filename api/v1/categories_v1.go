@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-	"fmt"
 )
 
 // 添加分类
@@ -33,7 +32,7 @@ func AddCategory(c *gin.Context) {
 	})
 }
 
-// 查询分类下的所有文章
+// 查询分类信息
 func GetCateInfo(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var code int
@@ -53,17 +52,20 @@ func GetCate(c *gin.Context) {
 	pageNum, _ := strconv.Atoi(c.Query("pagenum"))
 	var code int
 
-	if pageSize <= 0 {
-		pageSize = -1
-	}
-	if pageNum <= 0 {
-		pageNum = -1
+	if pageSize == -1 && pageNum == -1 {
+		// 查询所有分类
+		data, total := model.GetCate(-1, -1)
+		c.JSON(http.StatusOK, gin.H{
+			"status":  code,
+			"data":    data,
+			"total":   total,
+			"message": errmsg.GetErrMsg(code),
+		})
+		return
 	}
 
 	data, total := model.GetCate(pageSize, pageNum)
 
-	code = errmsg.SUCCESS
-	
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
 		"data":    data,
@@ -105,13 +107,7 @@ func EditCate(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	_ = c.ShouldBindJSON(&data)
 	
-	// 添加日志以便调试
-	fmt.Printf("EditCate called with id: %d, data: %+v\n", id, data)
-
 	code = model.CheckCategoryWithID(id, data.Name)
-	
-	// 添加日志以便调试
-	fmt.Printf("CheckCategoryWithID result: %d\n", code)
 
 	if code == errmsg.SUCCESS {
 		// 不再设置默认值，保持 img 字段为空或用户输入的值
@@ -119,9 +115,7 @@ func EditCate(c *gin.Context) {
 		if data.Top < 0 {
 			data.Top = 0
 		}
-		result := model.EditCate(id, &data)
-		// 添加日志以便调试
-		fmt.Printf("EditCate result: %d\n", result)
+		code = model.EditCate(id, &data)
 	}
 	if code == errmsg.ERROR_CATENAME_USED {
 		c.Abort()
