@@ -18,3 +18,8 @@ QiNiu:
   SecretKey: 
   Bucket: 
   Server: 
+
+  weather:
+    Provider: openweathermap
+    ApiKey: 
+    DefaultCity: 
