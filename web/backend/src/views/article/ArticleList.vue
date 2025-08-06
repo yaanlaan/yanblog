@@ -10,8 +10,9 @@
       
       <!-- 搜索表单 -->
       <ArticleSearchForm
-        v-model="searchForm"
+        :model-value="searchForm"
         :categories="categories"
+        @update:modelValue="handleSearchFormUpdate"
         @search="handleSearch"
         @reset="handleReset"
       />
@@ -88,9 +89,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { Picture } from '@element-plus/icons-vue'
 import { articleApi, categoryApi } from '@/services/api'
 import ArticleSearchForm from '@/components/article/ArticleSearchForm.vue'
@@ -98,6 +99,7 @@ import ArticleActions from '@/components/article/ArticleActions.vue'
 
 // 路由
 const router = useRouter()
+const route = useRoute()
 
 // 默认图片
 const defaultImage = new URL('../../assets/img/无封面.jpg', import.meta.url).href
@@ -158,6 +160,68 @@ const updateCurrentPageData = () => {
   const start = (pagination.currentPage - 1) * pagination.pageSize
   const end = start + pagination.pageSize
   articleList.value = filteredArticles.slice(start, end)
+  
+  // 更新URL参数
+  updateUrlParams()
+}
+
+// 更新URL参数
+const updateUrlParams = () => {
+  const query: Record<string, string | undefined> = {}
+  
+  if (searchForm.title) {
+    query.title = searchForm.title
+  }
+  
+  if (searchForm.categoryId !== undefined) {
+    query.categoryId = searchForm.categoryId.toString()
+  }
+  
+  if (pagination.currentPage > 1) {
+    query.page = pagination.currentPage.toString()
+  }
+  
+  if (pagination.pageSize !== 5) {
+    query.pageSize = pagination.pageSize.toString()
+  }
+  
+  // 只有当查询参数发生变化时才更新路由
+  const currentQuery = route.query
+  let needUpdate = false
+  
+  // 检查参数是否发生变化
+  const paramKeys = ['title', 'categoryId', 'page', 'pageSize']
+  for (const key of paramKeys) {
+    if (query[key] !== currentQuery[key]) {
+      needUpdate = true
+      break
+    }
+  }
+  
+  // 检查是否有额外的参数需要移除
+  for (const key in currentQuery) {
+    if (!['title', 'categoryId', 'page', 'pageSize'].includes(key) && query[key] === undefined) {
+      needUpdate = true
+      break
+    }
+  }
+  
+  if (needUpdate) {
+    router.replace({ query })
+  }
+}
+
+// 从URL参数初始化搜索表单和分页
+const initFromUrlParams = () => {
+  const query = route.query
+  
+  // 初始化搜索表单
+  searchForm.title = (query.title as string) || ''
+  searchForm.categoryId = query.categoryId ? Number(query.categoryId) : undefined
+  
+  // 初始化分页
+  pagination.currentPage = query.page ? Number(query.page) : 1
+  pagination.pageSize = query.pageSize ? Number(query.pageSize) : 5
 }
 
 // 分页信息
@@ -242,6 +306,11 @@ const handleCurrentChange = (val: number) => {
   updateCurrentPageData()
 }
 
+// 处理搜索表单更新
+const handleSearchFormUpdate = (value: {title: string, categoryId: number | undefined}) => {
+  Object.assign(searchForm, value)
+}
+
 // 处理搜索
 const handleSearch = () => {
   pagination.currentPage = 1
@@ -315,8 +384,18 @@ const handleDelete = (article: Article) => {
   })
 }
 
+// 监听路由参数变化
+watch(
+  () => route.query,
+  () => {
+    initFromUrlParams()
+    updateCurrentPageData()
+  }
+)
+
 // 组件挂载时获取数据
 onMounted(() => {
+  initFromUrlParams()
   getArticleList()
   getCategoryList()
 })

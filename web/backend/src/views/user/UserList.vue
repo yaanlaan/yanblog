@@ -10,7 +10,8 @@
       
       <!-- 搜索表单 -->
       <UserSearchForm
-        v-model="searchForm"
+        :model-value="searchForm"
+        @update:modelValue="handleSearchFormUpdate"
         @search="handleSearch"
         @reset="handleReset"
       />
@@ -73,12 +74,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter, useRoute } from 'vue-router'
 import { userApi } from '@/services/api'
 import UserSearchForm from '@/components/user/UserSearchForm.vue'
 import UserActions from '@/components/user/UserActions.vue'
 import UserForm from '@/components/user/UserForm.vue'
+
+// 路由
+const router = useRouter()
+const route = useRoute()
 
 // 用户数据类型
 interface User {
@@ -96,6 +102,97 @@ const searchForm = reactive({
   username: '',
   role: undefined as number | undefined
 })
+
+// 更新当前页数据（前端分页和筛选）
+const updateCurrentPageData = () => {
+  // 应用搜索和筛选
+  let filteredUsers = [...allUsers.value]
+  
+  // 用户名搜索
+  if (searchForm.username) {
+    filteredUsers = filteredUsers.filter(user => 
+      user.username.toLowerCase().includes(searchForm.username.toLowerCase())
+    )
+  }
+  
+  // 角色筛选
+  if (searchForm.role !== undefined && searchForm.role !== null) {
+    const role = Number(searchForm.role)
+    filteredUsers = filteredUsers.filter(user => 
+      user.role === role
+    )
+  }
+  
+  // 更新总数
+  pagination.total = filteredUsers.length
+  
+  // 计算当前页数据
+  const start = (pagination.currentPage - 1) * pagination.pageSize
+  const end = start + pagination.pageSize
+  userList.value = filteredUsers.slice(start, end)
+  
+  // 更新URL参数
+  updateUrlParams()
+}
+
+// 更新URL参数
+const updateUrlParams = () => {
+  const query: Record<string, string | undefined> = {}
+  
+  if (searchForm.username) {
+    query.username = searchForm.username
+  }
+  
+  if (searchForm.role !== undefined) {
+    query.role = searchForm.role.toString()
+  }
+  
+  if (pagination.currentPage > 1) {
+    query.page = pagination.currentPage.toString()
+  }
+  
+  if (pagination.pageSize !== 5) {
+    query.pageSize = pagination.pageSize.toString()
+  }
+  
+  // 只有当查询参数发生变化时才更新路由
+  const currentQuery = route.query
+  let needUpdate = false
+  
+  // 检查参数是否发生变化
+  const paramKeys = ['username', 'role', 'page', 'pageSize']
+  for (const key of paramKeys) {
+    if (query[key] !== currentQuery[key]) {
+      needUpdate = true
+      break
+    }
+  }
+  
+  // 检查是否有额外的参数需要移除
+  for (const key in currentQuery) {
+    if (!['username', 'role', 'page', 'pageSize'].includes(key) && query[key] === undefined) {
+      needUpdate = true
+      break
+    }
+  }
+  
+  if (needUpdate) {
+    router.replace({ query })
+  }
+}
+
+// 从URL参数初始化搜索表单和分页
+const initFromUrlParams = () => {
+  const query = route.query
+  
+  // 初始化搜索表单
+  searchForm.username = (query.username as string) || ''
+  searchForm.role = query.role ? Number(query.role) : undefined
+  
+  // 初始化分页
+  pagination.currentPage = query.page ? Number(query.page) : 1
+  pagination.pageSize = query.pageSize ? Number(query.pageSize) : 5
+}
 
 // 分页信息
 const pagination = reactive({
@@ -170,33 +267,9 @@ const getUserList = async () => {
   }
 }
 
-// 更新当前页数据（前端分页和筛选）
-const updateCurrentPageData = () => {
-  // 应用搜索和筛选
-  let filteredUsers = [...allUsers.value]
-  
-  // 用户名搜索
-  if (searchForm.username) {
-    filteredUsers = filteredUsers.filter(user => 
-      user.username.toLowerCase().includes(searchForm.username.toLowerCase())
-    )
-  }
-  
-  // 角色筛选
-  if (searchForm.role !== undefined && searchForm.role !== null) {
-    const role = Number(searchForm.role)
-    filteredUsers = filteredUsers.filter(user => 
-      user.role === role
-    )
-  }
-  
-  // 更新总数
-  pagination.total = filteredUsers.length
-  
-  // 计算当前页数据
-  const start = (pagination.currentPage - 1) * pagination.pageSize
-  const end = start + pagination.pageSize
-  userList.value = filteredUsers.slice(start, end)
+// 处理搜索表单更新
+const handleSearchFormUpdate = (value: {username: string, role: number | undefined}) => {
+  Object.assign(searchForm, value)
 }
 
 // 处理搜索
@@ -305,17 +378,27 @@ const submitUserForm = async (formData: { username: string; role: number; passwo
 const handleSizeChange = (val: number) => {
   pagination.pageSize = val
   pagination.currentPage = 1
-  getUserList()
+  updateCurrentPageData()
 }
 
 // 处理当前页变化
 const handleCurrentChange = (val: number) => {
   pagination.currentPage = val
-  getUserList()
+  updateCurrentPageData()
 }
+
+// 监听路由参数变化
+watch(
+  () => route.query,
+  () => {
+    initFromUrlParams()
+    updateCurrentPageData()
+  }
+)
 
 // 组件挂载时获取数据
 onMounted(() => {
+  initFromUrlParams()
   getUserList()
 })
 </script>

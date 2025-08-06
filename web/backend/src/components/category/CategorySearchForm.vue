@@ -1,9 +1,9 @@
 <template>
-  <el-form :model="searchData" label-width="80px" class="search-form">
+  <el-form :model="searchData" label-width="80px" class="search-form" @submit.prevent="handleSearch">
     <el-row :gutter="20">
       <el-col :span="6">
         <el-form-item label="分类名称">
-          <el-input v-model="searchData.name" placeholder="请输入分类名称" />
+          <el-input v-model="searchData.name" placeholder="请输入分类名称" @keydown.enter="handleSearch" />
         </el-form-item>
       </el-col>
       <el-col :span="6">

@@ -10,7 +10,8 @@
       
       <!-- 搜索表单 -->
       <CategorySearchForm
-        v-model="searchForm"
+        :model-value="searchForm"
+        @update:modelValue="handleSearchFormUpdate"
         @search="handleSearch"
         @reset="handleReset"
       />
@@ -61,12 +62,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter, useRoute } from 'vue-router'
 import { categoryApi } from '@/services/api'
 import CategorySearchForm from '@/components/category/CategorySearchForm.vue'
 import CategoryActions from '@/components/category/CategoryActions.vue'
 import CategoryForm from '@/components/category/CategoryForm.vue'
+
+// 路由
+const router = useRouter()
+const route = useRoute()
 
 // 分类数据类型
 interface Category {
@@ -96,6 +102,77 @@ const filteredCategories = ref<Category[]>([])
 const searchForm = reactive<SearchForm>({
   name: ''
 })
+
+// 更新当前页数据（前端分页和筛选）
+const updateCurrentPageData = () => {
+  // 应用搜索过滤
+  let resultCategories = [...filteredCategories.value]
+  
+  // 更新总数
+  pagination.total = resultCategories.length
+  
+  // 计算当前页数据
+  const start = (pagination.currentPage - 1) * pagination.pageSize
+  const end = start + pagination.pageSize
+  categoryList.value = resultCategories.slice(start, end)
+  
+  // 更新URL参数
+  updateUrlParams()
+}
+
+// 更新URL参数
+const updateUrlParams = () => {
+  const query: Record<string, string | undefined> = {}
+  
+  if (searchForm.name) {
+    query.name = searchForm.name
+  }
+  
+  if (pagination.currentPage > 1) {
+    query.page = pagination.currentPage.toString()
+  }
+  
+  if (pagination.pageSize !== 5) {
+    query.pageSize = pagination.pageSize.toString()
+  }
+  
+  // 只有当查询参数发生变化时才更新路由
+  const currentQuery = route.query
+  let needUpdate = false
+  
+  // 检查参数是否发生变化
+  const paramKeys = ['name', 'page', 'pageSize']
+  for (const key of paramKeys) {
+    if (query[key] !== currentQuery[key]) {
+      needUpdate = true
+      break
+    }
+  }
+  
+  // 检查是否有额外的参数需要移除
+  for (const key in currentQuery) {
+    if (!['name', 'page', 'pageSize'].includes(key) && query[key] === undefined) {
+      needUpdate = true
+      break
+    }
+  }
+  
+  if (needUpdate) {
+    router.replace({ query })
+  }
+}
+
+// 从URL参数初始化搜索表单和分页
+const initFromUrlParams = () => {
+  const query = route.query
+  
+  // 初始化搜索表单
+  searchForm.name = (query.name as string) || ''
+  
+  // 初始化分页
+  pagination.currentPage = query.page ? Number(query.page) : 1
+  pagination.pageSize = query.pageSize ? Number(query.pageSize) : 5
+}
 
 // 分页信息
 const pagination = reactive<Pagination>({
@@ -144,12 +221,8 @@ const getCategoryList = async () => {
       createdAt: item.CreatedAt || item.created_at || ''
     }))
     
-    // 初始化时所有数据都是过滤后的数据
-    filteredCategories.value = [...allCategories.value]
-    
-    // 更新当前页数据
-    updatePagination()
-    updateCurrentPageData()
+    // 应用筛选条件
+    applyFilters()
   } catch (err) {
     error.value = true
     ElMessage.error('获取分类列表失败')
@@ -169,22 +242,13 @@ const updatePagination = () => {
   }
 }
 
-// 更新当前页数据（前端分页和筛选）
-const updateCurrentPageData = () => {
-  // 应用搜索过滤
-  let resultCategories = filteredCategories.value
-  
-  // 更新总数
-  pagination.total = resultCategories.length
-  
-  // 计算当前页数据
-  const start = (pagination.currentPage - 1) * pagination.pageSize
-  const end = start + pagination.pageSize
-  categoryList.value = resultCategories.slice(start, end)
+// 处理搜索表单更新
+const handleSearchFormUpdate = (value: {name: string}) => {
+  Object.assign(searchForm, value)
 }
 
 // 应用筛选条件
-const applyFilters = () => {
+const applyFilters = (resetPage: boolean = true) => {
   // 应用搜索过滤
   let filtered = allCategories.value
   if (searchForm.name) {
@@ -195,8 +259,10 @@ const applyFilters = () => {
   
   filteredCategories.value = filtered
   
-  // 重置到第一页
-  pagination.currentPage = 1
+  // 仅在需要时重置到第一页（如搜索时）
+  if (resetPage) {
+    pagination.currentPage = 1
+  }
   
   // 更新分页信息和当前页数据
   updatePagination()
@@ -218,7 +284,7 @@ const handleCurrentChange = (val: number) => {
 
 // 处理搜索
 const handleSearch = () => {
-  applyFilters()
+  applyFilters(true) // 搜索时重置页码
 }
 
 // 处理重置
@@ -228,6 +294,9 @@ const handleReset = () => {
   
   // 恢复所有数据
   filteredCategories.value = [...allCategories.value]
+  
+  // 重置到第一页
+  pagination.currentPage = 1
   
   // 更新分页信息和当前页数据
   updatePagination()
@@ -306,9 +375,19 @@ const submitCategoryForm = async (formData: { name: string }) => {
   }
 }
 
+// 监听路由参数变化
+watch(
+  () => route.query,
+  () => {
+    initFromUrlParams()
+    // 应用筛选条件，但不重置页码（因为页码已经在initFromUrlParams中设置）
+    applyFilters(false)
+  }
+)
 
 // 组件挂载时获取数据
 onMounted(() => {
+  initFromUrlParams()
   getCategoryList()
 })
 </script>
