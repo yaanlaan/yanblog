@@ -4,7 +4,7 @@
       <template #main>
         <HeroSection />
         <TopArticles :articles="topArticles" :loading="topLoading" />
-        <LatestArticles :articles="latestArticles" :loading="latestLoading" :limit="6" />
+        <LatestArticles :articles="latestArticles" :loading="latestLoading" />
       </template>
       <template #sidebar>
         <Sidebar />
@@ -47,7 +47,7 @@ const getTopArticles = async () => {
   topLoading.value = true
   try {
     const response = await articleApi.getTopArticles({
-      num: 3 // 获取3篇置顶文章
+      num: -1 // 获取所有置顶文章
     })
     
     const { data } = response.data
@@ -63,6 +63,8 @@ const getTopArticles = async () => {
       createdAt: item.CreatedAt || item.created_at,
       updatedAt: item.UpdatedAt || item.updated_at
     }))
+    // 按置顶等级排序，数字越小等级越高
+    .sort((a, b) => a.top - b.top)
   } catch (error) {
     console.error('获取置顶文章失败:', error)
   } finally {

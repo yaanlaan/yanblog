@@ -14,7 +14,7 @@
       </div>
       <div class="tags" v-else-if="categories.length > 0">
         <router-link
-          v-for="category in categories" 
+          v-for="category in displayedCategories" 
           :key="category.id" 
           :to="`/category/${category.id}`"
           class="tag"
@@ -22,6 +22,16 @@
         >
           {{ category.name }}
         </router-link>
+        
+        <div class="see-more-container">
+          <button 
+            v-if="categories.length > TAG_LIMIT" 
+            @click="toggleShowAll"
+            class="see-more-button"
+          >
+            {{ showAll ? 'tidy-display' : 'seemore' }}
+          </button>
+        </div>
       </div>
       <div class="error-message" v-else-if="error">
         <p>❌ {{ error }}</p>
@@ -35,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { categoryApi } from '@/services/api'
 
 // 定义分类接口
@@ -45,9 +55,21 @@ interface Category {
   articleCount: number
 }
 
+// 标签显示上限
+const TAG_LIMIT = 5
+
 const categories = ref<Category[]>([])
 const loading = ref(false)
 const error = ref('')
+const showAll = ref(false)
+
+// 计算显示的标签
+const displayedCategories = computed(() => {
+  if (showAll.value) {
+    return categories.value
+  }
+  return categories.value.slice(0, TAG_LIMIT)
+})
 
 // 定义事件
 const emit = defineEmits<{
@@ -111,6 +133,11 @@ const calculateFontSize = (count: number) => {
   if (count <= 10) return '16px'
   if (count <= 20) return '18px'
   return '20px'
+}
+
+// 切换显示全部/部分标签
+const toggleShowAll = () => {
+  showAll.value = !showAll.value
 }
 
 // 重试函数
@@ -230,5 +257,32 @@ onMounted(() => {
 .retry-button:hover {
   background-color: #0056b3;
   border-radius: 8px;
+}
+
+.see-more-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.see-more-button {
+  width: 40%;
+  padding: 10px;
+  margin-top: 15px;
+  background-color: #f8f9fa;
+  color: #007bff;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.see-more-button:hover {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+  border-radius: 20px;
 }
 </style>

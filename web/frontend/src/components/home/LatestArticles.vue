@@ -17,6 +17,17 @@
           :article="article"
         />
       </div>
+      
+      <!-- seemore按钮 -->
+      <div class="see-more-container" v-if="articles.length > displayCount">
+        <button 
+          @click="loadMore"
+          class="see-more-button"
+        >
+          seemore
+        </button>
+      </div>
+      
       <div class="empty-state" v-else>
         <p>暂无文章</p>
       </div>
@@ -25,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import ArticleCard from './ArticleCard.vue'
 
 // 定义Props
@@ -44,18 +55,22 @@ interface Article {
 interface Props {
   articles: Article[]
   loading: boolean
-  limit?: number // 限制显示的文章数量
 }
 
 const props = defineProps<Props>()
 
-// 计算属性，根据limit属性限制显示的文章数量
+// 显示数量控制
+const displayCount = ref(5)
+
+// 计算属性，根据displayCount显示文章
 const displayArticles = computed(() => {
-  if (props.limit && props.limit > 0) {
-    return props.articles.slice(0, props.limit)
-  }
-  return props.articles
+  return props.articles.slice(0, displayCount.value)
 })
+
+// 加载更多文章
+const loadMore = () => {
+  displayCount.value += 5
+}
 </script>
 
 <style scoped>
@@ -99,6 +114,33 @@ const displayArticles = computed(() => {
   text-align: center;
   padding: 40px 0;
   color: #888;
+}
+
+.see-more-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 30px;
+}
+
+.see-more-button {
+  width: 40%;
+  padding: 10px;
+  background-color: #f8f9fa;
+  color: #007bff;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.see-more-button:hover {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+  border-radius: 20px;
 }
 
 @media (max-width: 768px) {

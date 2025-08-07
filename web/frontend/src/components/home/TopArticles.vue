@@ -10,13 +10,24 @@
     
     <!-- 文章列表 -->
     <div v-else>
-      <div class="articles-list" v-if="articles.length > 0">
+      <div class="articles-list" v-if="displayArticles.length > 0">
         <TopArticleCard 
-          v-for="article in articles" 
+          v-for="article in displayArticles" 
           :key="article.id" 
           :article="article"
         />
       </div>
+      
+      <!-- seemore按钮 -->
+      <div class="see-more-container" v-if="articles.length > displayCount">
+        <button 
+          @click="loadMore"
+          class="see-more-button"
+        >
+          seemore
+        </button>
+      </div>
+      
       <div class="empty-state" v-else>
         <p>暂无置顶文章</p>
       </div>
@@ -25,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import TopArticleCard from './TopArticleCard.vue'
 
 // 定义Props
@@ -46,7 +58,20 @@ interface Props {
   loading: boolean
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
+
+// 显示数量控制
+const displayCount = ref(2)
+
+// 计算属性，根据displayCount显示文章
+const displayArticles = computed(() => {
+  return props.articles.slice(0, displayCount.value)
+})
+
+// 加载更多文章
+const loadMore = () => {
+  displayCount.value += 2
+}
 </script>
 
 <style scoped>
@@ -90,6 +115,33 @@ defineProps<Props>()
   text-align: center;
   padding: 40px 0;
   color: #888;
+}
+
+.see-more-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 30px;
+}
+
+.see-more-button {
+  width: 40%;
+  padding: 10px;
+  background-color: #f8f9fa;
+  color: #007bff;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.see-more-button:hover {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+  border-radius: 20px;
 }
 
 @media (max-width: 768px) {
