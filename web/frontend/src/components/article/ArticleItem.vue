@@ -43,6 +43,7 @@ interface Article {
   desc: string
   content: string
   img: string
+  top: number
   createdAt: string
   updatedAt: string
 }
@@ -73,6 +74,20 @@ const formatDate = (dateString: string) => {
   transition: box-shadow 0.3s;
   display: flex;
   flex-direction: column;
+  position: relative; /* 保留相对定位，以防其他功能需要 */
+}
+
+.article-top-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #ff6b6b;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 1;
 }
 
 .article-item:hover {

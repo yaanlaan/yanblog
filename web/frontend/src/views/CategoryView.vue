@@ -8,11 +8,14 @@
       
       <div class="category-grid" v-loading="loading">
         <div 
-          v-for="category in categories" 
+          v-for="category in displayedCategories" 
           :key="category.id" 
           class="category-card"
           @click="goToCategory(category.id)"
         >
+          <div class="category-top-tag" v-if="category.top > 0">
+            置顶
+          </div>
           <div class="category-image">
             <img 
               :src="category.img || defaultImage" 
@@ -26,18 +29,32 @@
           </div>
         </div>
         
-        <div v-if="!loading && categories.length === 0" class="no-data">
+        <div v-if="!loading && displayedCategories.length === 0" class="no-data">
           <p>暂无分类数据</p>
         </div>
+      </div>
+      
+      <!-- 分页 -->
+      <div class="pagination">
+        <el-pagination
+          :current-page="pagination.currentPage"
+          :page-size="pagination.pageSize"
+          :total="total"
+          :page-sizes="[8, 16, 24, 32]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { categoryApi } from '@/services/api'
+import { ElPagination } from 'element-plus'
 
 // 定义分类类型
 interface Category {
@@ -45,15 +62,25 @@ interface Category {
   name: string
   img: string
   article_count: number
+  top: number
   created_at?: string
 }
 
 // 获取路由实例
+const route = useRoute()
 const router = useRouter()
 
 // 响应式数据
-const categories = ref<Category[]>([])
+const allCategories = ref<Category[]>([]) // 存储所有分类数据
+const displayedCategories = ref<Category[]>([]) // 存储当前显示的分类数据
 const loading = ref(true)
+const total = ref(0)
+
+// 分页配置
+const pagination = reactive({
+  currentPage: 1,
+  pageSize: 8
+})
 
 // 默认图片
 const defaultImage = new URL('@/assets/img/无封面.jpg', import.meta.url).href
@@ -64,7 +91,7 @@ const handleImageError = (e: Event) => {
   target.src = defaultImage
 }
 
-// 获取分类列表
+// 获取所有分类列表
 const getCategories = async () => {
   try {
     loading.value = true
@@ -73,14 +100,31 @@ const getCategories = async () => {
       pagenum: -1
     })
     
-    // 解析数据
-    const { data } = response.data
-    categories.value = data.map((item: any) => ({
+    // 解析数据并按置顶等级排序
+    const { data, total: totalCount } = response.data
+    total.value = totalCount
+    
+    allCategories.value = data.map((item: any) => ({
       id: item.ID || item.id,
       name: item.name,
       img: item.img,
+      top: item.top || 0,
       article_count: item.article_count || 0
-    }))
+    })).sort((a: Category, b: Category) => {
+      // 首先按置顶等级排序（0表示不置顶，其他值越小等级越高）
+      if (a.top !== b.top) {
+        // 如果其中一个为0（不置顶），则不置顶的排在后面
+        if (a.top === 0) return 1;
+        if (b.top === 0) return -1;
+        // 都置顶的情况下，top值小的排在前面
+        return a.top - b.top;
+      }
+      // 如果置顶等级相同，保持原有顺序
+      return 0;
+    })
+    
+    // 初始化显示数据
+    updateDisplayedCategories()
   } catch (error) {
     console.error('获取分类列表失败:', error)
   } finally {
@@ -93,10 +137,81 @@ const goToCategory = (id: number) => {
   router.push(`/category/${id}`)
 }
 
+// 更新显示的分类列表（前端分页）
+const updateDisplayedCategories = () => {
+  // 应用分页
+  const start = (pagination.currentPage - 1) * pagination.pageSize
+  const end = start + pagination.pageSize
+  displayedCategories.value = allCategories.value.slice(start, end)
+  
+  // 更新路由查询参数
+  router.replace({
+    query: {
+      ...route.query,
+      page: pagination.currentPage,
+      size: pagination.pageSize
+    }
+  })
+}
+
+// 处理分页大小变化
+const handleSizeChange = (val: number) => {
+  pagination.pageSize = val
+  pagination.currentPage = 1
+  updateDisplayedCategories()
+}
+
+// 处理当前页变化
+const handleCurrentChange = (val: number) => {
+  pagination.currentPage = val
+  updateDisplayedCategories()
+}
+
+// 更新路由查询参数并获取数据
+const updateRouteQueryAndFetch = () => {
+  router.replace({
+    query: {
+      ...route.query,
+      page: pagination.currentPage,
+      size: pagination.pageSize
+    }
+  }).then(() => {
+    // 路由更新后再获取数据
+    getCategories()
+  })
+}
+
+// 监听路由查询参数变化
+watch(
+  () => route.query,
+  (newQuery) => {
+    const page = Number(newQuery.page) || 1
+    const size = Number(newQuery.size) || 8
+    
+    // 只有当分页参数真正发生变化时才更新
+    if (page !== pagination.currentPage || size !== pagination.pageSize) {
+      pagination.currentPage = page
+      pagination.pageSize = size
+      updateDisplayedCategories()
+    }
+  },
+  { deep: true } // 深度监听查询参数变化
+)
+
 // 组件挂载时获取数据
 onMounted(() => {
+  // 从路由查询参数中初始化分页状态
+  const page = Number(route.query.page) || 1
+  const size = Number(route.query.size) || 8
+  pagination.currentPage = page
+  pagination.pageSize = size
   getCategories()
 })
+
+// 在组件卸载前清理watcher（可选）
+// onUnmounted(() => {
+//   // 清理逻辑（如果需要）
+// })
 </script>
 
 <style scoped>
@@ -141,11 +256,25 @@ onMounted(() => {
   cursor: pointer;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .category-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.category-top-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #ff6b6b;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 1;
 }
 
 .category-image {
@@ -186,6 +315,12 @@ onMounted(() => {
   text-align: center;
   padding: 40px;
   color: #666;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
 }
 
 @media (max-width: 768px) {

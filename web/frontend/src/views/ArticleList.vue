@@ -50,6 +50,7 @@ interface Article {
   desc: string
   content: string
   img: string
+  top: number // 添加top字段
   createdAt: string
   updatedAt: string
 }
@@ -118,10 +119,11 @@ const getArticles = async () => {
       desc: item.desc,
       content: item.content,
       img: item.img,
+      top: item.top || 0, // 添加top字段
       createdAt: item.CreatedAt || item.created_at,
       updatedAt: item.UpdatedAt || item.updated_at
     }))
-    // 按创建时间倒序排列
+    // 按创建时间倒序排列（最新的在最前面）
     .sort((a: Article, b: Article) => {
       const dateA = new Date(a.createdAt).getTime()
       const dateB = new Date(b.createdAt).getTime()
