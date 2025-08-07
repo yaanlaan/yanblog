@@ -18,17 +18,17 @@
 
           <span>
             <span class="iconfont icon-lianjie"></span>
-            <a href="https://github.com">myproject</a>
+            <a href="https://github.com/yaanlaan/yanblog.git">yanblog</a>
           </span>
 
           <span>
             <span class="iconfont icon-lianjie"></span>
-            <a href="https://github.com">myproject</a>
+            <a href="https://github.com/yaanlaan/yanblog.git">yanblog</a>
           </span>
 
           <span>
             <span class="iconfont icon-lianjie"></span>
-            <a href="https://github.com">myproject</a>
+            <a href="https://github.com/yaanlaan/yanblog.git">yanblog</a>
           </span>
         </div>
 

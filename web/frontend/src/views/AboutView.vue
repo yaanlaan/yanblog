@@ -137,7 +137,7 @@
               <ul class="contact-list">
                 <li class="contact-item" @click="openLink('mailto:example@email.com')">
                   <i class="iconfont icon-email"></i>
-                  <span>example@email.com</span>
+                  <span>yanxia2425@foxmail.com</span>
                 </li>
                 <li class="contact-item" @click="openQQChat('123456789')">
                   <i class="iconfont icon-QQ"></i>
@@ -149,7 +149,11 @@
                 </li>
                 <li class="contact-item" @click="openLink('https://github.com/username')">
                   <i class="iconfont icon-github-fill"></i>
-                  <span>github_username</span>
+                  <span>yaanlaan</span>
+                </li>
+                <li class="contact-item" @click="openLink('https://github.com/username')">
+                  <i class="iconfont icon-zhihu-circle-fill"></i>
+                  <span>言盐盐</span>
                 </li>
               </ul>
             </div>
