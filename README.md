@@ -143,14 +143,11 @@ npm run build
 
 ### 前端
 
-![首页1](./readme_src/前端预览/首页1.png)
-![首页2](./readme_src/前端预览/首页2.png)
-![文章](./readme_src/前端预览/文章.png)
-![分类](./readme_src/前端预览/分类.png)
-![测试文章1](./readme_src/前端预览/测试文章1.png)
-![测试文章2](./readme_src/前端预览/测试文章2.png)
-![关于](./readme_src/前端预览/关于.png)
-
+![首页](./readme_src/前端预览/首页.jpeg)
+![文章](./readme_src/前端预览/文章.jpeg)
+![分类](./readme_src/前端预览/分类.jpeg)
+![关于](./readme_src/前端预览/关于.jpeg)
+![测试文章](./readme_src/前端预览/测试文章.jpeg)
 ### 后端
 
 ![仪表盘](./readme_src/后端预览/仪表盘.png)
