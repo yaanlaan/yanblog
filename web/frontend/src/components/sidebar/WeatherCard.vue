@@ -15,7 +15,7 @@
         <div class="weather-main">
           <div class="city">{{ weather.city }}</div>
           <div class="weather-icon">
-            <span class="icon">{{ getWeatherIcon(weather.description) }}</span>
+            <span v-for="(icon, index) in weatherIcons" :key="index" class="icon">{{ icon }}</span>
           </div>
           <div class="temperature">{{ weather.temperature.toFixed(1) }}°C</div>
           <div class="weather-description">{{ weather.description }}</div>
@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { weatherApi } from '@/services/api'
 
 // 定义组件属性
@@ -64,8 +64,35 @@ const emit = defineEmits<{
   (e: 'loading', value: boolean): void
 }>()
 
-// 获取天气图标
-const getWeatherIcon = (description: string) => {
+// 计算属性：根据天气描述获取所有对应的图标
+const weatherIcons = computed(() => {
+  if (!weather.value) return [];
+  
+  const description = weather.value.description;
+  const icons = [];
+  
+  // 如果包含多种天气，拆分处理
+  if (description.includes('，')) {
+    const types = description.split('，');
+    types.forEach(type => {
+      const icon = getSingleWeatherIcon(type.trim());
+      if (icon) {
+        icons.push(icon);
+      }
+    });
+  } else {
+    // 单一天气
+    const icon = getSingleWeatherIcon(description);
+    if (icon) {
+      icons.push(icon);
+    }
+  }
+  
+  return icons;
+});
+
+// 获取单个天气图标
+const getSingleWeatherIcon = (description: string) => {
   // 根据天气描述返回对应的图标
   switch (description) {
     case '晴':
@@ -185,6 +212,9 @@ onMounted(() => {
 .weather-icon {
   font-size: 48px;
   margin: 15px 0;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
 
 .temperature {

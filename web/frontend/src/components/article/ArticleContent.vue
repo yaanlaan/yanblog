@@ -4,7 +4,7 @@
       <blockquote>{{ article.desc }}</blockquote>
     </div>
     
-    <div class="content" v-html="renderedContent" ref="contentRef"></div>
+    <div class="content" v-html="renderedContent" ref="contentRef" @click="handleContentClick"></div>
   </div>
 </template>
 
@@ -12,7 +12,10 @@
 import { computed, ref, onMounted, onUpdated } from 'vue'
 import { marked } from 'marked'
 import katex from 'katex'
+import hljs from 'highlight.js'
+import mermaid from 'mermaid'
 import 'katex/dist/katex.min.css'
+import 'highlight.js/styles/github.css'
 
 // 定义Props
 interface Article {
@@ -34,6 +37,18 @@ interface Props {
 const props = defineProps<Props>()
 const contentRef = ref<HTMLElement | null>(null)
 
+// 定义事件
+const emit = defineEmits<{
+  (e: 'imageClick', imageSrc: string, imageAlt: string, images: string[], alts: string[]): void
+}>()
+
+// 初始化mermaid
+mermaid.initialize({ 
+  startOnLoad: false,
+  theme: 'default',
+  securityLevel: 'loose'
+})
+
 // 渲染Markdown内容
 const renderedContent = computed(() => {
   if (!props.article.content) return ''
@@ -41,8 +56,20 @@ const renderedContent = computed(() => {
   // 添加ID到标题
   let contentWithIds = addIdsToHeadings(props.article.content)
   
+  // 配置marked
+  marked.setOptions({
+    highlight: function(code, lang) {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      return hljs.highlight(code, { language }).value;
+    },
+    langPrefix: 'hljs language-',
+  });
+  
   // 首先使用marked解析Markdown
   let html: string = marked.parse(contentWithIds) as string
+  
+  // 处理mermaid图表
+  html = renderMermaid(html)
   
   // 然后处理数学公式
   html = renderMath(html)
@@ -58,6 +85,30 @@ const addIdsToHeadings = (content: string) => {
     const id = `heading-${headingCounter}`
     return `${hashes} <span id="${id}" class="heading-anchor"></span>${text}`
   })
+}
+
+// 渲染mermaid图表
+const renderMermaid = (html: string) => {
+  // 查找mermaid代码块
+  const mermaidRegex = /<pre><code class="([^"]*)mermaid([^"]*)">([\s\S]*?)<\/code><\/pre>/g;
+  
+  let match;
+  let newHtml = html;
+  let mermaidCounter = 0;
+  
+  while ((match = mermaidRegex.exec(html)) !== null) {
+    const fullMatch = match[0];
+    const mermaidCode = match[3];
+    const mermaidId = `mermaid-${mermaidCounter++}`;
+    
+    // 替换为占位符div
+    newHtml = newHtml.replace(
+      fullMatch,
+      `<div class="mermaid-chart" id="${mermaidId}">${mermaidCode}</div>`
+    );
+  }
+  
+  return newHtml;
 }
 
 // 渲染数学公式
@@ -85,33 +136,86 @@ const renderMath = (html: string) => {
   return html
 }
 
-// 渲染完成后的数学公式处理
-const renderMathInElement = () => {
+// 渲染完成后的处理
+const renderPostProcess = async () => {
   if (contentRef.value) {
-    // 处理块级公式（$$...$$）
-    const blockFormulas = contentRef.value.querySelectorAll('p')
-    blockFormulas.forEach(element => {
-      const text = element.textContent || ''
-      if (text.startsWith('$$') && text.endsWith('$$')) {
+    // 处理代码高亮
+    const codeBlocks = contentRef.value.querySelectorAll('pre code');
+    codeBlocks.forEach((block) => {
+      if (block instanceof HTMLElement) {
+        hljs.highlightElement(block);
+      }
+    });
+    
+    // 处理mermaid图表
+    const mermaidBlocks = contentRef.value.querySelectorAll('.mermaid-chart');
+    for (let i = 0; i < mermaidBlocks.length; i++) {
+      const block = mermaidBlocks[i];
+      if (block instanceof HTMLElement) {
         try {
-          const formula = text.substring(2, text.length - 2)
-          const katexHtml = katex.renderToString(formula.trim(), { displayMode: true })
-          element.innerHTML = katexHtml
+          const code = block.textContent || '';
+          // 正确处理mermaid.render的返回值
+          const { svg } = await mermaid.render(block.id + '-svg', code);
+          block.innerHTML = svg;
         } catch (error) {
-          console.error('KaTeX渲染错误:', error)
+          console.error('Mermaid渲染错误:', error);
+          block.innerHTML = '<p style="color: red;">图表渲染失败</p>';
         }
       }
-    })
+    }
+    
+    // 处理块级公式（$$...$$）
+    const blockFormulas = contentRef.value.querySelectorAll('p');
+    blockFormulas.forEach(element => {
+      const text = element.textContent || '';
+      if (text.startsWith('$$') && text.endsWith('$$')) {
+        try {
+          const formula = text.substring(2, text.length - 2);
+          const katexHtml = katex.renderToString(formula.trim(), { displayMode: true });
+          element.innerHTML = katexHtml;
+        } catch (error) {
+          console.error('KaTeX渲染错误:', error);
+        }
+      }
+    });
   }
 }
 
-// 在组件挂载和更新时渲染数学公式
+// 处理内容区域点击事件
+const handleContentClick = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  
+  // 检查是否点击了图片
+  if (target.tagName === 'IMG') {
+    event.preventDefault()
+    
+    // 获取所有图片
+    const images = contentRef.value?.querySelectorAll('img') || []
+    const imageSources: string[] = []
+    const imageAlts: string[] = []
+    
+    // 提取所有图片的src和alt属性
+    images.forEach(img => {
+      imageSources.push(img.getAttribute('src') || '')
+      imageAlts.push(img.getAttribute('alt') || '')
+    })
+    
+    // 获取当前点击图片的src
+    const currentSrc = target.getAttribute('src') || ''
+    const currentAlt = target.getAttribute('alt') || ''
+    
+    // 触发imageClick事件
+    emit('imageClick', currentSrc, currentAlt, imageSources, imageAlts)
+  }
+}
+
+// 在组件挂载和更新时进行后处理
 onMounted(() => {
-  renderMathInElement()
+  renderPostProcess()
 })
 
 onUpdated(() => {
-  renderMathInElement()
+  renderPostProcess()
 })
 </script>
 
@@ -197,6 +301,12 @@ onUpdated(() => {
   height: auto;
   border-radius: 4px;
   margin: 20px 0;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.content :deep(img:hover) {
+  opacity: 0.8;
 }
 
 .content :deep(a) {
@@ -235,6 +345,18 @@ onUpdated(() => {
 
 .content :deep(.katex) {
   white-space: nowrap;
+}
+
+/* Mermaid 图表样式 */
+.content :deep(.mermaid-chart) {
+  text-align: center;
+  margin: 20px 0;
+  overflow-x: auto;
+}
+
+.content :deep(.mermaid-chart svg) {
+  max-width: 100%;
+  height: auto;
 }
 
 /* 标题锚点样式 */

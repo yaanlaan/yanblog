@@ -27,7 +27,11 @@
           <div v-else>
             <ArticleHeader v-if="article" :article="article" />
             
-            <ArticleContent v-if="article" :article="article" />
+            <ArticleContent 
+              v-if="article" 
+              :article="article" 
+              @image-click="handleImageClick"
+            />
             
             <!-- 上一篇/下一篇导航 -->
             <div class="article-navigation" v-if="article">
@@ -57,11 +61,31 @@
           </div>
         </article>
       </template>
-      
-      <template #sidebar>
-        <Sidebar />
-      </template>
     </MainLayout>
+    
+    <!-- 图片查看器 -->
+    <div v-if="showImageViewer" class="image-viewer" @click="closeImageViewer">
+      <div class="image-viewer-content" @click.stop>
+        <button class="close-btn" @click="closeImageViewer">×</button>
+        <button class="nav-btn prev-btn" @click="prevImage" v-if="imageList.length > 1">‹</button>
+        <button class="nav-btn next-btn" @click="nextImage" v-if="imageList.length > 1">›</button>
+        
+        <div class="image-container">
+          <img 
+            :src="currentImage" 
+            :alt="`图片 ${currentImageIndex + 1}`"
+            class="viewer-image"
+            @load="onImageLoad"
+            @error="onImageError"
+          />
+        </div>
+        
+        <div class="image-info">
+          <span class="image-counter">{{ currentImageIndex + 1 }} / {{ imageList.length }}</span>
+          <span class="image-alt">{{ imageAltList[currentImageIndex] || `图片 ${currentImageIndex + 1}` }}</span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -73,7 +97,6 @@ import MainLayout from '@/components/layout/MainLayout.vue'
 import ArticleHeader from '@/components/article/ArticleHeader.vue'
 import ArticleContent from '@/components/article/ArticleContent.vue'
 import ArticleToc from '@/components/article/ArticleToc.vue'
-import Sidebar from '@/components/Sidebar.vue'
 
 // 默认图片
 const defaultImage = new URL('@/assets/img/无封面.jpg', import.meta.url).href
@@ -100,6 +123,13 @@ const article = ref<Article | null>(null)
 const loading = ref(false)
 const previousArticle = ref<Article | null>(null)
 const nextArticle = ref<Article | null>(null)
+
+// 图片查看器相关
+const showImageViewer = ref(false)
+const imageList = ref<string[]>([])
+const imageAltList = ref<string[]>([])
+const currentImageIndex = ref(0)
+const currentImage = ref('')
 
 // 获取文章详情
 const getArticleDetail = async (id: number) => {
@@ -186,6 +216,66 @@ const getAdjacentArticles = async (currentId: number) => {
   }
 }
 
+// 处理图片点击事件
+const handleImageClick = (imageSrc: string, imageAlt: string, images: string[], alts: string[]) => {
+  imageList.value = images
+  imageAltList.value = alts
+  currentImageIndex.value = images.indexOf(imageSrc)
+  currentImage.value = imageSrc
+  showImageViewer.value = true
+  
+  // 禁止body滚动
+  document.body.style.overflow = 'hidden'
+}
+
+// 关闭图片查看器
+const closeImageViewer = () => {
+  showImageViewer.value = false
+  // 恢复body滚动
+  document.body.style.overflow = ''
+}
+
+// 上一张图片
+const prevImage = () => {
+  if (imageList.value.length <= 1) return
+  currentImageIndex.value = (currentImageIndex.value - 1 + imageList.value.length) % imageList.value.length
+  currentImage.value = imageList.value[currentImageIndex.value]
+}
+
+// 下一张图片
+const nextImage = () => {
+  if (imageList.value.length <= 1) return
+  currentImageIndex.value = (currentImageIndex.value + 1) % imageList.value.length
+  currentImage.value = imageList.value[currentImageIndex.value]
+}
+
+// 图片加载完成
+const onImageLoad = () => {
+  // 图片加载完成后的处理
+}
+
+// 图片加载错误
+const onImageError = (e: Event) => {
+  console.error('图片加载失败:', e)
+}
+
+// 监听键盘事件
+const handleKeydown = (e: KeyboardEvent) => {
+  if (!showImageViewer.value) return
+  
+  switch (e.key) {
+    case 'Escape':
+      closeImageViewer()
+      break
+    case 'ArrowLeft':
+      prevImage()
+      break
+    case 'ArrowRight':
+      nextImage()
+      break
+  }
+}
+
 // 监听路由变化
 watch(
   () => route.params.id,
@@ -203,7 +293,13 @@ onMounted(() => {
   if (articleId) {
     getArticleDetail(articleId)
   }
+  
+  // 添加键盘事件监听
+  window.addEventListener('keydown', handleKeydown)
 })
+
+// 组件卸载时移除事件监听
+// 注意：在Vue 3的组合式API中，需要手动清理事件监听器
 </script>
 
 <style scoped>
@@ -355,5 +451,127 @@ onMounted(() => {
   .nav-cover {
     height: 80px;
   }
+  
+  .image-viewer-content {
+    max-width: 95%;
+  }
+  
+  .nav-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+  }
+  
+  .prev-btn {
+    left: 10px;
+  }
+  
+  .next-btn {
+    right: 10px;
+  }
+}
+
+/* 图片查看器样式 */
+.image-viewer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.image-viewer-content {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.close-btn {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.close-btn:hover {
+  color: #ccc;
+}
+
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.3s;
+}
+
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.prev-btn {
+  left: 20px;
+}
+
+.next-btn {
+  right: 20px;
+}
+
+.image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  max-height: 80vh;
+}
+
+.viewer-image {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+}
+
+.image-info {
+  color: white;
+  margin-top: 15px;
+  text-align: center;
+}
+
+.image-counter {
+  margin-right: 20px;
+  font-size: 14px;
+}
+
+.image-alt {
+  font-size: 16px;
 }
 </style>
