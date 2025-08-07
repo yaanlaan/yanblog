@@ -29,7 +29,8 @@
             @click="toggleShowAll"
             class="see-more-button"
           >
-            {{ showAll ? 'tidy-display' : 'seemore' }}
+            <i class="iconfont icon-seemore"></i>
+            <span>{{ showAll ? ' tidy-display' : ' seemore' }}</span>
           </button>
         </div>
       </div>
@@ -157,6 +158,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.iconfont {
+  font-size: 10px;
+}
+
 .card-header {
   padding: 15px 20px;
   border-bottom: 1px solid #eee;

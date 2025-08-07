@@ -24,7 +24,8 @@
           @click="loadMore"
           class="see-more-button"
         >
-          seemore
+          <i class="iconfont icon-seemore"></i>
+          <span> seemore</span>
         </button>
       </div>
       
@@ -74,6 +75,9 @@ const loadMore = () => {
 </script>
 
 <style scoped>
+.iconfont {
+  font-size: 10px;
+}
 .section-title {
   font-size: 32px;
   margin-bottom: 40px;

@@ -1,24 +1,33 @@
 <template>
-  <div class="container">
-    <div class="content-wrapper">
-      <div class="sidebar left-sidebar" v-if="$slots.leftSidebar">
-        <slot name="leftSidebar"></slot>
+  <div class="main-wrapper">
+    <div class="container">
+      <div class="content-wrapper">
+        <div class="sidebar left-sidebar" v-if="$slots.leftSidebar">
+          <slot name="leftSidebar"></slot>
+        </div>
+        <div class="main-content">
+          <slot name="main"></slot>
+        </div>
+        <div class="sidebar right-sidebar" v-if="$slots.sidebar">
+          <slot name="sidebar"></slot>
+        </div>
       </div>
-      <div class="main-content">
-        <slot name="main"></slot>
-      </div>
-      <div class="sidebar right-sidebar" v-if="$slots.sidebar">
-        <slot name="sidebar"></slot>
-      </div>
+      <BackToTop />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 // 主布局组件
+import BackToTop from '@/components/BackToTop.vue'
 </script>
 
 <style scoped>
+.main-wrapper {
+  width: 100%;
+  margin-TOP: 10px;
+}
+
 .container {
   width: 100%;
   max-width: 1400px; /* 扩大最大宽度以适应三栏布局 */
