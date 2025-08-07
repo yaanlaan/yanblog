@@ -8,6 +8,38 @@
   padding: 0;
 }
 
+/* 自定义滚动条样式 - WebKit浏览器 (Chrome, Safari, Edge) */
+body::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(116, 116, 116, 0);
+  background-color: rgb(214, 212, 212);
+}
+
+body::-webkit-scrollbar {
+  width: 14px;
+  background-color: rgb(255, 255, 255);
+}
+
+body::-webkit-scrollbar-thumb {
+  height: 5px;
+  background-image: -webkit-gradient(linear,
+      left bottom,
+      left top,
+      color-stop(0.2, rgb(134, 164, 194)),
+      color-stop(0.4, rgb(87, 181, 224)),
+      color-stop(0.8, rgb(35, 204, 255)));
+}
+
+/* 隐藏滚动条上下箭头 */
+body::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* 自定义滚动条样式 - Firefox浏览器 */
+/* * {
+  scrollbar-width: 20px;
+  scrollbar-color: rgb(34, 179, 247) rgb(212, 209, 209);
+} */
+
 html {
   height: 100%;
 }
