@@ -117,7 +117,9 @@ npm run dev
 
 ## API 文档
 
-详细的 API 接口文档请查看 [API.md](API.md)
+
+
+详细的 API 接口文档请查看 [apidoc.md](apidoc.md)
 
 ## 配置说明
 
