@@ -21,7 +21,7 @@ export default defineConfig({
     port: 3001,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         // 不再重写路径，保持/api前缀
       }
