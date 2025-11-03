@@ -19,7 +19,7 @@
 
 <style scoped>
 .hero-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(275deg, #80acdfff 0%, #2a5eceff 100%);
   color: white;
   padding: 80px 0;
   margin-bottom: 40px;
