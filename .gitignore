@@ -75,3 +75,5 @@ web/backend/dist/
 web/backend/node_modules/*
 
 test
+
+uploads/

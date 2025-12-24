@@ -81,6 +81,7 @@
             :on-error="handleAvatarError"
             :before-upload="beforeAvatarUpload"
             :headers="uploadHeaders"
+            :data="uploadData"
           >
             <img v-if="publishData.img" :src="publishData.img" class="avatar" />
             <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
@@ -121,6 +122,8 @@ const props = defineProps<{
   categories: {id: number, name: string}[]
   isEdit: boolean
   submitLoading: boolean
+  title?: string
+  articleId?: number
 }>()
 
 // 定义事件
@@ -162,6 +165,16 @@ const uploadHeaders = {
   Authorization: `Bearer ${localStorage.getItem('token')}`
 }
 
+// 上传额外参数
+import { computed } from 'vue'
+const uploadData = computed(() => {
+  return {
+    type: 'article',
+    key: props.title || 'default',
+    id: props.articleId || 0
+  }
+})
+
 // 处理表单变化
 const handleFormChange = () => {
   emit('update:modelValue', {
@@ -179,6 +192,13 @@ const handleAvatarSuccess: UploadProps['onSuccess'] = (
   uploadFile
 ) => {
   console.log('Upload response:', response); // 调试信息
+  
+  // 检查后端返回的状态码
+  if (response && response.status !== 200) {
+    ElMessage.error(response.message || '上传失败')
+    return
+  }
+
   // 从响应中获取图片URL
   if (response && response.url) {
     // 后端直接返回url字段

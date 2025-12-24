@@ -41,6 +41,11 @@
           </template>
           <el-menu-item index="/article/list">文章列表</el-menu-item>
         </el-sub-menu>
+
+        <el-menu-item index="/media">
+          <el-icon><Picture /></el-icon>
+          <span>媒体库</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     
@@ -84,7 +89,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Odometer, User, Folder, Document } from '@element-plus/icons-vue'
+import { Odometer, User, Folder, Document, Picture } from '@element-plus/icons-vue'
 
 // 获取路由实例
 const route = useRoute()

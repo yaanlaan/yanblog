@@ -1,75 +1,67 @@
 package model
 
 import (
-	"yanblog/utils"
-	"yanblog/utils/errmsg"
-
-	"context"
+	"fmt"
+	"io"
 	"mime/multipart"
-
-	"github.com/qiniu/go-sdk/v7/auth/qbox"
-	"github.com/qiniu/go-sdk/v7/storage"
+	"os"
+	"path/filepath"
+	"time"
+	"yanblog/utils/errmsg"
 )
 
-// 从配置文件中读取七牛云相关配置
-var Zone = utils.ServerConfig.Qiniu.Zone
-var AccessKey = utils.ServerConfig.Qiniu.AccessKey
-var SecretKey = utils.ServerConfig.Qiniu.SecretKey
-var Bucket = utils.ServerConfig.Qiniu.Bucket
-var ImgUrl = utils.ServerConfig.Qiniu.Server 
-
-// UpLoadFile 上传文件到七牛云
-// 参数: file - 要上传的文件, fileSize - 文件大小
+// UpLoadFile 上传文件到本地
+// 参数: file - 要上传的文件, fileHeader - 文件头信息, uploadType - 上传类型(article/category), key - 关键标识(文章标题/分类名)
 // 返回: 文件访问URL和状态码
-func UpLoadFile(file multipart.File, fileSize int64) (string, int) {
+func UpLoadFile(file multipart.File, fileHeader *multipart.FileHeader, uploadType string, key string) (string, int) {
+	// 1. 确定存储目录
+	baseDir := "./uploads"
+	targetDir := baseDir
 
-	putPolicy := storage.PutPolicy{
-		Scope: Bucket,
+	// 简单的文件名清理函数，防止路径遍历和非法字符
+	cleanKey := filepath.Clean(key)
+	// 移除可能导致问题的字符，这里简单处理，实际可能需要更严格的正则
+	// 比如将空格替换为下划线，移除特殊符号
+
+	if uploadType == "category" {
+		targetDir = filepath.Join(baseDir, "category")
+	} else if uploadType == "article" {
+		if cleanKey != "" && cleanKey != "." {
+			targetDir = filepath.Join(baseDir, "articles", cleanKey)
+		} else {
+			targetDir = filepath.Join(baseDir, "articles", "default")
+		}
+	} else {
+		targetDir = filepath.Join(baseDir, "common")
 	}
-	
-	// 打印调试信息
-	// fmt.Println(Bucket)
-	// fmt.Println(ImgUrl)
-	// fmt.Println(AccessKey)
-	// fmt.Println(SecretKey)
 
-	mac := qbox.NewMac(AccessKey, SecretKey)
-	upToken := putPolicy.UploadToken(mac)
-
-	cfg := storage.Config{
-		Zone:          SetZone(Zone),
-		UseCdnDomains: false,
-		UseHTTPS:      false,
+	// 确保存储目录存在
+	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
+		_ = os.MkdirAll(targetDir, os.ModePerm)
 	}
 
-	putExtra := storage.PutExtra{}
+	// 2. 生成文件名
+	ext := filepath.Ext(fileHeader.Filename)
+	fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
+	filePath := filepath.Join(targetDir, fileName)
 
-	formUploader := storage.NewFormUploader(&cfg)
-	ret := storage.PutRet{}
-
-	err := formUploader.PutWithoutKey(context.Background(), &ret, upToken, file, fileSize, &putExtra)
+	// 3. 创建目标文件
+	out, err := os.Create(filePath)
 	if err != nil {
 		return "", errmsg.ERROR
 	}
-	
-	url := "http://" + ImgUrl + "/" + ret.Key
-	return url, errmsg.SUCCESS
-}
+	defer out.Close()
 
-// SetZone 根据配置设置七牛云存储区域
-// 参数: zone - 区域代码(0:华东 1:华南 2:北美 3:新加坡)
-// 返回: 对应的存储区域配置
-func SetZone(zone int) *storage.Zone {
-	switch zone {
-	case 0:
-		return &storage.ZoneHuadong   // 华东
-	case 1:
-		return &storage.ZoneHuanan    // 华南
-	case 2:
-		return &storage.ZoneBeimei    // 北美
-	case 3:
-		return &storage.ZoneXinjiapo  // 新加坡
-	default:
-		return &storage.ZoneHuadong   // 默认华东
+	// 4. 写入文件内容
+	_, err = io.Copy(out, file)
+	if err != nil {
+		return "", errmsg.ERROR
 	}
+
+	// 5. 返回访问URL
+	// 需要将文件路径转换为URL路径 (将反斜杠转换为斜杠)
+	relPath, _ := filepath.Rel(".", filePath)
+	url := "/" + filepath.ToSlash(relPath)
+
+	return url, errmsg.SUCCESS
 }

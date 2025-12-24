@@ -12,13 +12,6 @@ database:
 
 JwtKey: 
 
-QiNiu:
-  Zone: 
-  AccessKey: 
-  SecretKey: 
-  Bucket: 
-  Server: 
-
   weather:
     Provider: openweathermap
     ApiKey: 

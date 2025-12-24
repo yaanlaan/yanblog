@@ -56,6 +56,9 @@
                 v-else
                 v-model="articleForm.content"
                 :preview-only="previewOnly"
+                :title="articleForm.title"
+                :article-id="articleId"
+                @save="submitArticle"
                 ref="markdownEditorRef"
                 class="content-editor"
               />
@@ -69,6 +72,8 @@
             :categories="categories"
             :is-edit="isEdit"
             :submit-loading="submitLoading"
+            :title="articleForm.title"
+            :article-id="articleId"
             @submit="submitArticle"
             @update:modelValue="handlePublishFormUpdate"
           />

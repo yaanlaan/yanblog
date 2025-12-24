@@ -91,6 +91,17 @@ export const userApi = {
     apiClient.delete(`/v1/user/${id}`)
 }
 
+// 文件管理API
+export const fileApi = {
+  // 获取文件列表
+  getFiles: (path: string = '') => 
+    apiClient.get('/v1/files', { params: { path } }),
+  
+  // 删除文件
+  deleteFile: (path: string) => 
+    apiClient.delete('/v1/files', { params: { path } })
+}
+
 // 分类相关API
 export const categoryApi = {
   // 获取分类列表
@@ -110,8 +121,8 @@ export const categoryApi = {
     apiClient.put(`/v1/category/${id}`, data),
   
   // 删除分类
-  deleteCategory: (id: number) => 
-    apiClient.delete(`/v1/category/${id}`)
+  deleteCategory: (id: number, force: boolean = false) => 
+    apiClient.delete(`/v1/category/${id}`, { params: { force } })
 }
 
 // 文章相关API

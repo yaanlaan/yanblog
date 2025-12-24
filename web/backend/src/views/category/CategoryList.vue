@@ -283,26 +283,35 @@ const handleEdit = (row: Category) => {
 // 处理删除
 const handleDelete = (row: Category) => {
   ElMessageBox.confirm(
-    `确定要删除分类"${row.name}"吗？`,
-    '提示',
+    `您正在删除分类"${row.name}"。是否同时删除该分类下的所有文章？`,
+    '删除确认',
     {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+      confirmButtonText: '是，删除文章',
+      cancelButtonText: '否，仅删除分类',
       type: 'warning',
+      distinguishCancelAndClose: true
     }
   ).then(async () => {
-    try {
-      await categoryApi.deleteCategory(row.id)
-      ElMessage.success('分类删除成功')
-      // 重新获取分类列表
-      await getCategoryList()
-    } catch (error) {
-      ElMessage.error('分类删除失败')
-      console.error('分类删除失败:', error)
+    // 点击了"是"
+    await executeDelete(row.id, true)
+  }).catch(async (action) => {
+    if (action === 'cancel') {
+      // 点击了"否"
+      await executeDelete(row.id, false)
     }
-  }).catch(() => {
-    // 用户取消删除
+    // 如果是 'close' (点击X或蒙层)，则什么都不做
   })
+}
+
+const executeDelete = async (id: number, force: boolean) => {
+  try {
+    await categoryApi.deleteCategory(id, force)
+    ElMessage.success('删除成功')
+    await getCategoryList()
+  } catch (error) {
+    ElMessage.error('删除失败')
+    console.error('删除失败:', error)
+  }
 }
 
 // 提交分类表单

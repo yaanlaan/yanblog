@@ -10,13 +10,13 @@ import (
 
 // Config 定义配置文件的结构
 type Config struct {
-	Server struct {//服务器
+	Server struct { //服务器
 		AppMode  string `yaml:"AppMode"`
 		HttpPort string `yaml:"HttpPort"`
 	} `yaml:"server"`
 
-	Database struct {//数据库
-		Db         string `yaml:"Db"`	
+	Database struct { //数据库
+		Db         string `yaml:"Db"`
 		DbHost     string `yaml:"DbHost"`
 		DbPort     int    `yaml:"DbPort"`
 		DbUser     string `yaml:"DbUser"`
@@ -27,31 +27,21 @@ type Config struct {
 	//JwtKey 用于JWT加密
 	JwtKey string `yaml:"JwtKey"`
 
-	// Qiniu 七牛云配置
-	Qiniu struct {
-		Zone      int    `yaml:"Zone"`
-		AccessKey string `yaml:"AccessKey"`
-		SecretKey string `yaml:"SecretKey"`
-		Bucket    string `yaml:"Bucket"`
-		Server    string `yaml:"Server"`
-	} `yaml:"QiNiu"`
-	
 	// Weather 天气API配置
 	Weather struct {
 		Provider    string `yaml:"Provider"`
 		ApiKey      string `yaml:"ApiKey"`
 		DefaultCity string `yaml:"DefaultCity"`
 	} `yaml:"weather"`
-	
+
 	// Cities 城市配置
 	Cities []struct {
-		Name     string `yaml:"Name"`
-		Alias    string `yaml:"Alias"`
+		Name  string `yaml:"Name"`
+		Alias string `yaml:"Alias"`
 	} `yaml:"cities"`
 }
 
 var ServerConfig = Config{}
-
 
 // init 初始化配置文件
 // 参数: 无

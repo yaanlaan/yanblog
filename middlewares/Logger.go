@@ -1,15 +1,15 @@
 package middlewares
 
 import (
-
 	"fmt"
+	"math"
+	"os"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	retalog "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
-	"math"
-	"os"
-	"time"
 )
 
 // Logger 日志记录中间件
@@ -17,7 +17,7 @@ import (
 // 支持日志轮转和按级别分类存储
 func Logger() gin.HandlerFunc {
 	filePath := "log/log"
-	linkName := "latest_log.log"
+	// linkName := "latest_log.log"
 
 	scr, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
@@ -33,9 +33,9 @@ func Logger() gin.HandlerFunc {
 		filePath+"%Y%m%d.log",
 		retalog.WithMaxAge(7*24*time.Hour),
 		retalog.WithRotationTime(24*time.Hour),
-		retalog.WithLinkName(linkName),
+		// retalog.WithLinkName(linkName), // Windows下可能需要管理员权限，暂时注释掉
 	)
-	
+
 	// 定义不同日志级别的输出映射
 	writeMap := lfshook.WriterMap{
 		logrus.InfoLevel:  logWriter,

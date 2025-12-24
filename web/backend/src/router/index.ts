@@ -10,6 +10,8 @@ const Dashboard = () => import('@/views/dashboard/Dashboard.vue')
 const UserList = () => import('@/views/user/UserList.vue')
 const CategoryList = () => import('@/views/category/CategoryList.vue')
 const ArticleList = () => import('@/views/article/ArticleList.vue')
+const ArticleEditor = () => import('@/views/article/ArticleEditor.vue')
+const MediaManager = () => import('@/views/media/MediaManager.vue')
 
 // 定义路由
 const routes: RouteRecordRaw[] = [
@@ -95,7 +97,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '/article/add',
         name: 'ArticleAdd',
-        component: () => import('@/views/article/ArticleEditor.vue'),
+        component: ArticleEditor,
         meta: {
           title: '新增文章'
         }
@@ -103,9 +105,18 @@ const routes: RouteRecordRaw[] = [
       {
         path: '/article/edit/:id',
         name: 'ArticleEdit',
-        component: () => import('@/views/article/ArticleEditor.vue'),
+        component: ArticleEditor,
         meta: {
           title: '编辑文章'
+        }
+      },
+      {
+        path: '/media',
+        name: 'Media',
+        component: MediaManager,
+        meta: {
+          title: '媒体库',
+          icon: 'Picture'
         }
       }
     ]

@@ -20,6 +20,9 @@ func InitRouter() {
 	r.Use(gin.Recovery())
 	r.Use(middleware.Cors())
 
+	// 静态文件服务
+	r.Static("/uploads", "./uploads")
+
 	// 用户路由分组
 	auth := r.Group("api/v1")
 	auth.Use(middleware.JwtToken())
@@ -41,6 +44,9 @@ func InitRouter() {
 		auth.DELETE("article/:id", v1.DeleteArt)
 		// 上传文件
 		auth.POST("upload", v1.UpLoad)
+		// 文件管理
+		auth.GET("files", v1.GetFileList)
+		auth.DELETE("files", v1.DeleteFile)
 	}
 
 	// 公共路由分组
