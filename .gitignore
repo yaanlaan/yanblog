@@ -48,6 +48,9 @@ dist/
 .DS_Store
 .DS_Store?
 ._*
+
+# Uploads
+uploads/
 .Spotlight-V100
 .Trashes
 ehthumbs.db
@@ -75,5 +78,3 @@ web/backend/dist/
 web/backend/node_modules/*
 
 test
-
-uploads/
