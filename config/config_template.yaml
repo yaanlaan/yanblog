@@ -1,6 +1,6 @@
 server:
-  AppMode: 
-  HttpPort: 
+  AppMode: debug
+  HttpPort: localhost:8080
 
 database:
   Db: 
@@ -9,10 +9,11 @@ database:
   DbUser: 
   DbPassWord: 
   DbName: 
+  
+# openssl rand -hex 32（使用这个命令生成密钥，修改为你自己的密钥）
+JwtKey: 1234567890
 
-JwtKey: 
-
-  weather:
-    Provider: openweathermap
-    ApiKey: 
-    DefaultCity: 
+weather:
+  Provider: openweathermap
+  ApiKey: 
+  DefaultCity: 

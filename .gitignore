@@ -78,3 +78,9 @@ web/backend/dist/
 web/backend/node_modules/*
 
 test
+
+# Docker / Deployment
+server
+yanblog
+docker_field
+deploy

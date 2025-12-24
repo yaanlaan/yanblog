@@ -72,8 +72,14 @@ const currentUserRole = computed(() => {
 
 // 是否可以编辑角色
 const canEditRole = computed(() => {
-  // 只有超级管理员可以修改角色
-  return currentUserRole.value === 1
+  // 1. 只有超级管理员可以修改角色
+  if (currentUserRole.value !== 1) return false
+  
+  // 2. 如果正在编辑的是超级管理员（即自己），则不允许修改角色
+  // 注意：这里使用 props.user.role 来判断原始角色
+  if (!props.isAdd && props.user.role === 1) return false
+  
+  return true
 })
 
 // 定义事件

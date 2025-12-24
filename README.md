@@ -1,12 +1,12 @@
-# Go+Vue的前后端分离博客
+# Go+Vue 前后端分离博客系统
 
 [原项目链接](https://github.com/wejectchen/Ginblog.git)
 
-后端主要参考了ginblog，由于原教程是22年的有一些东西不一样了，同时我也希望设计一些更丰富的功能
+后端主要参考了 ginblog，由于原教程是 22 年的有一些东西不一样了，同时我也希望设计一些更丰富的功能。
 
 ## 项目简介
 
-这是一个使用 Go 语言和 Vue.js 构建的前后端分离博客系统。后端采用 Gin 框架，前端使用 Vue 3 + TypeScript + Vite 构建。
+这是一个使用 Go 语言和 Vue.js 构建的前后端分离博客系统。后端采用 Gin 框架，前端使用 Vue 3 + TypeScript + Vite 构建。支持 Docker 一键部署。
 
 ## 功能特性
 
@@ -30,74 +30,98 @@
 - 管理后台（用户、文章、分类管理）
 - 实时服务器状态显示
 - 搜索功能
+- **全配置化管理**：头像、背景图、Logo、二维码等均可通过配置文件修改，无需修改代码。
 
-## 技术栈
+## 快速开始 (Docker 部署)
 
-### 后端
+这是最推荐的部署方式，简单快捷。
 
-- Go 语言
-- Gin Web 框架
-- GORM ORM 库
-- MySQL 数据库
-- JWT 用户认证
-- YAML 配置文件
+### 1. 准备配置文件
 
-### 前端
+在项目根目录下，你需要准备好配置文件。
 
-- Vue 3 (Composition API)
-- TypeScript
-- Vite 构建工具
-- Vue Router 路由管理
-- Axios HTTP 客户端
-- CSS3 + Flexbox 布局
+**后端配置：**
+将 `config/config_template.yaml` 复制并重命名为 `docker_field/backend/config.yaml`，并填入你的数据库信息、JWT 密钥等。
 
-## 项目结构
+**前端配置：**
+前端配置文件位于 `docker_field/frontend/config.yaml`。
+如果你不想在部署后修改，请提前编辑此文件，配置你的博客名称、头像路径、背景图等。
 
-```
-yaanlaan_blog/
-├── api/                # API 接口实现
-│   └── v1/             # v1 版本 API
-├── config/             # 配置文件
-├── middlewares/        # 中间件
-├── model/              # 数据模型
-├── routers/            # 路由配置
-├── utils/              # 工具函数
-├── web/                # 前端代码
-│   └── frontend/       # 前端页面
-├── └── backend/        # 后端管理页面
-├── main.go             # 程序入口
-├── go.mod              # Go 模块定义
-└── go.sum              # Go 模块校验和
+### 2. 启动服务
+
+确保你已经安装了 Docker 和 Docker Compose，然后在项目根目录下运行：
+
+```bash
+docker-compose up --build -d
 ```
 
-## 安装与运行
+### 3. 访问服务
+
+启动成功后，你可以通过以下地址访问：
+
+- **博客前台**: [http://localhost:3002](http://localhost:3002)
+- **后台管理**: [http://localhost:3001](http://localhost:3001)
+- **后端 API**: [http://localhost:8080](http://localhost:8080)
+
+### 4. 后续维护
+
+- **修改前端配置**：直接编辑 `docker_field/frontend/config.yaml`，保存后刷新浏览器即可生效。
+- **修改关于页面**：直接编辑 `docker_field/frontend/static/about.md`，支持 Markdown 语法。保存后刷新浏览器即可看到更新，无需重启容器。
+- **更换图片资源**：将图片放入 `docker_field/frontend/static/` 目录（例如 `avatar.jpg`），然后在配置文件中引用 `/static/avatar.jpg`。
+- **修改后端配置**：编辑 `docker_field/backend/config.yaml`，保存后需要重启后端容器：`docker-compose restart backend`。
+- **数据备份**：
+    - 数据库数据位于 `docker_field/mysql/data`
+    - 上传的文件位于 `docker_field/uploads`
+
+## 本地开发构建
+
+如果你想自己从源码构建或进行二次开发。
 
 ### 后端
 
 1. 克隆项目
+2. 安装依赖：`go mod tidy`
+3. 配置数据库：修改 `config/config.yaml`
+4. 运行项目：`go run main.go`
 
-```bash
-git clone <项目地址>
+### 前端 (Web/Frontend & Web/Backend)
+
+前端分为前台 (frontend) 和后台管理 (backend) 两个项目。
+
+1. 进入目录：`cd web/frontend` 或 `cd web/backend`
+2. 安装依赖：`npm install`
+3. **配置文件**：
+    - 本地开发时，前台使用的是 `public/config.yaml`。
+4. 运行开发服务器：`npm run dev`
+5. 构建生产版本：`npm run build`
+
+## 项目结构
+
+```
+yanblog/
+├── api/                # API 接口实现
+├── config/             # 本地开发配置文件
+├── docker_field/       # Docker 部署挂载目录 (配置、数据、静态资源)
+│   ├── backend/        # 后端生产配置
+│   ├── frontend/       # 前端生产配置 & 静态资源
+│   ├── mysql/          # 数据库数据
+│   └── uploads/        # 上传文件存储
+├── deploy/             # Docker 构建辅助文件
+├── model/              # 数据模型
+├── routers/            # 路由配置
+├── web/                # 前端代码
+│   ├── frontend/       # 博客前台 (Vue3 + TS)
+│   └── backend/        # 后台管理 (Vue3 + TS)
+├── main.go             # 程序入口
+├── docker-compose.yaml # Docker 编排文件
+└── Dockerfile          # 后端构建文件
 ```
 
-2. 安装依赖
+## 技术栈
 
-```bash
-go mod tidy
-```
-
-3. 配置数据库
-   在 `config/config.yaml` 中配置数据库连接信息
-4. 运行项目
-
-```bash
-go run main.go
-```
-
-### 前端
-
-1. 进入前端目录
-   frontend和backend相同
+- **后端**: Go, Gin, GORM, MySQL, JWT
+- **前端**: Vue 3, TypeScript, Vite, Pinia, Element Plus, Axios
+- **部署**: Docker, Docker Compose, Nginx
 
 ```bash
 cd web/frontend（backend）
@@ -144,16 +168,20 @@ npm run build
 ## 预览
 
 ### 前端
+===由于是整页捕获的，所以有些下半是白色，但其实正常不会==
+![首页](./readme_src/前端预览/1.jpeg)
+![文章](./readme_src/前端预览/2.jpeg)
+![分类](./readme_src/前端预览/3.jpeg)
+![归档](./readme_src/前端预览/4.jpeg)
+![关于](./readme_src/前端预览/5.jpeg)
+![测试文章](./readme_src/前端预览/6.jpeg)
 
-![首页](./readme_src/前端预览/首页.jpeg)
-![文章](./readme_src/前端预览/文章.jpeg)
-![分类](./readme_src/前端预览/分类.jpeg)
-![关于](./readme_src/前端预览/关于.jpeg)
-![测试文章](./readme_src/前端预览/测试文章.jpeg)
 ### 后端
 
-![仪表盘](./readme_src/后端预览/仪表盘.png)
-![用户列表](./readme_src/后端预览/用户列表.png)
-![分类列表](./readme_src/后端预览/分类列表.png)
-![文章列表](./readme_src/后端预览/文章列表.png)
-![文章编辑](./readme_src/后端预览/文章编辑.png)
+![仪表盘](./readme_src/后端预览/1.png)
+![用户列表](./readme_src/后端预览/2.png)
+![分类列表](./readme_src/后端预览/3.png)
+![文章列表](./readme_src/后端预览/4.png)
+![媒体库](./readme_src/后端预览/5.png)
+![文章详情](./readme_src/后端预览/6.png)
+![文章详情](./readme_src/后端预览/7.png)

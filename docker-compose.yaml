@@ -1,0 +1,51 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./docker_field/backend/config.yaml:/app/config/config.yaml
+      - ./docker_field/uploads:/app/uploads
+    depends_on:
+      - db
+    networks:
+      - yanblog-network
+    restart: always
+
+  frontend-admin:
+    build: ./web/backend
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+    networks:
+      - yanblog-network
+    restart: always
+
+  frontend-public:
+    build: ./web/frontend
+    ports:
+      - "3002:80"
+    volumes:
+      - ./docker_field/frontend/config.yaml:/usr/share/nginx/html/config.yaml
+      - ./docker_field/frontend/static:/usr/share/nginx/html/static
+    depends_on:
+      - backend
+    networks:
+      - yanblog-network
+    restart: always
+
+  db:
+    build: ./deploy/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: yanblog
+    volumes:
+      - ./docker_field/mysql/data:/var/lib/mysql
+    networks:
+      - yanblog-network
+    restart: always
+
+networks:
+  yanblog-network:
+    driver: bridge

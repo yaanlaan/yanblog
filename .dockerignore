@@ -1,0 +1,32 @@
+# Git
+.git
+.gitignore
+
+# Docker
+docker-compose.yaml
+Dockerfile
+.dockerignore
+
+# Build
+dist
+build
+bin
+
+# Dependencies
+node_modules
+vendor
+
+# Logs
+logs
+*.log
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Project specific
+docker_field
+uploads
+config/config.yaml

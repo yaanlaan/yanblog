@@ -2,11 +2,11 @@
 
 ## 1. 概述
 
-这是一个使用 Go 语言和 Gin 框架构建的博客系统后端 API。API 遵循 RESTful 设计原则，提供用户管理、文章管理、分类管理等功能。
+这是一个使用 Go 语言和 Gin 框架构建的博客系统后端 API。API 遵循 RESTful 设计原则，提供用户管理、文章管理、分类管理、文件管理等功能。
 
 ### 1.1 基础 URL
 
-所有 API 接口的基础 URL 为: `http://localhost:3000/api/v1`
+所有 API 接口的基础 URL 为: `http://localhost:3000/api/v1` (端口取决于配置，默认为 3000)
 
 ### 1.2 响应格式
 
@@ -14,7 +14,7 @@
 
 ```json
 {
-  "status": 200,        // 状态码
+  "status": 200,        // 状态码 (200: 成功, 500: 错误, 等)
   "data": {},           // 返回数据
   "message": "成功",     // 状态消息
   "total": 100          // 总数（分页接口）
@@ -29,6 +29,10 @@
 | 400 | 请求参数错误 |
 | 401 | 未授权访问 |
 | 500 | 服务器内部错误 |
+| 1001 | 用户名已存在 |
+| 1002 | 用户不存在 |
+| 1003 | 密码错误 |
+| ... | 更多错误码请参考 errmsg 包 |
 
 ### 1.4 认证机制
 
@@ -42,7 +46,7 @@ Authorization: Bearer <token>
 
 ## 2. 用户管理接口
 
-### 2.1 用户注册
+### 2.1 用户注册/添加（需要认证）
 
 **接口地址**: `POST /user/add`
 
@@ -50,9 +54,9 @@ Authorization: Bearer <token>
 
 | 参数名 | 类型 | 必填 | 说明 |
 |--------|------|------|------|
-| username | string | 是 | 用户名 |
-| password | string | 是 | 密码 |
-| role | int | 否 | 用户角色(1: 管理员, 2: 普通用户) |
+| username | string | 是 | 用户名 (4-12位) |
+| password | string | 是 | 密码 (6-20位) |
+| role | int | 否 | 用户角色(1: 超级管理员, 2: 管理员, 3: 普通用户) |
 
 **请求示例**:
 
@@ -103,7 +107,7 @@ Authorization: Bearer <token>
 }
 ```
 
-### 2.3 获取用户列表
+### 2.3 获取用户列表（需要认证）
 
 **接口地址**: `GET /users`
 
@@ -111,8 +115,9 @@ Authorization: Bearer <token>
 
 | 参数名 | 类型 | 必填 | 说明 |
 |--------|------|------|------|
-| pagesize | int | 否 | 每页条数(-1表示获取所有) |
-| pagenum | int | 否 | 页码(-1表示获取所有) |
+| pagesize | int | 否 | 每页条数 |
+| pagenum | int | 否 | 页码 |
+| username | string | 否 | 用户名模糊搜索 |
 
 **响应示例**:
 
@@ -121,22 +126,19 @@ Authorization: Bearer <token>
   "status": 200,
   "data": [
     {
-      "id": 1,
+      "ID": 1,
+      "CreatedAt": "2023-01-01T00:00:00Z",
+      "UpdatedAt": "2023-01-01T00:00:00Z",
       "username": "admin",
       "role": 1
-    },
-    {
-      "id": 2,
-      "username": "testuser",
-      "role": 2
     }
   ],
-  "total": 2,
+  "total": 1,
   "message": "OK"
 }
 ```
 
-### 2.4 搜索用户
+### 2.4 搜索用户（需要认证）
 
 **接口地址**: `GET /users/search`
 
@@ -144,23 +146,16 @@ Authorization: Bearer <token>
 
 | 参数名 | 类型 | 必填 | 说明 |
 |--------|------|------|------|
-| pagesize | int | 否 | 每页条数(-1表示获取所有) |
-| pagenum | int | 否 | 页码(-1表示获取所有) |
-| keyword | string | 否 | 搜索关键词 |
-| role | int | 否 | 用户角色 |
+| pagesize | int | 否 | 每页条数 |
+| pagenum | int | 否 | 页码 |
+| username | string | 否 | 搜索关键词 |
 
 **响应示例**:
 
 ```json
 {
   "status": 200,
-  "data": [
-    {
-      "id": 2,
-      "username": "testuser",
-      "role": 2
-    }
-  ],
+  "data": [...],
   "total": 1,
   "message": "OK"
 }
@@ -175,7 +170,6 @@ Authorization: Bearer <token>
 | 参数名 | 类型 | 必填 | 说明 |
 |--------|------|------|------|
 | username | string | 是 | 用户名 |
-| password | string | 是 | 密码 |
 | role | int | 否 | 用户角色 |
 
 **请求示例**:
@@ -183,7 +177,6 @@ Authorization: Bearer <token>
 ```json
 {
   "username": "newusername",
-  "password": "newpassword",
   "role": 2
 }
 ```
@@ -259,8 +252,8 @@ Authorization: Bearer <token>
 
 | 参数名 | 类型 | 必填 | 说明 |
 |--------|------|------|------|
-| pagesize | int | 否 | 每页条数(-1表示获取所有) |
-| pagenum | int | 否 | 页码(-1表示获取所有) |
+| pagesize | int | 否 | 每页条数 |
+| pagenum | int | 否 | 页码 |
 
 **响应示例**:
 
@@ -272,7 +265,8 @@ Authorization: Bearer <token>
       "id": 1,
       "name": "技术分享",
       "img": "https://example.com/image.jpg",
-      "top": 0
+      "top": 0,
+      "article_count": 5
     }
   ],
   "total": 1,
@@ -288,8 +282,8 @@ Authorization: Bearer <token>
 
 | 参数名 | 类型 | 必填 | 说明 |
 |--------|------|------|------|
-| pagesize | int | 否 | 每页条数(-1表示获取所有) |
-| pagenum | int | 否 | 页码(-1表示获取所有) |
+| pagesize | int | 否 | 每页条数 |
+| pagenum | int | 否 | 页码 |
 | keyword | string | 否 | 搜索关键词 |
 
 **响应示例**:
@@ -297,14 +291,7 @@ Authorization: Bearer <token>
 ```json
 {
   "status": 200,
-  "data": [
-    {
-      "id": 1,
-      "name": "技术分享",
-      "img": "https://example.com/image.jpg",
-      "top": 0
-    }
-  ],
+  "data": [...],
   "total": 1,
   "message": "OK"
 }
@@ -339,7 +326,7 @@ Authorization: Bearer <token>
 |--------|------|------|------|
 | name | string | 是 | 分类名称 |
 | img | string | 否 | 分类图片URL |
-| top | int | 否 | 是否置顶(0: 不置顶, 1: 置顶) |
+| top | int | 否 | 是否置顶 |
 
 **请求示例**:
 
@@ -390,7 +377,8 @@ Authorization: Bearer <token>
 | img | string | 否 | 文章图片URL |
 | desc | string | 否 | 文章摘要 |
 | cid | int | 是 | 分类ID |
-| top | int | 否 | 是否置顶(0: 不置顶, 1: 置顶) |
+| top | int | 否 | 置顶等级(0: 不置顶, 1-6: 置顶等级) |
+| tags | string | 否 | 标签 |
 
 **请求示例**:
 
@@ -401,7 +389,8 @@ Authorization: Bearer <token>
   "img": "https://example.com/article-image.jpg",
   "desc": "Go语言学习心得分享",
   "cid": 1,
-  "top": 0
+  "top": 0,
+  "tags": "Go,后端"
 }
 ```
 
@@ -410,15 +399,6 @@ Authorization: Bearer <token>
 ```json
 {
   "status": 200,
-  "data": {
-    "id": 1,
-    "title": "Go语言学习笔记",
-    "content": "Go语言是一门现代编程语言...",
-    "img": "https://example.com/article-image.jpg",
-    "desc": "Go语言学习心得分享",
-    "cid": 1,
-    "top": 0
-  },
   "message": "文章创建成功"
 }
 ```
@@ -431,8 +411,9 @@ Authorization: Bearer <token>
 
 | 参数名 | 类型 | 必填 | 说明 |
 |--------|------|------|------|
-| pagesize | int | 否 | 每页条数(-1表示获取所有) |
-| pagenum | int | 否 | 页码(-1表示获取所有) |
+| pagesize | int | 否 | 每页条数 |
+| pagenum | int | 否 | 页码 |
+| title | string | 否 | 标题模糊搜索 |
 
 **响应示例**:
 
@@ -443,9 +424,10 @@ Authorization: Bearer <token>
     {
       "id": 1,
       "title": "Go语言学习笔记",
-      "content": "Go语言是一门现代编程语言...",
-      "img": "https://example.com/article-image.jpg",
-      "desc": "Go语言学习心得分享",
+      "Category": { "name": "技术分享" },
+      "content": "...",
+      "img": "...",
+      "desc": "...",
       "cid": 1,
       "top": 0
     }
@@ -463,9 +445,9 @@ Authorization: Bearer <token>
 
 | 参数名 | 类型 | 必填 | 说明 |
 |--------|------|------|------|
-| pagesize | int | 否 | 每页条数(-1表示获取所有) |
-| pagenum | int | 否 | 页码(-1表示获取所有) |
-| keyword | string | 否 | 搜索关键词 |
+| pagesize | int | 否 | 每页条数 |
+| pagenum | int | 否 | 页码 |
+| keyword | string | 否 | 搜索关键词(标题、描述、标签) |
 | cid | int | 否 | 分类ID |
 
 **响应示例**:
@@ -473,17 +455,7 @@ Authorization: Bearer <token>
 ```json
 {
   "status": 200,
-  "data": [
-    {
-      "id": 1,
-      "title": "Go语言学习笔记",
-      "content": "Go语言是一门现代编程语言...",
-      "img": "https://example.com/article-image.jpg",
-      "desc": "Go语言学习心得分享",
-      "cid": 1,
-      "top": 0
-    }
-  ],
+  "data": [...],
   "total": 1,
   "message": "OK"
 }
@@ -504,17 +476,7 @@ Authorization: Bearer <token>
 ```json
 {
   "status": 200,
-  "data": [
-    {
-      "id": 1,
-      "title": "Go语言学习笔记",
-      "content": "Go语言是一门现代编程语言...",
-      "img": "https://example.com/article-image.jpg",
-      "desc": "Go语言学习心得分享",
-      "cid": 1,
-      "top": 1
-    }
-  ],
+  "data": [...],
   "message": "OK"
 }
 ```
@@ -527,25 +489,15 @@ Authorization: Bearer <token>
 
 | 参数名 | 类型 | 必填 | 说明 |
 |--------|------|------|------|
-| pagesize | int | 否 | 每页条数(-1表示获取所有) |
-| pagenum | int | 否 | 页码(-1表示获取所有) |
+| pagesize | int | 否 | 每页条数 |
+| pagenum | int | 否 | 页码 |
 
 **响应示例**:
 
 ```json
 {
   "status": 200,
-  "data": [
-    {
-      "id": 1,
-      "title": "Go语言学习笔记",
-      "content": "Go语言是一门现代编程语言...",
-      "img": "https://example.com/article-image.jpg",
-      "desc": "Go语言学习心得分享",
-      "cid": 1,
-      "top": 0
-    }
-  ],
+  "data": [...],
   "total": 1,
   "message": "OK"
 }
@@ -563,11 +515,8 @@ Authorization: Bearer <token>
   "data": {
     "id": 1,
     "title": "Go语言学习笔记",
-    "content": "Go语言是一门现代编程语言...",
-    "img": "https://example.com/article-image.jpg",
-    "desc": "Go语言学习心得分享",
-    "cid": 1,
-    "top": 0
+    "content": "...",
+    "Category": { ... }
   },
   "message": "OK"
 }
@@ -586,20 +535,8 @@ Authorization: Bearer <token>
 | img | string | 否 | 文章图片URL |
 | desc | string | 否 | 文章摘要 |
 | cid | int | 是 | 分类ID |
-| top | int | 否 | 是否置顶(0: 不置顶, 1: 置顶) |
-
-**请求示例**:
-
-```json
-{
-  "title": "Go语言学习笔记（更新版）",
-  "content": "Go语言是一门现代编程语言，具有并发性强等特点...",
-  "img": "https://example.com/article-image.jpg",
-  "desc": "Go语言学习心得分享（更新版）",
-  "cid": 1,
-  "top": 1
-}
-```
+| top | int | 否 | 置顶等级 |
+| tags | string | 否 | 标签 |
 
 **响应示例**:
 
@@ -625,7 +562,7 @@ Authorization: Bearer <token>
 
 ---
 
-## 5. 系统功能接口
+## 5. 文件管理接口
 
 ### 5.1 文件上传（需要认证）
 
@@ -643,11 +580,67 @@ Authorization: Bearer <token>
 {
   "status": 200,
   "message": "文件上传成功",
-  "url": "https://example.com/uploaded-file.jpg"
+  "url": "http://localhost:3000/uploads/2023/01/file.jpg"
 }
 ```
 
-### 5.2 获取天气信息
+### 5.2 获取文件列表（需要认证）
+
+**接口地址**: `GET /files`
+
+**请求参数**:
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| path | string | 否 | 目录路径 (相对于 uploads, 默认为空) |
+
+**响应示例**:
+
+```json
+{
+  "status": 200,
+  "data": [
+    {
+      "name": "articles",
+      "isDir": true,
+      "path": "articles",
+      "size": 0
+    },
+    {
+      "name": "image.jpg",
+      "isDir": false,
+      "path": "image.jpg",
+      "size": 1024
+    }
+  ],
+  "message": "OK"
+}
+```
+
+### 5.3 删除文件/目录（需要认证）
+
+**接口地址**: `DELETE /files`
+
+**请求参数**:
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| path | string | 是 | 文件或目录路径 (相对于 uploads) |
+
+**响应示例**:
+
+```json
+{
+  "status": 200,
+  "message": "删除成功"
+}
+```
+
+---
+
+## 6. 系统功能接口
+
+### 6.1 获取天气信息
 
 **接口地址**: `GET /weather`
 
@@ -673,7 +666,7 @@ Authorization: Bearer <token>
 }
 ```
 
-### 5.3 获取系统状态
+### 6.2 获取系统状态
 
 **接口地址**: `GET /system/status`
 
@@ -688,6 +681,7 @@ Authorization: Bearer <token>
     "uptime": "1天2小时30分钟15秒",
     "memory_usage": 45.5,
     "cpu_usage": 12.3,
+    "disk_usage": 30.5,
     "goroutines": 25,
     "start_time": 1623456789000
   }

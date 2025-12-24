@@ -173,6 +173,17 @@ func EditUser(c *gin.Context) {
 		return
 	}
 
+	// 禁止修改其他超级管理员的角色（防止降权）
+	if targetUser.Role == 1 && targetUser.Username != currentUsername.(string) {
+		if data.Role != 1 {
+			c.JSON(http.StatusOK, gin.H{
+				"status":  errmsg.ERROR_USER_NO_RIGHT,
+				"message": "无权修改其他超级管理员的角色",
+			})
+			return
+		}
+	}
+
 	if currentUserRole == 1 {
 		// 超级管理员
 		if targetUser.Username == currentUsername.(string) {
@@ -258,7 +269,15 @@ func DeleteUser(c *gin.Context) {
 
 	// 权限检查
 	if currentUserRole == 1 {
-		// 超级管理员可以删除任何人（除了自己，通常不建议删除自己，但这里暂不限制，或者前端限制）
+		// 超级管理员不能删除自己
+		if targetUser.Username == currentUsername.(string) {
+			c.JSON(http.StatusOK, gin.H{
+				"status":  errmsg.ERROR_USER_NO_RIGHT,
+				"message": "超级管理员不能删除自己",
+			})
+			return
+		}
+		// 超级管理员可以删除其他任何人
 	} else if currentUserRole == 2 {
 		// 管理员只能删除普通用户
 		if targetUser.Role != 3 {
