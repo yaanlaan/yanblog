@@ -76,9 +76,9 @@ const handleCurrentChange = (val: number) => {
 
 <style scoped>
 .articles-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   margin-bottom: 30px;
 }
 

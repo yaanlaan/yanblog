@@ -105,7 +105,7 @@ defineExpose({
   position: sticky;
   top: 20px;
   padding: 20px;
-  background: #f8f9fa;
+  background: var(--color-background-soft);
   border-radius: 8px;
   max-height: calc(100vh - 40px);
   overflow-y: auto;
@@ -115,9 +115,9 @@ defineExpose({
   font-size: 18px;
   font-weight: bold;
   margin: 0 0 15px 0;
-  color: #333;
+  color: var(--color-heading);
   padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .toc-list {
@@ -134,11 +134,11 @@ defineExpose({
 }
 
 .toc-item:hover {
-  background-color: #e9ecef;
+  background-color: var(--color-background-mute);
 }
 
 .toc-item.active {
-  background-color: #007bff;
+  background-color: #3d96fc;
 }
 
 .toc-item.active .toc-link {
@@ -147,7 +147,7 @@ defineExpose({
 
 .toc-link {
   text-decoration: none;
-  color: #495057;
+  color: var(--color-text);
   font-size: 14px;
   display: block;
   padding: 3px 10px;

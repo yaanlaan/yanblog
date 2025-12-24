@@ -37,7 +37,7 @@ import BackToTop from '@/components/BackToTop.vue'
 
 .content-wrapper {
   display: flex;
-  gap: 30px;
+  gap: 20px;
   min-height: calc(100vh - 280px);
 }
 

@@ -35,6 +35,11 @@ const router = createRouter({
       component: CategoryView,
     },
     {
+      path: '/archive',
+      name: 'archive',
+      component: () => import('../views/ArchiveView.vue'),
+    },
+    {
       path: '/about',
       name: 'about',
       // route level code-splitting

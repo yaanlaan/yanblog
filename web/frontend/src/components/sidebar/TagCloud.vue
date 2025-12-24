@@ -322,8 +322,8 @@ onBeforeUnmount(() => {
 
 .card-header {
   padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-  background: #f8f9fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -331,8 +331,23 @@ onBeforeUnmount(() => {
 
 .card-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
+  font-weight: 700;
   color: #333;
+  position: relative;
+  padding-left: 12px;
+}
+
+.card-header h3::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 16px;
+  background: #3d96fc;
+  border-radius: 2px;
 }
 
 .switch-btn {
@@ -342,11 +357,14 @@ onBeforeUnmount(() => {
   font-size: 18px;
   padding: 5px;
   border-radius: 50%;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
+  color: #999;
 }
 
 .switch-btn:hover {
-  background-color: #e9ecef;
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #3d96fc;
+  transform: rotate(180deg);
 }
 
 .card-content {
@@ -368,22 +386,23 @@ onBeforeUnmount(() => {
 
 .tag {
   display: inline-block;
-  padding: 6px 12px;
-  background: #e9ecef;
-  border-radius: 15px;
-  color: #495057;
+  padding: 6px 14px;
+  background: rgba(61, 150, 252, 0.08);
+  border-radius: 20px;
+  color: #555;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   text-decoration: none;
   font-weight: 500;
   line-height: 1.2;
+  border: 1px solid transparent;
 }
 
 .tag:hover {
-  background: #007bff;
+  background: #3d96fc;
   color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(61, 150, 252, 0.3);
 }
 
 /* 3D 视图样式 */

@@ -36,6 +36,13 @@
           </li>
 
           <li class="nav-item">
+            <router-link to="/archive" class="nav-link" :class="{ active: $route.name === 'archive' }">
+              <i class="iconfont icon-archive"></i>
+              <span>归档</span>
+            </router-link>
+          </li>
+
+          <li class="nav-item">
             <router-link to="/about" class="nav-link" :class="{ active: $route.name === 'about' }">
               <i class="iconfont icon-about"></i>
               <span>关于</span>

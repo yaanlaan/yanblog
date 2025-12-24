@@ -10,23 +10,25 @@
     
     <!-- 文章列表 -->
     <div v-else>
-      <div class="articles-grid" v-if="displayArticles.length > 0">
+      <div class="articles-list" v-if="articles.length > 0">
         <ArticleCard 
           v-for="article in displayArticles" 
           :key="article.id" 
           :article="article"
         />
-      </div>
-      
-      <!-- seemore按钮 -->
-      <div class="see-more-container" v-if="articles.length > displayCount">
-        <button 
-          @click="loadMore"
-          class="see-more-button"
-        >
-          <i class="iconfont icon-seemore"></i>
-          <span> seemore</span>
-        </button>
+        
+        <!-- seemore按钮 -->
+        <div class="see-more-container">
+          <button 
+            v-if="displayCount < articles.length"
+            @click="loadMore"
+            class="see-more-button"
+          >
+            <i class="iconfont icon-seemore"></i>
+            <span> 查看更多</span>
+          </button>
+          <p v-else class="no-more-hint">没有更多文章了</p>
+        </div>
       </div>
       
       <div class="empty-state" v-else>
@@ -76,13 +78,15 @@ const loadMore = () => {
 
 <style scoped>
 .iconfont {
-  font-size: 10px;
+  font-size: 14px;
 }
 .section-title {
-  font-size: 32px;
-  margin-bottom: 40px;
+  font-size: 24px;
+  margin-bottom: 20px;
   color: #333;
-  text-align: center;
+  text-align: left;
+  padding-left: 10px;
+  border-left: 4px solid #42b883;
 }
 
 .loading-state {
@@ -90,7 +94,7 @@ const loadMore = () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 200px;
+  height: 150px;
 }
 
 .spinner {
@@ -100,7 +104,7 @@ const loadMore = () => {
   border-top: 4px solid #007bff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 @keyframes spin {
@@ -108,59 +112,48 @@ const loadMore = () => {
   100% { transform: rotate(360deg); }
 }
 
-.articles-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 30px;
+.articles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.see-more-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.see-more-button {
+  padding: 10px 30px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.see-more-button:hover {
+  background-color: #f8f9fa;
+  color: #333;
+  border-color: #ccc;
+}
+
+.no-more-hint {
+  color: #999;
+  font-size: 14px;
+  padding: 10px 0;
 }
 
 .empty-state {
   text-align: center;
   padding: 40px 0;
   color: #888;
-}
-
-.see-more-container {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  margin-top: 30px;
-}
-
-.see-more-button {
-  width: 40%;
-  padding: 10px;
-  background-color: #f8f9fa;
-  color: #007bff;
-  border: 1px solid #dee2e6;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.see-more-button:hover {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
-  border-radius: 20px;
-}
-
-@media (max-width: 768px) {
-  .articles-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .section-title {
-    font-size: 28px;
-  }
-}
-
-@media (max-width: 480px) {
-  .articles-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
 }
 </style>
