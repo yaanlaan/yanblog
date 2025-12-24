@@ -1,21 +1,23 @@
 <template>
   <div class="sidebar-card profile-card">
     <div class="profile-header">
-      <img src="@/assets/avatar.jpg" alt="Avatar" class="avatar">
+      <img :src="siteInfo.author_avatar || '/assets/avatar.jpg'" alt="Avatar" class="avatar">
     </div>
     <div class="profile-content">
-      <h3 class="name">Yaan</h3>
-      <p class="bio">欢迎光临 (￣▽￣)~*</p>
+      <h3 class="name">{{ siteInfo.author_name }}</h3>
+      <p class="bio">{{ siteInfo.author_bio }}</p>
       
       <div class="social-links">
-        <a href="https://github.com/yaanlaan" target="_blank" class="social-item" title="GitHub">
-          <i class="iconfont icon-github-fill"></i>
-        </a>
-        <a href="https://space.bilibili.com/3461574693360526" target="_blank" class="social-item" title="Bilibili">
-          <i class="iconfont icon-bilibili-line"></i>
-        </a>
-        <a href="mailto:yanxia2425@foxmail.com" class="social-item" title="Email">
-          <i class="iconfont icon-email"></i>
+        <a 
+          v-for="(item, index) in siteInfo.socials" 
+          :key="index"
+          :href="item.url" 
+          target="_blank" 
+          class="social-item" 
+          :title="item.name"
+          :style="item.is_circle ? { '--hover-bg': item.color } : {}"
+        >
+          <i class="iconfont" :class="item.icon"></i>
         </a>
       </div>
       
@@ -40,8 +42,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { articleApi, categoryApi } from '@/services/api'
+import { useSiteInfoStore } from '@/stores/siteInfo'
+import { storeToRefs } from 'pinia'
+
+const siteInfoStore = useSiteInfoStore()
+const { siteInfo } = storeToRefs(siteInfoStore)
 
 const articleCount = ref(0)
 const categoryCount = ref(0)
@@ -49,20 +56,26 @@ const currentQuote = ref('')
 const currentQuoteIndex = ref(0)
 let quoteInterval: number | null = null
 
-const quotes = [
+const defaultQuotes = [
   "月亮想着我的心事，一只猫吃了我的奶酪",
   "草木山石，日月星辰",
   "雾霭山岚，风光雨霁",
 ]
 
+const activeQuotes = computed(() => {
+  return (siteInfo.value.quotes && siteInfo.value.quotes.length > 0) 
+    ? siteInfo.value.quotes 
+    : defaultQuotes
+})
+
 onMounted(async () => {
   // 初始化名言
-  currentQuote.value = quotes[0]
+  currentQuote.value = activeQuotes.value[0]
   
   // 启动轮播
   quoteInterval = setInterval(() => {
-    currentQuoteIndex.value = (currentQuoteIndex.value + 1) % quotes.length
-    currentQuote.value = quotes[currentQuoteIndex.value]
+    currentQuoteIndex.value = (currentQuoteIndex.value + 1) % activeQuotes.value.length
+    currentQuote.value = activeQuotes.value[currentQuoteIndex.value]
   }, 4000) as unknown as number
 
   try {
@@ -157,7 +170,7 @@ onUnmounted(() => {
 }
 
 .social-item:hover {
-  background: #42b883;
+  background: var(--hover-bg, #42b883);
   color: white;
   transform: translateY(-3px);
 }

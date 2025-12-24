@@ -5,8 +5,8 @@
       <!-- 左侧：介绍与技术栈 -->
       <div class="hero-card intro-card">
         <div class="intro-content">
-          <h1 class="blog-title">草木山石<br>日月星辰</h1>
-          <p class="blog-subtitle">yaan's blog</p>
+          <h1 class="blog-title" v-html="siteInfo.hero?.title || '草木山石<br>日月星辰'"></h1>
+          <p class="blog-subtitle">{{ siteInfo.hero?.subtitle || "yaan's blog" }}</p>
         </div>
         <div class="tech-stack-visual">
           <!-- 装饰性图标背景 -->
@@ -20,10 +20,10 @@
       </div>
 
       <!-- 右侧：欢迎图与推荐 -->
-      <div class="hero-card welcome-card">
+      <div class="hero-card welcome-card" :style="{ '--welcome-bg': `url(${siteInfo.hero?.welcome_image || '/src/assets/img/1412.jpg'})` }">
         <div class="welcome-overlay"></div>
         <div class="welcome-content">
-          <h2 class="welcome-title">Welcome to<br>Yaan's Blog</h2>
+          <h2 class="welcome-title" v-html="siteInfo.hero?.welcome || 'Welcome to<br>Yaan\'s Blog'"></h2>
           <button class="recommend-btn" @click="handleRandomVisit">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
             随便逛逛
@@ -42,8 +42,12 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { articleApi } from '@/services/api'
+import { useSiteInfoStore } from '@/stores/siteInfo'
+import { storeToRefs } from 'pinia'
 
 const router = useRouter()
+const siteInfoStore = useSiteInfoStore()
+const { siteInfo } = storeToRefs(siteInfoStore)
 
 const handleRandomVisit = async () => {
   try {
@@ -176,7 +180,7 @@ const handleRandomVisit = async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('/src/assets/img/1412.jpg');
+  background-image: var(--welcome-bg);
   background-size: cover;
   background-position: center;
   transition: all 0.5s ease;

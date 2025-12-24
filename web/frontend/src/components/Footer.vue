@@ -4,70 +4,40 @@
       <div class="container">
         <div class="ref-link">
           <span>
-            <h2>言盐盐 - 无人在意的小角落</h2>
+            <h2>{{ siteInfo.blog_name }} - 无人在意的小角落</h2>
           </span>
-          <span class="copyright"> Email: yanxia2425@foxmail.com </span>
-          <span class="copyright"> Copyright ©2022-2025 言盐盐 All Rights Reserved </span>
-          <span class="copyright">
-            <!-- <a href="https://beian.miit.gov.cn" target="_blank" class="copyright-message">备案</a> -->
-          </span>
-        </div>
-
-        <div class="ref-link">
-          <h2><span class="iconfont icon-book" style="font-size:28px;"></span> 作品集</h2>
-
-          <span>
-            <span class="iconfont icon-lianjie"></span>
-            <a href="https://github.com/yaanlaan/yanblog.git">yanblog</a>
-          </span>
-
-          <span>
-            <span class="iconfont icon-lianjie"></span>
-            <a href="https://github.com/yaanlaan/yanblog.git">yanblog</a>
-          </span>
-
-          <span>
-            <span class="iconfont icon-lianjie"></span>
-            <a href="https://github.com/yaanlaan/yanblog.git">yanblog</a>
+          <span class="copyright"> Email: {{ siteInfo.footer.email }} </span>
+          <span class="copyright"> {{ siteInfo.footer.copyright }} </span>
+          <span class="copyright" v-if="siteInfo.footer.icp?.show">
+            <a :href="siteInfo.footer.icp.link" target="_blank" class="copyright-message">{{ siteInfo.footer.icp.text }}</a>
           </span>
         </div>
 
-        <div class="ref-link">
-          <h2>相关链接</h2>
-          <span>
-            <span class="iconfont icon-icon-zhihu-circle-fill"></span>
-            <a href="/">知乎@言盐盐</a>
-          </span>
+        <div class="ref-link" v-if="siteInfo.footer.portfolio?.show">
+          <h2><span class="iconfont" :class="siteInfo.footer.portfolio.icon" style="font-size:28px;"></span> {{ siteInfo.footer.portfolio.title }}</h2>
 
-          <span>
-            <span class="iconfont icon-bilibili-line"></span>
-            <a href="/">Bilibili@土豆炸马铃薯0_0</a>
+          <span v-for="(item, index) in siteInfo.footer.portfolio.items" :key="index">
+            <span class="iconfont" :class="item.icon"></span>
+            <a :href="item.url" target="_blank">{{ item.name }}</a>
           </span>
+        </div>
 
-          <span>
-            <span class="iconfont icon-github-fill"></span>
-            <a href="https://github.com/yaanlaan">Github@yaanlaan</a>
+        <div class="ref-link" v-if="siteInfo.footer.related_links?.show">
+          <h2>{{ siteInfo.footer.related_links.title }}</h2>
+          <span v-for="(item, index) in siteInfo.footer.related_links.items" :key="index">
+            <span class="iconfont" :class="item.icon"></span>
+            <a :href="item.url" target="_blank">{{ item.name }}</a>
           </span>
-
-          <span>
-            <span class="iconfont icon-lianjie"></span>
-            <a href="https://kirigaya.cn">本博客参考博客链接（知乎：恢锦）</a>
-          </span>
+        </div>
 
           <!-- <span>
             <span class="iconfont icon-steam"></span>
             <a href="https://steamcommunity.com">Steam@yaanlaan</a>
           </span> -->
-          
-        </div>
       </div>
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-// 页脚组件
-</script>
 
 <style scoped>
 .footer-wrapper {
@@ -179,3 +149,11 @@
   }
 }
 </style>
+
+<script setup lang="ts">
+import { useSiteInfoStore } from '@/stores/siteInfo'
+import { storeToRefs } from 'pinia'
+
+const siteInfoStore = useSiteInfoStore()
+const { siteInfo } = storeToRefs(siteInfoStore)
+</script>

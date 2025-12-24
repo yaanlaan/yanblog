@@ -20,6 +20,72 @@
 // App根组件
 import NavBar from '@/components/NavBar.vue'
 import Footer from '@/components/Footer.vue'
+import { onMounted } from 'vue'
+import { useSiteInfoStore } from '@/stores/siteInfo'
+
+const siteInfoStore = useSiteInfoStore()
+
+onMounted(async () => {
+  await siteInfoStore.fetchSiteInfo()
+  
+  // 动态加载 iconfont
+  if (siteInfoStore.siteInfo.iconfont_url) {
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = siteInfoStore.siteInfo.iconfont_url
+    document.head.appendChild(link)
+  } else {
+    // 如果没有配置 iconfont_url，使用默认的离线图标样式（简单的圆点作为占位符）
+    const style = document.createElement('style')
+    style.textContent = `
+      .iconfont {
+        display: inline-block;
+        font-style: normal;
+        vertical-align: baseline;
+        text-align: center;
+        text-transform: none;
+        line-height: 1;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .iconfont::before {
+        content: "\\25CF"; /* 实心圆点 */
+      }
+    `
+    document.head.appendChild(style)
+  }
+
+  // 设置 Favicon
+  if (siteInfoStore.siteInfo.favicon) {
+    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement
+    if (!link) {
+      link = document.createElement('link')
+      link.rel = 'icon'
+      document.head.appendChild(link)
+    }
+    link.href = siteInfoStore.siteInfo.favicon
+  }
+
+  // 设置页面标题
+  if (siteInfoStore.siteInfo.page_title?.default) {
+    document.title = siteInfoStore.siteInfo.page_title.default
+  }
+
+  // 处理页面标题模糊效果
+  let title = document.title
+  window.onblur = function () {
+    title = document.title
+    if (siteInfoStore.siteInfo.page_title?.blur) {
+      document.title = siteInfoStore.siteInfo.page_title.blur
+    }
+  }
+  window.onfocus = function () {
+    if (title) {
+      document.title = title
+    }
+  }
+})
 </script>
 
 <style scoped>

@@ -6,8 +6,8 @@
         <div class="logo-container">
           <router-link to="/">
             <div class="logo">
-              <img src="../assets/yan_icon/yaan.png" class="avatar" alt="博客头像">
-              <span class="blog-name">言盐盐的博客</span>
+              <img :src="siteInfo.logo_image || '/assets/yan_icon/yaan.png'" class="avatar" alt="博客头像">
+              <span class="blog-name">{{ siteInfo.blog_name }}</span>
             </div>
           </router-link>
         </div>
@@ -15,7 +15,7 @@
         <div class="navbar-center">
           <Transition name="fade-slide" mode="out-in">
             <div class="site-title-centered" v-if="isScrolled" key="title">
-              <span>言盐盐的博客</span>
+              <span>{{ siteInfo.blog_name }}</span>
             </div>
 
             <ul class="navbar-nav" v-else key="nav">
@@ -48,11 +48,25 @@
                 </router-link>
               </li>
 
-              <li class="nav-item">
+              <li class="nav-item dropdown-container">
                 <router-link to="/about" class="nav-link" :class="{ active: $route.name === 'about' }">
                   <i class="iconfont icon-about"></i>
                   <span>关于</span>
                 </router-link>
+                
+                <!-- 下拉菜单 -->
+                <div class="dropdown-menu" v-if="siteInfo.socials && siteInfo.socials.length > 0">
+                  <a 
+                    v-for="(contact, index) in siteInfo.socials" 
+                    :key="index" 
+                    :href="contact.url" 
+                    target="_blank" 
+                    class="dropdown-item"
+                  >
+                    <i class="iconfont" :class="contact.icon" :style="{ color: contact.color }"></i>
+                    <span>{{ contact.name }}</span>
+                  </a>
+                </div>
               </li>
 
             </ul>
@@ -73,37 +87,45 @@
             </button>
           </div>
 
-          <!-- <button class="login-btn">未登录</button> -->
-          
-          <!-- 圆形阅读进度 -->
-          <div class="reading-progress-circle">
-            <svg viewBox="0 0 36 36" class="circular-chart">
-              <path class="circle-bg"
-                d="M18 2.0845
-                  a 15.9155 15.9155 0 0 1 0 31.831
-                  a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <path class="circle"
-                :stroke-dasharray="`${scrollProgress}, 100`"
-                d="M18 2.0845
-                  a 15.9155 15.9155 0 0 1 0 31.831
-                  a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <text x="18" y="20.35" class="percentage">{{ Math.round(scrollProgress) }}</text>
-            </svg>
-          </div>
         </div>
       </div>
     </div>
+
+    <a v-if="siteInfo.admin_url" :href="siteInfo.admin_url" target="_blank" class="login-btn admin-btn-fixed">
+      登录
+    </a>
     
     <!-- 底部线性进度条 -->
     <div class="progress-bar" :style="{ width: scrollProgress + '%' }"></div>
   </nav>
+
+  <!-- 悬浮阅读进度 -->
+  <div class="floating-progress" :class="{ visible: isScrolled }">
+    <svg viewBox="0 0 36 36" class="circular-chart">
+      <path class="circle-bg"
+        d="M18 2.0845
+          a 15.9155 15.9155 0 0 1 0 31.831
+          a 15.9155 15.9155 0 0 1 0 -31.831"
+      />
+      <path class="circle"
+        :stroke-dasharray="`${scrollProgress}, 100`"
+        d="M18 2.0845
+          a 15.9155 15.9155 0 0 1 0 31.831
+          a 15.9155 15.9155 0 0 1 0 -31.831"
+      />
+      <text x="18" y="20.35" class="percentage">{{ Math.round(scrollProgress) }}</text>
+    </svg>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import { useSiteInfoStore } from '@/stores/siteInfo'
+import { storeToRefs } from 'pinia'
+
+const siteInfoStore = useSiteInfoStore()
+const { siteInfo } = storeToRefs(siteInfoStore)
 
 // 导航栏可见性状态
 const isNavVisible = ref(true)
@@ -320,6 +342,82 @@ onBeforeUnmount(() => {
   margin-bottom: 0; /* 移除底部间距 */
 }
 
+/* 下拉菜单样式 - Mac风格 */
+.dropdown-container {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 140px;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 1000;
+  margin-top: 5px;
+}
+
+.dropdown-container:hover .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 小三角箭头 */
+.dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid rgba(255, 255, 255, 0.85);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  color: #333;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.dropdown-item:hover {
+  background-color: #007AFF; /* Mac Blue */
+  color: white;
+}
+
+.dropdown-item:hover i {
+  color: white !important; /* 强制图标变白 */
+}
+
+.dropdown-item i {
+  margin-right: 10px;
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+  transition: color 0.2s ease;
+}
+
 .navbar-right {
   display: flex;
   align-items: center; /* 垂直居中 */
@@ -375,12 +473,18 @@ onBeforeUnmount(() => {
 .login-btn {
   background-color: #42b883;
   color: white;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 20px;
+  text-decoration: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 500;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -390,12 +494,40 @@ onBeforeUnmount(() => {
   box-shadow: 0 4px 8px rgba(66, 184, 131, 0.3);
 }
 
-/* 阅读进度条样式 */
-.reading-progress-circle {
-  width: 36px;
-  height: 36px;
-  margin-left: 25px; /* 增加间距 */
-  flex-shrink: 0; /* 防止被压缩 */
+.login-btn i {
+  font-size: 20px;
+}
+
+.admin-btn-fixed {
+  position: absolute;
+  right: 20px;
+  top: 12px; /* (60px header - 36px button) / 2 */
+  z-index: 1002;
+}
+
+/* 悬浮阅读进度条样式 */
+.floating-progress {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  z-index: 999;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 2px;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  backdrop-filter: blur(5px);
+}
+
+.floating-progress.visible {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
 }
 
 .circular-chart {

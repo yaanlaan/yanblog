@@ -5,7 +5,7 @@
     </div>
     <div class="card-content">
       <div class="shortcut-list">
-        <a v-for="(item, index) in shortcuts" :key="index" :href="item.url" target="_blank" class="shortcut-item">
+        <a v-for="(item, index) in siteInfo.shortcuts" :key="index" :href="item.url" target="_blank" class="shortcut-item">
           <div class="icon-wrapper" :style="{ background: item.color }">
             <i :class="['iconfont', item.icon]"></i>
           </div>
@@ -17,35 +17,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { useSiteInfoStore } from '@/stores/siteInfo'
+import { storeToRefs } from 'pinia'
 
-interface Shortcut {
-  name: string
-  url: string
-  icon: string
-  color: string
-}
-
-const shortcuts = ref<Shortcut[]>([
-  {
-    name: '知乎',
-    url: 'https://www.zhihu.com/',
-    icon: 'icon-document',
-    color: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)'
-  },
-  {
-    name: 'Bilibili',
-    url: 'https://www.bilibili.com/',
-    icon: 'icon-ppt',
-    color: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)'
-  },
-  {
-    name: 'github',
-    url: 'https://github.com/',
-    icon: 'icon-folder',
-    color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
-  },
-])
+const siteInfoStore = useSiteInfoStore()
+const { siteInfo } = storeToRefs(siteInfoStore)
 </script>
 
 <style scoped>

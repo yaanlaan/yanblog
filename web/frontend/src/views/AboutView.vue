@@ -12,30 +12,22 @@
           <ProfileCard />
 
           <!-- 联系方式卡片 -->
-          <div class="sidebar-card contact-card" ref="contactCard">
+          <div class="sidebar-card contact-card" ref="contactCard" v-if="siteInfo.contacts?.show">
             <div class="card-header">
               <h3>联系方式</h3>
             </div>
             <div class="card-content">
               <ul class="contact-list">
-                <li class="contact-item" @click="openLink('mailto:yanxia2425@foxmail.com')">
-                  <i class="iconfont icon-email"></i>
-                  <span>yanxia2425@foxmail.com</span>
-                </li>
-                <li class="contact-item" @click="openLink('https://github.com/yaanlaan')">
-                  <i class="iconfont icon-github-fill"></i>
-                  <span>yaanlaan</span>
-                </li>
-                <li class="contact-item" @click="openLink('https://space.bilibili.com/3461574693360526')">
-                  <i class="iconfont icon-bilibili-line"></i>
-                  <span>土豆炸马铃薯0_0</span>
+                <li v-for="(item, index) in siteInfo.contacts.items" :key="index" class="contact-item" @click="openLink(item.url)">
+                  <i class="iconfont" :class="item.icon" :style="{ color: item.color }"></i>
+                  <span>{{ item.name }}</span>
                 </li>
               </ul>
             </div>
           </div>
 
           <!-- 音乐播放器卡片 -->
-          <div class="sidebar-card music-card">
+          <div class="sidebar-card music-card" v-if="siteInfo.music_player?.show && siteInfo.music_player?.url">
             <div class="card-header">
               <h3>音乐播放器</h3>
             </div>
@@ -43,7 +35,7 @@
               <div class="music-player">
                 <!-- 音乐播放器 -->
                 <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="100%" height="86"
-                  src="//music.163.com/outchain/player?type=2&id=555503430&auto=0&height=66">
+                  :src="siteInfo.music_player.url">
                 </iframe>
               </div>
             </div>
@@ -69,6 +61,11 @@ import { marked } from 'marked'
 import MainLayout from '@/components/layout/MainLayout.vue'
 import ProfileCard from '@/components/sidebar/ProfileCard.vue'
 import aboutContent from '@/assets/about/about.md?raw'
+import { useSiteInfoStore } from '@/stores/siteInfo'
+import { storeToRefs } from 'pinia'
+
+const siteInfoStore = useSiteInfoStore()
+const { siteInfo } = storeToRefs(siteInfoStore)
 
 // 渲染 Markdown 内容
 const renderedContent = ref('')

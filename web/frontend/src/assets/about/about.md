@@ -74,5 +74,4 @@
 如果你对这个项目感兴趣，或者有任何问题，欢迎通过以下方式联系我：
 
 - **GitHub**: [https://github.com/yaanlaan](https://github.com/yaanlaan)
-- **Bilibili**: [https://space.bilibili.com/483434376](https://space.bilibili.com/483434376)
 - **Email**: yanxia2425@foxmail.com
