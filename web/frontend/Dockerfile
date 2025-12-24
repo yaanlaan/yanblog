@@ -16,7 +16,7 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Use config.docker.yaml as the main config.yaml
-# RUN cp /usr/share/nginx/html/config.docker.yaml /usr/share/nginx/html/config.yaml
+RUN cp /usr/share/nginx/html/config.docker.yaml /usr/share/nginx/html/config.yaml
 
 EXPOSE 80
 

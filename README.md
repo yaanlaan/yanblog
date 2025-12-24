@@ -44,8 +44,8 @@
 将 `config/config_template.yaml` 复制并重命名为 `docker_field/backend/config.yaml`，并填入你的数据库信息、JWT 密钥等。
 
 **前端配置：**
-前端配置文件位于 `docker_field/frontend/config.yaml`。
-如果你不想在部署后修改，请提前编辑此文件，配置你的博客名称、头像路径、背景图等。
+前端配置文件位于 `docker_field/frontend/config.yaml`。（一开始没有这个文件，但是有一个config.docker.yaml，如果是使用docker直接就行，如果想自己本地运行，把config.docker.yaml复制重命名为config.yaml即可）
+如果你不想在部署后修改，请提前编辑此文件，配置你的博客名称、头像路径、背景图等，自行查看配置）
 
 ### 2. 启动服务
 
@@ -73,115 +73,32 @@ docker-compose up --build -d
     - 数据库数据位于 `docker_field/mysql/data`
     - 上传的文件位于 `docker_field/uploads`
 
-## 本地开发构建
-
-如果你想自己从源码构建或进行二次开发。
-
-### 后端
-
-1. 克隆项目
-2. 安装依赖：`go mod tidy`
-3. 配置数据库：修改 `config/config.yaml`
-4. 运行项目：`go run main.go`
-
-### 前端 (Web/Frontend & Web/Backend)
-
-前端分为前台 (frontend) 和后台管理 (backend) 两个项目。
-
-1. 进入目录：`cd web/frontend` 或 `cd web/backend`
-2. 安装依赖：`npm install`
-3. **配置文件**：
-    - 本地开发时，前台使用的是 `public/config.yaml`。
-4. 运行开发服务器：`npm run dev`
-5. 构建生产版本：`npm run build`
-
-## 项目结构
-
-```
-yanblog/
-├── api/                # API 接口实现
-├── config/             # 本地开发配置文件
-├── docker_field/       # Docker 部署挂载目录 (配置、数据、静态资源)
-│   ├── backend/        # 后端生产配置
-│   ├── frontend/       # 前端生产配置 & 静态资源
-│   ├── mysql/          # 数据库数据
-│   └── uploads/        # 上传文件存储
-├── deploy/             # Docker 构建辅助文件
-├── model/              # 数据模型
-├── routers/            # 路由配置
-├── web/                # 前端代码
-│   ├── frontend/       # 博客前台 (Vue3 + TS)
-│   └── backend/        # 后台管理 (Vue3 + TS)
-├── main.go             # 程序入口
-├── docker-compose.yaml # Docker 编排文件
-└── Dockerfile          # 后端构建文件
-```
-
-## 技术栈
-
-- **后端**: Go, Gin, GORM, MySQL, JWT
-- **前端**: Vue 3, TypeScript, Vite, Pinia, Element Plus, Axios
-- **部署**: Docker, Docker Compose, Nginx
-
-```bash
-cd web/frontend（backend）
-```
-
-2. 安装依赖
-
-```bash
-npm install
-```
-
-3. 运行开发服务器
-
-```bash
-npm run dev
-```
 
 ## API 文档
-
-
 
 详细的 API 接口文档请查看 [apidoc.md](apidoc.md)
 
 ## 配置说明
 
-项目使用 YAML 格式进行配置，主要配置项包括：
-
-- 服务器配置（端口、运行模式等）
-- 数据库配置（地址、用户名、密码等）
-- 天气 API 配置
-
-## 部署
-
-1. 构建前端项目
-
-```bash
-cd web/frontend
-npm run build
-```
-
-2. 将构建产物部署到服务器
-3. 配置反向代理（如 Nginx）将前端请求代理到后端
+项目使用 YAML 格式进行配置
 
 ## 预览
 
 ### 前端
 ===由于是整页捕获的，所以有些下半是白色，但其实正常不会==
-![首页](./readme_src/前端预览/1.jpeg)
-![文章](./readme_src/前端预览/2.jpeg)
+![首页](./readme_src/前端预览/1.png)
+![文章](./readme_src/前端预览/2.png)
 ![分类](./readme_src/前端预览/3.jpeg)
 ![归档](./readme_src/前端预览/4.jpeg)
-![关于](./readme_src/前端预览/5.jpeg)
+![关于](./readme_src/前端预览/5.png)
 ![测试文章](./readme_src/前端预览/6.jpeg)
 
 ### 后端
 
-![仪表盘](./readme_src/后端预览/1.png)
-![用户列表](./readme_src/后端预览/2.png)
-![分类列表](./readme_src/后端预览/3.png)
-![文章列表](./readme_src/后端预览/4.png)
-![媒体库](./readme_src/后端预览/5.png)
-![文章详情](./readme_src/后端预览/6.png)
-![文章详情](./readme_src/后端预览/7.png)
+![仪表盘](./readme_src/后端预览/1.jpeg)
+![用户列表](./readme_src/后端预览/2.jpeg)
+![分类列表](./readme_src/后端预览/3.jpeg)
+![文章列表](./readme_src/后端预览/4.jpeg)
+![媒体库](./readme_src/后端预览/5.jpeg)
+![文章详情](./readme_src/后端预览/6.jpeg)
+![文章详情](./readme_src/后端预览/7.jpeg)
