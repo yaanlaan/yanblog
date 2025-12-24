@@ -58,9 +58,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { marked } from 'marked'
+import axios from 'axios'
 import MainLayout from '@/components/layout/MainLayout.vue'
 import ProfileCard from '@/components/sidebar/ProfileCard.vue'
-import aboutContent from '@/assets/about/about.md?raw'
 import { useSiteInfoStore } from '@/stores/siteInfo'
 import { storeToRefs } from 'pinia'
 
@@ -70,8 +70,15 @@ const { siteInfo } = storeToRefs(siteInfoStore)
 // 渲染 Markdown 内容
 const renderedContent = ref('')
 
-onMounted(() => {
-  renderedContent.value = marked.parse(aboutContent) as string
+onMounted(async () => {
+  try {
+    // 添加时间戳防止缓存
+    const response = await axios.get(`/static/about.md?t=${new Date().getTime()}`)
+    renderedContent.value = marked.parse(response.data) as string
+  } catch (error) {
+    console.error('Failed to load about.md:', error)
+    renderedContent.value = '<h1>加载失败</h1><p>请检查网络或配置文件。</p>'
+  }
 })
 
 // 微信二维码显示状态
@@ -137,6 +144,15 @@ const showQRCode = (type: string) => {
 .markdown-body {
   color: #333;
   line-height: 1.6;
+}
+
+.markdown-body :deep(h1) {
+  font-size: 36px;
+  font-weight: bold;
+  margin: 0 0 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #eee;
+  color: #333;
 }
 
 .markdown-body :deep(h2) {

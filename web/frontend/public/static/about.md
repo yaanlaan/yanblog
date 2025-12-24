@@ -1,5 +1,4 @@
-# 关于我们
-
+# YANBLOG
 ## 项目简介
 
 这是一个使用 Vue 3、Go 语言和现代 Web 技术构建的全栈博客系统。项目采用前后端分离架构，后端使用 Gin 框架提供 RESTful API，前端使用 Vue 3 构建响应式界面。
@@ -70,20 +69,3 @@
 3.  **维护**: 直接修改挂载的配置文件或替换静态资源图片，刷新即可生效。
 
 ## 视频示例
-
-<div class="video-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%;">
-  <iframe src="https://player.bilibili.com/player.html?isOutside=true&aid=638975717&bvid=BV1HY4y1r731&cid=717992692&page=1&high_quality=1&danmaku=0" allowfullscreen="allowfullscreen" width="100%" height="100%" scrolling="no" frameborder="0" sandbox="allow-top-navigation allow-same-origin allow-forms allow-scripts" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
-</div>
-
-<p class="video-description" style="text-align: center; color: #666; margin-top: 10px;">莫扎特 D大调嬉游曲 K. 136丨Pekka Kuusisto丨挪威室内乐团</p>
-
-## 参考说明
-
-本博客主要参考了 ginblog 项目的后端，和知乎恢锦的博客元素设计。
-
-## 联系方式
-
-如果你对这个项目感兴趣，或者有任何问题，欢迎通过以下方式联系我：
-
-- **GitHub**: [https://github.com/yaanlaan](https://github.com/yaanlaan)
-- **Email**: yanxia2425@foxmail.com
