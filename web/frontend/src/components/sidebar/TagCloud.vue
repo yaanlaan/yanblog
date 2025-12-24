@@ -375,7 +375,7 @@ onBeforeUnmount(() => {
 }
 
 .switch-track.active {
-  background-color: #42b883;
+  background-color: #05b19aff;
 }
 
 .switch-thumb {
@@ -454,7 +454,7 @@ onBeforeUnmount(() => {
   position: absolute;
   left: 0;
   top: 0;
-  color: #42b883; /* 默认颜色 */
+  color: #696e6cff; /* 默认颜色 */
   text-decoration: none;
   font-weight: bold;
   white-space: nowrap;
@@ -465,7 +465,7 @@ onBeforeUnmount(() => {
 }
 
 .tag-3d:hover {
-  color: #3aa876;
+  color: #3daa79ff;
   z-index: 1000 !important; /* 确保 hover 时在最上层 */
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }

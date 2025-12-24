@@ -57,6 +57,7 @@ import Footer from '@/components/Footer.vue'
 
 .header {
   flex-shrink: 0; /* 防止头部被压缩 */
+  height: 60px; /* 占位高度，与 NavBar 高度一致 */
 }
 
 .main {

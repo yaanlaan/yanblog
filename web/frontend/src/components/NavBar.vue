@@ -12,44 +12,52 @@
           </router-link>
         </div>
         
-        <ul class="navbar-nav">
+        <div class="navbar-center">
+          <Transition name="fade-slide" mode="out-in">
+            <div class="site-title-centered" v-if="isScrolled" key="title">
+              <span>言盐盐的博客</span>
+            </div>
 
-          <li class="nav-item">
-            <router-link to="/" class="nav-link" :class="{ active: $route.name === 'home' }">
-              <i class="iconfont icon-Homehomepagemenu"></i>
-              <span>首页</span>
-            </router-link>
-          </li>
+            <ul class="navbar-nav" v-else key="nav">
 
-          <li class="nav-item">
-            <router-link to="/articles" class="nav-link" :class="{ active: $route.name === 'articles' }">
-              <i class="iconfont icon-newspaper"></i>
-              <span>文章</span>
-            </router-link>
-          </li>
+              <li class="nav-item">
+                <router-link to="/" class="nav-link" :class="{ active: $route.name === 'home' }">
+                  <i class="iconfont icon-Homehomepagemenu"></i>
+                  <span>首页</span>
+                </router-link>
+              </li>
 
-          <li class="nav-item">
-            <router-link to="/categories" class="nav-link" :class="{ active: $route.name === 'categories' }">
-              <i class="iconfont icon-categories"></i>
-              <span>分类</span>
-            </router-link>
-          </li>
+              <li class="nav-item">
+                <router-link to="/articles" class="nav-link" :class="{ active: $route.name === 'articles' }">
+                  <i class="iconfont icon-newspaper"></i>
+                  <span>文章</span>
+                </router-link>
+              </li>
 
-          <li class="nav-item">
-            <router-link to="/archive" class="nav-link" :class="{ active: $route.name === 'archive' }">
-              <i class="iconfont icon-archive"></i>
-              <span>归档</span>
-            </router-link>
-          </li>
+              <li class="nav-item">
+                <router-link to="/categories" class="nav-link" :class="{ active: $route.name === 'categories' }">
+                  <i class="iconfont icon-categories"></i>
+                  <span>分类</span>
+                </router-link>
+              </li>
 
-          <li class="nav-item">
-            <router-link to="/about" class="nav-link" :class="{ active: $route.name === 'about' }">
-              <i class="iconfont icon-about"></i>
-              <span>关于</span>
-            </router-link>
-          </li>
+              <li class="nav-item">
+                <router-link to="/archive" class="nav-link" :class="{ active: $route.name === 'archive' }">
+                  <i class="iconfont icon-archive"></i>
+                  <span>归档</span>
+                </router-link>
+              </li>
 
-        </ul>
+              <li class="nav-item">
+                <router-link to="/about" class="nav-link" :class="{ active: $route.name === 'about' }">
+                  <i class="iconfont icon-about"></i>
+                  <span>关于</span>
+                </router-link>
+              </li>
+
+            </ul>
+          </Transition>
+        </div>
 
         <div class="navbar-right">
           <div class="search-container">
@@ -78,6 +86,7 @@ import { useRouter } from 'vue-router'
 
 // 导航栏可见性状态
 const isNavVisible = ref(true)
+const isScrolled = ref(false)
 const lastScrollY = ref(0)
 const searchQuery = ref('')
 
@@ -86,8 +95,9 @@ const router = useRouter()
 // 处理滚动事件
 const handleScroll = () => {
   const currentScrollY = window.scrollY
-  // 当向下滚动超过50px时隐藏导航栏，向上滚动时显示
-  isNavVisible.value = currentScrollY < 50 || currentScrollY < lastScrollY.value
+  // 始终保持导航栏可见，但根据滚动距离切换显示内容
+  isNavVisible.value = true
+  isScrolled.value = currentScrollY > 100
   lastScrollY.value = currentScrollY
 }
 
@@ -116,15 +126,16 @@ onBeforeUnmount(() => {
 .navbar {
   background-color: rgba(255, 255, 255, 0.9);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   width: 100%;
   z-index: 1000;
   transition: opacity 0.3s, transform 0.3s;
   backdrop-filter: blur(10px);
   box-sizing: border-box;
 
-  position: 0;
   margin: 0;
   display: flex;
   align-items: center; /* 垂直居中 */
@@ -156,7 +167,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 0;
+  height: 60px; /* 固定高度 */
   width: 100%;
   box-sizing: border-box;
 }
@@ -166,13 +177,13 @@ onBeforeUnmount(() => {
   align-items: center; /* 垂直居中 */
   justify-content: left; /* 水平居中 */
   width: 20%;
-
+  height: 100%;
 }
 
 .logo {
   position: relative;
-  width: 180px;
-  height: 60px;
+  padding: 0 10px;
+  height: 40px; /* 减小高度 */
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -214,24 +225,32 @@ onBeforeUnmount(() => {
 }
 
 .avatar {
-  width: 45px;
-  height: 45px;
+  width: 32px; /* 减小头像 */
+  height: 32px;
   object-fit: cover;
   border-radius: 10%;
-  margin-right: 10px;
+  margin-right: 8px;
 }
 
 .blog-name {
-  font-size: 1.3em;
+  font-size: 1.1em; /* 稍微减小字体 */
   font-weight: bold;
   color: #333;
+}
+
+.navbar-center {
+  width: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
 }
 
 .navbar-nav {
   display: flex;
   align-items: center; /* 垂直居中 */
   justify-content: center; /* 水平居中 */
-  width: 50%;
+  width: 100%;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -243,20 +262,21 @@ onBeforeUnmount(() => {
 
 .nav-link {
   display: flex;
-  flex-direction: column;
+  flex-direction: row; /* 改为水平排列 */
   align-items: center;
   justify-content: center;
   text-decoration: none;
   color: #2c3e50;
-  padding: 8px 15px;
+  padding: 6px 12px; /* 减小 padding */
   border-radius: 8px;
   transition: all 0.3s ease;
-  min-width: 60px;
+  min-width: auto; /* 移除最小宽度限制 */
+  gap: 6px; /* 图标和文字间距 */
 }
 
 .nav-link:hover {
   color: #42b883;
-  transform: translateY(-2px);
+  transform: translateY(-1px); /* 减小位移 */
   background-color: rgba(66, 184, 131, 0.1);
 }
 
@@ -266,8 +286,8 @@ onBeforeUnmount(() => {
 }
 
 .nav-link i {
-  font-size: 1.2em;
-  margin-bottom: 4px;
+  font-size: 1.1em;
+  margin-bottom: 0; /* 移除底部间距 */
 }
 
 .navbar-right {
@@ -340,12 +360,42 @@ onBeforeUnmount(() => {
   box-shadow: 0 4px 8px rgba(66, 184, 131, 0.3);
 }
 
+.site-title-centered {
+  width: 100%;
+  height: 100%; /* 撑满高度 */
+  text-align: center;
+  font-size: 1.3em; /* 稍微减小字体 */
+  font-weight: bold;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 动画效果 */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
 @media (max-width: 768px) {
   .navbar-content {
     flex-wrap: wrap;
   }
   
-  .navbar-nav {
+  .navbar-nav,
+  .site-title-centered,
+  .navbar-center {
     order: 3;
     width: 100%;
     justify-content: center;

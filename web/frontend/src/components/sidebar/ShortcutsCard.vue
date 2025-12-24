@@ -1,7 +1,7 @@
 <template>
   <div class="sidebar-card shortcuts-card">
     <div class="card-header">
-      <h3><i class="iconfont icon-link"></i> 常用连接</h3>
+      <h3><i class="iconfont icon-link"></i> 常用链接</h3>
     </div>
     <div class="card-content">
       <div class="shortcut-list">
@@ -28,29 +28,23 @@ interface Shortcut {
 
 const shortcuts = ref<Shortcut[]>([
   {
-    name: 'OpenMCP 官方文档',
-    url: '#',
+    name: '知乎',
+    url: 'https://www.zhihu.com/',
     icon: 'icon-document',
     color: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)'
   },
   {
-    name: 'Slidev AI 幻灯片',
-    url: '#',
+    name: 'Bilibili',
+    url: 'https://www.bilibili.com/',
     icon: 'icon-ppt',
     color: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)'
   },
   {
-    name: '锦恢的文档库',
-    url: '#',
+    name: 'github',
+    url: 'https://github.com/',
     icon: 'icon-folder',
     color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
   },
-  {
-    name: '锦恢的 NAS',
-    url: '#',
-    icon: 'icon-cloud',
-    color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
-  }
 ])
 </script>
 
