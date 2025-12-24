@@ -10,9 +10,11 @@
           :categories="categories"
           :selected-category="selectedCategory"
           :search-keyword="searchKeyword"
+          :view-mode="viewMode"
           @category-change="handleCategoryChange"
           @search="handleSearch"
           @reset="handleReset"
+          @view-change="(mode) => viewMode = mode"
         />
         
         <ArticleListContent
@@ -21,6 +23,7 @@
           :total="total"
           :current-page="pagination.currentPage"
           :page-size="pagination.pageSize"
+          :view-mode="viewMode"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
@@ -72,6 +75,7 @@ const loading = ref(false)
 const total = ref(0)
 const selectedCategory = ref('')
 const searchKeyword = ref('')
+const viewMode = ref<'grid' | 'list'>('grid')
 
 const pagination = reactive({
   currentPage: 1,

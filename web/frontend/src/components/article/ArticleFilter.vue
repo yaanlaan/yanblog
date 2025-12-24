@@ -1,39 +1,65 @@
 <template>
-  <div class="filters">
-    <!-- 搜索框 -->
-    <div class="filter-group">
-      <label>搜索:</label>
-      <input 
-        type="text" 
-        :value="searchKeyword" 
-        @input="handleSearchInput"
-        @keyup.enter="handleSearch"
-        placeholder="输入文章标题或摘要关键词"
-        class="search-input"
-      />
-      <button @click="handleSearch" class="search-button">搜索</button>
-      <button @click="handleReset" class="reset-button">重置</button>
+  <div class="article-filter-bar">
+    <!-- 左侧分类Tab -->
+    <div class="category-tabs">
+      <button 
+        class="tab-item" 
+        :class="{ active: !selectedCategory }"
+        @click="selectCategory('')"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tab-icon"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        全部文章
+      </button>
+      <button 
+        v-for="category in categories" 
+        :key="category.id" 
+        class="tab-item"
+        :class="{ active: selectedCategory == String(category.id) }"
+        @click="selectCategory(String(category.id))"
+      >
+        {{ category.name }}
+      </button>
     </div>
-    
-    <!-- 分类筛选 -->
-    <div class="filter-group">
-      <label>分类:</label>
-      <select :value="selectedCategory" @change="handleCategoryChange">
-        <option value="">全部分类</option>
-        <option 
-          v-for="category in categories" 
-          :key="category.id" 
-          :value="category.id"
+
+    <!-- 右侧搜索与视图切换 -->
+    <div class="right-actions">
+      <div class="view-toggles">
+        <button 
+          class="view-btn" 
+          :class="{ active: viewMode === 'grid' }"
+          @click="$emit('view-change', 'grid')"
+          title="网格视图"
         >
-          {{ category.name }}
-        </option>
-      </select>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        </button>
+        <button 
+          class="view-btn" 
+          :class="{ active: viewMode === 'list' }"
+          @click="$emit('view-change', 'list')"
+          title="列表视图"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="search-wrapper">
+        <div class="search-box">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input 
+            type="text" 
+            :value="searchKeyword" 
+            @input="handleSearchInput"
+            @keyup.enter="handleSearch"
+            placeholder="搜索文章..."
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onUnmounted } from 'vue'
 
 // 定义Props
 interface Category {
@@ -45,6 +71,7 @@ interface Props {
   categories: Category[]
   selectedCategory: string
   searchKeyword: string
+  viewMode?: 'grid' | 'list'
 }
 
 // 定义Emits
@@ -52,6 +79,7 @@ const emit = defineEmits<{
   (e: 'category-change', value: string): void
   (e: 'search', keyword: string): void
   (e: 'reset'): void
+  (e: 'view-change', mode: 'grid' | 'list'): void
 }>()
 
 const props = defineProps<Props>()
@@ -59,10 +87,9 @@ const props = defineProps<Props>()
 // 防抖定时器
 let searchTimer: number | null = null
 
-// 处理分类变化
-const handleCategoryChange = (event: Event) => {
-  const target = event.target as HTMLSelectElement
-  emit('category-change', target.value)
+// 处理分类选择
+const selectCategory = (id: string) => {
+  emit('category-change', id)
 }
 
 // 处理搜索输入
@@ -81,7 +108,7 @@ const handleSearchInput = (event: Event) => {
   }, 300) // 300ms防抖延迟
 }
 
-// 处理搜索（点击搜索按钮或按回车）
+// 处理搜索（按回车）
 const handleSearch = (event: Event) => {
   // 清除防抖定时器
   if (searchTimer) {
@@ -90,19 +117,7 @@ const handleSearch = (event: Event) => {
   }
   
   const target = event.target as HTMLInputElement
-  const keyword = (target.previousElementSibling as HTMLInputElement)?.value || props.searchKeyword
-  emit('search', keyword)
-}
-
-// 处理重置
-const handleReset = () => {
-  // 清除防抖定时器
-  if (searchTimer) {
-    clearTimeout(searchTimer)
-    searchTimer = null
-  }
-  
-  emit('reset')
+  emit('search', target.value)
 }
 
 // 组件卸载时清除定时器
@@ -114,78 +129,140 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.filters {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin-bottom: 25px;
+.article-filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
-.filter-group {
+.category-tabs {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 5px; /* 滚动条空间 */
+}
+
+.tab-item {
+  background: none;
+  border: none;
+  font-size: 15px;
+  color: #666;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.3s;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.filter-group:last-child {
-  margin-bottom: 0;
-}
-
-.filter-group label {
+  gap: 6px;
+  white-space: nowrap;
   font-weight: 500;
-  color: #333;
-  min-width: 40px;
 }
 
-.filter-group select,
-.filter-group input {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
+.tab-item:hover {
+  color: #42b883;
+  background-color: rgba(66, 184, 131, 0.05);
 }
 
-.search-input {
-  min-width: 200px;
+.tab-item.active {
+  color: #42b883;
+  background-color: rgba(66, 184, 131, 0.1);
+  font-weight: 600;
 }
 
-.search-button,
-.reset-button {
-  padding: 8px 16px;
+.tab-icon {
+  opacity: 0.8;
+}
+
+.right-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.view-toggles {
+  display: flex;
+  background: #f5f5f5;
+  padding: 3px;
+  border-radius: 8px;
+  gap: 2px;
+}
+
+.view-btn {
   border: none;
-  border-radius: 4px;
+  background: none;
+  padding: 6px;
+  border-radius: 6px;
+  color: #999;
   cursor: pointer;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
 }
 
-.search-button {
-  background-color: #409eff;
-  color: white;
-}
-
-.reset-button {
-  background-color: #f5f5f5;
+.view-btn:hover {
   color: #666;
+  background: rgba(0,0,0,0.05);
 }
 
-.search-button:hover {
-  background-color: #337ecc;
+.view-btn.active {
+  background: white;
+  color: #42b883;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
-.reset-button:hover {
-  background-color: #e0e0e0;
+.search-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: #999;
+  pointer-events: none;
+}
+
+.search-box input {
+  padding: 8px 12px 8px 36px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 14px;
+  width: 200px;
+  transition: all 0.3s;
+  outline: none;
+  color: #333;
+}
+
+.search-box input:focus {
+  border-color: #42b883;
+  box-shadow: 0 0 0 3px rgba(66, 184, 131, 0.1);
+  width: 240px;
 }
 
 @media (max-width: 768px) {
-  .filter-group {
+  .article-filter-bar {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
   }
   
-  .search-input {
-    min-width: 150px;
+  .search-box input {
+    width: 100%;
+  }
+  
+  .search-box input:focus {
+    width: 100%;
   }
 }
 </style>

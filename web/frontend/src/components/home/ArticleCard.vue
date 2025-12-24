@@ -120,8 +120,8 @@ const splitTags = (tags: string) => {
 }
 
 .article-title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 900;
   margin: 0;
   line-height: 1.4;
   display: flex;
@@ -143,6 +143,8 @@ const splitTags = (tags: string) => {
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  font-weight: 900 !important;
+  font-size: 20px !important;
 }
 
 .article-title a:hover {
