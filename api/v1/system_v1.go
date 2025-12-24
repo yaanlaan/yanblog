@@ -3,14 +3,13 @@ package v1
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"runtime"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/mem"
-	"github.com/shirou/gopsutil/v3/process"
 )
 
 // 系统状态信息结构体
@@ -19,6 +18,7 @@ type SystemStatus struct {
 	Uptime      string  `json:"uptime"`       // 运行时间
 	MemoryUsage float64 `json:"memory_usage"` // 内存使用率
 	CPUUsage    float64 `json:"cpu_usage"`    // CPU使用率
+	DiskUsage   float64 `json:"disk_usage"`   // 磁盘使用率
 	Goroutines  int     `json:"goroutines"`   // Goroutines数量
 	StartTime   int64   `json:"start_time"`   // 启动时间戳（毫秒）
 }
@@ -29,7 +29,7 @@ var startTime = time.Now()
 // GetSystemStatus 获取系统状态信息
 func GetSystemStatus(c *gin.Context) {
 	// 获取内存信息
-	_, err := mem.VirtualMemory()
+	vMem, err := mem.VirtualMemory()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  500,
@@ -50,24 +50,12 @@ func GetSystemStatus(c *gin.Context) {
 		return
 	}
 
-	// 获取当前进程信息
-	pid := os.Getpid()
-	proc, err := process.NewProcess(int32(pid))
+	// 获取磁盘信息
+	diskStat, err := disk.Usage("/")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  500,
-			"message": "获取进程信息失败",
-			"data":    nil,
-		})
-		return
-	}
-
-	// 获取进程内存使用
-	procMemPercent, err := proc.MemoryPercent()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  500,
-			"message": "获取进程内存使用率失败",
+			"message": "获取磁盘信息失败",
 			"data":    nil,
 		})
 		return
@@ -81,8 +69,9 @@ func GetSystemStatus(c *gin.Context) {
 	systemStatus := SystemStatus{
 		Status:      "online",
 		Uptime:      uptimeStr,
-		MemoryUsage: float64(procMemPercent),
+		MemoryUsage: vMem.UsedPercent,
 		CPUUsage:    cpuPercent[0],
+		DiskUsage:   diskStat.UsedPercent,
 		Goroutines:  runtime.NumGoroutine(),
 		StartTime:   startTime.UnixNano() / 1000000, // 转换为毫秒时间戳
 	}

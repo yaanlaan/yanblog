@@ -16,14 +16,23 @@
       
       <div class="article-footer">
         <div class="footer-left">
-          <span class="date">
+          <span class="meta-item date">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             {{ formatDate(article.createdAt) }}
+          </span>
+          <span class="meta-item category">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            {{ article.categoryName }}
+          </span>
+          <span class="meta-item tags" v-if="article.tags">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+            <span v-for="(tag, index) in splitTags(article.tags)" :key="tag">
+              {{ tag }}{{ index < splitTags(article.tags).length - 1 ? ', ' : '' }}
+            </span>
           </span>
         </div>
         <div class="footer-right">
           <span class="top-badge">置顶</span>
-          <span class="category-badge">{{ article.categoryName }}</span>
         </div>
       </div>
     </div>
@@ -47,6 +56,7 @@ interface Article {
   content: string
   img: string
   top: number
+  tags?: string
   createdAt: string
   updatedAt: string
 }
@@ -64,9 +74,63 @@ const defaultImage = new URL('../../assets/img/无封面.jpg', import.meta.url).
 const formatDate = (dateString: string) => {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-')
+}
+
+// 分割标签
+const splitTags = (tags: string) => {
+  if (!tags) return []
+  return tags.replace(/，/g, ',').split(',').map(t => t.trim()).filter(t => t).slice(0, 3)
 }
 </script>
+
+<style scoped>
+/* ... existing styles ... */
+.article-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.3s ease;
+  cursor: pointer;
+}
+
+.meta-item:hover {
+  color: #42b883;
+}
+
+.meta-item svg {
+  width: 14px;
+  height: 14px;
+}
+
+.top-badge {
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(255, 77, 79, 0.2);
+}
+</style>
 
 <style scoped>
 .article-item {
@@ -89,7 +153,7 @@ const formatDate = (dateString: string) => {
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #ff6b6b 0%, #c0392b 100%); /* 置顶文章使用红色渐变 */
+  background: linear-gradient(180deg, #42b883 0%, #35495e 100%); /* 置顶文章使用绿色渐变 */
   z-index: 1;
 }
 
@@ -125,7 +189,7 @@ const formatDate = (dateString: string) => {
 }
 
 .title-icon {
-  color: #ff6b6b; /* 置顶图标颜色 */
+  color: #309988ff; /* 置顶图标颜色 */
   width: 18px;
   height: 18px;
 }
@@ -143,7 +207,7 @@ const formatDate = (dateString: string) => {
 }
 
 .article-title a:hover {
-  color: #ff6b6b;
+  color: #42b883;
 }
 
 /* 摘要 */
@@ -194,8 +258,8 @@ const formatDate = (dateString: string) => {
 
 .category-badge {
   padding: 2px 10px;
-  border: 1px solid #ff6b6b;
-  color: #ff6b6b;
+  border: 1px solid #42b883;
+  color: #42b883;
   border-radius: 4px;
   font-size: 12px;
   transition: all 0.3s;
@@ -203,18 +267,18 @@ const formatDate = (dateString: string) => {
 }
 
 .category-badge:hover {
-  background-color: #ff6b6b;
+  background-color: #42b883;
   color: white;
 }
 
 .top-badge {
   padding: 2px 10px;
-  background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+  background: linear-gradient(45deg, #42b883, #66c798);
   color: white;
   border-radius: 4px;
   font-size: 12px;
   font-weight: bold;
-  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 2px 6px rgba(66, 184, 131, 0.3);
 }
 
 /* 右侧封面图 */
@@ -251,7 +315,7 @@ const formatDate = (dateString: string) => {
     width: 100%;
     height: 4px;
     bottom: auto;
-    background: linear-gradient(90deg, #ff6b6b 0%, #c0392b 100%);
+    background: linear-gradient(90deg, #42b883 0%, #35495e 100%);
   }
 
   .article-cover {

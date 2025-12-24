@@ -11,13 +11,20 @@
       </div>
       
       <div class="article-meta-row">
-        <div class="tags-container" v-if="article.tags">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tag-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-          <span v-for="tag in splitTags(article.tags)" :key="tag" class="tag-pill">
-            {{ tag }}
+        <span class="meta-item date">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          {{ formatDate(article.createdAt) }}
+        </span>
+        <span class="meta-item category">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          {{ article.categoryName }}
+        </span>
+        <div class="meta-item tags" v-if="article.tags">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+          <span v-for="(tag, index) in splitTags(article.tags)" :key="tag">
+            {{ tag }}{{ index < splitTags(article.tags).length - 1 ? ', ' : '' }}
           </span>
         </div>
-        <span v-else class="category-pill">{{ article.categoryName }}</span>
       </div>
 
       <div class="article-summary">
@@ -79,7 +86,6 @@ const splitTags = (tags: string) => {
   padding: 25px 15px;
   margin-bottom: 0;
   background: transparent;
-  border-bottom: 1px solid #f0f0f0;
   position: relative;
   transition: all 0.3s ease;
   height: 160px; /* 紧凑高度 */
@@ -155,42 +161,36 @@ const splitTags = (tags: string) => {
 .article-meta-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
   margin-bottom: 12px;
+  font-size: 12px;
+  color: #999;
 }
 
-.tags-container {
+.meta-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  transition: color 0.3s ease;
+  cursor: pointer;
 }
 
-.tag-icon {
-  color: #666;
+.meta-item:hover {
+  color: #42b883;
+}
+
+.meta-item svg {
   width: 14px;
   height: 14px;
 }
 
-.tag-pill {
-  font-size: 12px;
-  color: #42b883;
-  border: 1px solid #42b883;
-  padding: 1px 8px;
-  border-radius: 12px; /* 胶囊形状 */
-  background: transparent;
-  transition: all 0.3s;
+.tags span {
+  margin-right: 4px;
 }
 
-.tag-pill:hover {
-  background: #42b883;
-  color: white;
-}
-
-.category-pill {
-  font-size: 12px;
-  color: #666;
-  background: #f5f5f5;
-  padding: 2px 8px;
-  border-radius: 4px;
+.tags span:last-child {
+  margin-right: 0;
 }
 
 /* 摘要 */

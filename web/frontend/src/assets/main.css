@@ -24,9 +24,9 @@ body::-webkit-scrollbar-thumb {
   background-image: -webkit-gradient(linear,
       left bottom,
       left top,
-      color-stop(0.2, rgb(134, 164, 194)),
-      color-stop(0.4, rgb(87, 181, 224)),
-      color-stop(0.8, rgb(35, 204, 255)));
+      color-stop(0.2, rgb(1, 153, 128)),
+      color-stop(0.4, rgb(55, 212, 191)),
+      color-stop(0.8, rgb(163, 216, 212)));
 }
 
 /* 隐藏滚动条上下箭头 */

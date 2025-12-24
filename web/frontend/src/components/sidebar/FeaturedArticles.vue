@@ -1,7 +1,7 @@
 <template>
   <div class="sidebar-card featured-articles">
     <div class="card-header">
-      <h3>置顶文章</h3>
+      <h3><i class="iconfont icon-pushpin" style="color: #333; margin-right: 5px;"></i> 置顶博客</h3>
     </div>
     <div class="card-content">
       <div v-if="loading" class="skeleton-loader">
@@ -18,8 +18,8 @@
           class="article-item"
         >
           <router-link :to="`/article/${article.id}`" class="article-link">
-            <div class="article-title">{{ article.title }}</div>
-            <div class="article-date">{{ formatDate(article.createdAt) }}</div>
+            <i class="iconfont icon-rss article-icon"></i>
+            <span class="article-title">{{ article.title }}</span>
           </router-link>
         </div>
       </div>
@@ -122,133 +122,84 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.sidebar-card.featured-articles {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0;
+}
+
 .card-header {
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-  background: #f8f9fa;
+  padding: 15px 0;
+  border-bottom: none;
+  background: transparent;
 }
 
 .card-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   color: #333;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.card-content {
+  padding: 0;
 }
 
 .article-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  padding: 5px;
+  gap: 12px;
 }
 
 .article-item {
-  border-bottom: 1px solid #eee;
-  padding: 15px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  margin: 0 -10px; /* 补偿.card-content的padding */
-  width: calc(100% + 20px);
+  border-bottom: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
 }
 
 .article-item:hover {
-  background-color: #f8f9fa;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.article-item:last-child {
-  border-bottom: none;
-  padding-bottom: 15px;
+  background-color: transparent;
+  box-shadow: none;
 }
 
 .article-link {
   text-decoration: none;
-  color: inherit;
-  display: block;
+  color: #333;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  transition: color 0.3s ease;
 }
 
 .article-link:hover {
-  color: #007bff; /* 绿色 */
+  color: #42b883;
+}
+
+.article-icon {
+  font-size: 18px;
+  color: #333;
+  margin-top: 2px;
 }
 
 .article-title {
   font-size: 15px;
-  font-weight: 500;
-  margin-bottom: 8px;
-  line-height: 1.4;
+  font-weight: 400;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.article-date {
-  font-size: 13px;
-  color: #888;
-}
-
-.empty-state {
+/* Skeleton & Error styles remain similar but simplified */
+.empty-state, .error-message {
   text-align: center;
-  padding: 30px 10px;
+  padding: 20px 0;
   color: #888;
-}
-
-.skeleton-loader {
-  animation: skeleton-loading 1s linear infinite alternate;
-  padding: 10px;
-}
-
-@keyframes skeleton-loading {
-  0% {
-    background-color: hsl(200, 20%, 80%);
-  }
-  100% {
-    background-color: hsl(200, 20%, 95%);
-  }
-}
-
-.skeleton-header {
-  height: 20px;
-  width: 60%;
-  margin-bottom: 15px;
-  border-radius: 4px;
-}
-
-.skeleton-body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.skeleton-line {
-  height: 16px;
-  border-radius: 4px;
-}
-
-.skeleton-line:first-child {
-  width: 100%;
-}
-
-.skeleton-line:nth-child(2) {
-  width: 80%;
-}
-
-.error-message {
-  text-align: center;
-  padding: 30px 10px;
-  color: #dc3545;
-}
-
-.retry-button {
-  margin-top: 15px;
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.retry-button:hover {
-  background-color: #0056b3;
-  border-radius: 8px;
 }
 </style>

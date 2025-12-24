@@ -1,11 +1,13 @@
 <template>
   <div class="sidebar-card tag-cloud">
     <div class="card-header">
-      <h3>标签云</h3>
-      <button class="switch-btn" @click="toggleView" :title="is3DView ? '切换到列表视图' : '切换到3D视图'">
-        <span v-if="is3DView">📋</span>
-        <span v-else>🌐</span>
-      </button>
+      <h3><i class="iconfont icon-tags" style="color: #2aa073ff; margin-right: 5px;"></i> 标签云</h3>
+      <div class="view-switch" @click="toggleView" :title="is3DView ? '切换到列表视图' : '切换到3D视图'">
+        <span class="switch-label">{{ is3DView ? '3D' : '列表' }}</span>
+        <div class="switch-track" :class="{ 'active': is3DView }">
+          <div class="switch-thumb"></div>
+        </div>
+      </div>
     </div>
     <div class="card-content" :class="{ 'content-3d': is3DView }">
       <div v-if="loading" class="skeleton-loader">
@@ -350,21 +352,46 @@ onBeforeUnmount(() => {
   border-radius: 2px;
 }
 
-.switch-btn {
-  background: none;
-  border: none;
+.view-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
-  font-size: 18px;
-  padding: 5px;
-  border-radius: 50%;
-  transition: all 0.3s;
-  color: #999;
 }
 
-.switch-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  color: #3d96fc;
-  transform: rotate(180deg);
+.switch-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.switch-track {
+  width: 36px;
+  height: 20px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+
+.switch-track.active {
+  background-color: #42b883;
+}
+
+.switch-thumb {
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.switch-track.active .switch-thumb {
+  transform: translateX(16px);
 }
 
 .card-content {
@@ -399,10 +426,10 @@ onBeforeUnmount(() => {
 }
 
 .tag:hover {
-  background: #3d96fc;
+  background: #42b883;
   color: white;
   transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(61, 150, 252, 0.3);
+  box-shadow: 0 4px 10px rgba(66, 184, 131, 0.3);
 }
 
 /* 3D 视图样式 */
@@ -427,7 +454,7 @@ onBeforeUnmount(() => {
   position: absolute;
   left: 0;
   top: 0;
-  color: #007bff; /* 默认颜色 */
+  color: #42b883; /* 默认颜色 */
   text-decoration: none;
   font-weight: bold;
   white-space: nowrap;
@@ -438,7 +465,7 @@ onBeforeUnmount(() => {
 }
 
 .tag-3d:hover {
-  color: #ff6b6b;
+  color: #3aa876;
   z-index: 1000 !important; /* 确保 hover 时在最上层 */
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
@@ -491,7 +518,7 @@ onBeforeUnmount(() => {
 .retry-button {
   margin-top: 15px;
   padding: 8px 16px;
-  background-color: #007bff;
+  background-color: #42b883;
   color: white;
   border: none;
   border-radius: 6px;
@@ -501,7 +528,7 @@ onBeforeUnmount(() => {
 }
 
 .retry-button:hover {
-  background-color: #0056b3;
+  background-color: #3aa876;
   border-radius: 8px;
 }
 
@@ -515,8 +542,8 @@ onBeforeUnmount(() => {
 .see-more-button {
   padding: 8px 15px;
   background-color: transparent;
-  color: #007bff;
-  border: 1px solid #007bff;
+  color: #42b883;
+  border: 1px solid #42b883;
   border-radius: 20px;
   cursor: pointer;
   font-size: 12px;
@@ -524,7 +551,7 @@ onBeforeUnmount(() => {
 }
 
 .see-more-button:hover {
-  background-color: #007bff;
+  background-color: #42b883;
   color: white;
 }
 

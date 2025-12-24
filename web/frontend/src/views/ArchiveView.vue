@@ -177,7 +177,7 @@ onMounted(() => {
   transform: translateY(-50%);
   width: 12px;
   height: 12px;
-  background: #3d96fc;
+  background: #06bac7ff;
   border-radius: 50%;
   border: 2px solid var(--color-background);
 }
@@ -229,7 +229,7 @@ onMounted(() => {
 }
 
 .title:hover {
-  color: #3d96fc;
+  color: #21e7ddff;
 }
 
 .loading-state {
@@ -241,7 +241,7 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border: 3px solid var(--color-border);
-  border-top-color: #3d96fc;
+  border-top-color: #04aa94ff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 15px;

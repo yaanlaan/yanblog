@@ -109,24 +109,7 @@
       <template #sidebar>
         <div class="sidebar right-sidebar">
           <!-- 个人卡片 -->
-          <div class="sidebar-card profile-card">
-            <div class="card-header">
-              <h3>个人资料</h3>
-            </div>
-            <div class="card-content">
-              <div class="profile-wrapper">
-                <div class="avatar-wrapper">
-                  <img src="@/assets/avatar.jpg" alt="头像" class="avatar" @error="handleAvatarError" />
-                  <!-- 状态指示器 -->
-                  <div class="status-indicator online"></div>
-                </div>
-                <div class="profile-info">
-                  <h4 class="username">yaanlaan</h4>
-                  <p class="signature">月亮想着我的心事，猫儿吃了我的奶酪</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ProfileCard />
 
           <!-- 联系方式卡片 -->
           <div class="sidebar-card contact-card" ref="contactCard">
@@ -135,25 +118,17 @@
             </div>
             <div class="card-content">
               <ul class="contact-list">
-                <li class="contact-item" @click="openLink('mailto:example@email.com')">
+                <li class="contact-item" @click="openLink('mailto:yanxia2425@foxmail.com')">
                   <i class="iconfont icon-email"></i>
                   <span>yanxia2425@foxmail.com</span>
                 </li>
-                <li class="contact-item" @click="openQQChat('123456789')">
-                  <i class="iconfont icon-QQ"></i>
-                  <span>123456789</span>
-                </li>
-                <li class="contact-item" @click="showQRCode('wechat')">
-                  <i class="iconfont icon-wechat-fill"></i>
-                  <span>wechat_id</span>
-                </li>
-                <li class="contact-item" @click="openLink('https://github.com/username')">
+                <li class="contact-item" @click="openLink('https://github.com/yaanlaan')">
                   <i class="iconfont icon-github-fill"></i>
                   <span>yaanlaan</span>
                 </li>
-                <li class="contact-item" @click="openLink('https://github.com/username')">
-                  <i class="iconfont icon-zhihu-circle-fill"></i>
-                  <span>言盐盐</span>
+                <li class="contact-item" @click="openLink('https://space.bilibili.com/3461574693360526')">
+                  <i class="iconfont icon-bilibili-line"></i>
+                  <span>土豆炸马铃薯0_0</span>
                 </li>
               </ul>
             </div>
@@ -192,6 +167,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import MainLayout from '@/components/layout/MainLayout.vue'
+import ProfileCard from '@/components/sidebar/ProfileCard.vue'
 
 // 微信二维码显示状态
 const showWechatQR = ref(false)
@@ -396,7 +372,7 @@ const showQRCode = (type: string) => {
   margin-right: 10px;
   width: 24px;
   text-align: center;
-  color: #409eff;
+  color: #42b883;
 }
 
 .contact-item span {
@@ -467,7 +443,7 @@ const showQRCode = (type: string) => {
 }
 
 .close-btn {
-  background: #409eff;
+  background: #42b883;
   color: white;
   border: none;
   padding: 8px 20px;
@@ -477,7 +453,7 @@ const showQRCode = (type: string) => {
 }
 
 .close-btn:hover {
-  background: #337ecc;
+  background: #3aa876;
 }
 
 @media (max-width: 992px) {

@@ -30,7 +30,7 @@ import BackToTop from '@/components/BackToTop.vue'
 
 .container {
   width: 100%;
-  max-width: 1400px; /* 扩大最大宽度以适应三栏布局 */
+  max-width: 1200px; /* 调整为更窄的宽度以匹配设计图 */
   margin: 0 auto;
   padding: 0 20px;
 }

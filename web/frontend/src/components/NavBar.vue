@@ -193,7 +193,7 @@ onBeforeUnmount(() => {
   right: -2px;
   bottom: -2px;
   border-radius: 12px;
-  background: linear-gradient(45deg, #0000ff, #0033ff, #0066ff, #0099ff, #00ccff, #00ffff, #33ffff, #66ffff, #99ffff, #ccffff, #ffffff);
+  background: linear-gradient(45deg, hsla(197, 100%, 50%, 1.00), hsla(177, 100%, 50%, 1.00));
   z-index: -1;
   animation: glow 2s linear infinite;
   opacity: 0;
@@ -255,14 +255,14 @@ onBeforeUnmount(() => {
 }
 
 .nav-link:hover {
-  color: #3994fc;
+  color: #42b883;
   transform: translateY(-2px);
-  background-color: rgba(61, 150, 252, 0.1);
+  background-color: rgba(66, 184, 131, 0.1);
 }
 
 .nav-link.active {
-  color: #7cb7fa;
-  background-color: rgba(61, 150, 252, 0.1);
+  color: #42b883;
+  background-color: rgba(66, 184, 131, 0.1);
 }
 
 .nav-link i {
@@ -292,8 +292,8 @@ onBeforeUnmount(() => {
 
 .search-container:focus-within {
   width: 300px;
-  box-shadow: 0 0 0 2px #3d96fc;
-  border-color: #3d96fc;
+  box-shadow: 0 0 0 2px #42b883;
+  border-color: #42b883;
 }
 
 .search-box {
@@ -318,12 +318,12 @@ onBeforeUnmount(() => {
 }
 
 .search-container:focus-within .search-icon {
-  color: #3d96fc;
-  background-color: rgba(61, 150, 252, 0.1);
+  color: #42b883;
+  background-color: rgba(66, 184, 131, 0.1);
 }
 
 .login-btn {
-  background-color: #3d96fc;
+  background-color: #42b883;
   color: white;
   border: none;
   padding: 8px 20px;
@@ -335,9 +335,9 @@ onBeforeUnmount(() => {
 }
 
 .login-btn:hover {
-  background-color: #2a85f5;
+  background-color: #3aa876;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(61, 150, 252, 0.3);
+  box-shadow: 0 4px 8px rgba(66, 184, 131, 0.3);
 }
 
 @media (max-width: 768px) {

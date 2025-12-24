@@ -76,9 +76,21 @@
 
 .copyright-container {
   width: 100%;
-  background-color: rgb(209, 208, 208);
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(66, 184, 131, 0.2);
   padding: 30px 0;
   margin-top: 50px;
+}
+
+.copyright-container a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.copyright-container a:hover {
+  color: #42b883;
 }
 
 .container {
@@ -142,7 +154,7 @@
 }
 
 .copyright-container .ref-link a:hover {
-  color: #4cc6ff;
+  color: #2cb497ff;
   text-decoration-thickness: 3px;
 }
 

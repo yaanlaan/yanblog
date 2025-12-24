@@ -32,27 +32,10 @@
       </div>
     </div>
 
-    <!-- 下部分：三个导航卡片 -->
-    <div class="hero-bottom-grid">
-      <div class="nav-card blue-card">
-        <div class="nav-content">
-          <h3>黎明破晓</h3>
-          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-        </div>
-      </div>
-      <div class="nav-card orange-card">
-        <div class="nav-content">
-          <h3>日落黄昏</h3>
-          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-        </div>
-      </div>
-      <div class="nav-card green-card">
-        <div class="nav-content">
-          <h3>午夜降临</h3>
-          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-        </div>
-      </div>
-    </div>
+    <!-- 下部分：三个导航卡片 (已移除) -->
+    <!-- <div class="hero-bottom-grid">
+      ...
+    </div> -->
   </div>
 </template>
 

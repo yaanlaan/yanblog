@@ -1,32 +1,34 @@
-<!-- Sidebar 组件：展示侧边栏内容，包含天气信息、置顶文章、标签云和服务器状态四个模块 -->
+<!-- Sidebar 组件：展示侧边栏内容 -->
 <template>
   <div class="sidebar">
     <WeatherCard ref="weatherCard" />
+    <ShortcutsCard />
     <FeaturedArticles ref="featuredArticles" />
-    <TagCloud ref="tagCloud" />
     <ServerStatus ref="serverStatus" />
+    <TagCloud ref="tagCloud" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import WeatherCard from './sidebar/WeatherCard.vue'
+import ShortcutsCard from './sidebar/ShortcutsCard.vue'
 import FeaturedArticles from './sidebar/FeaturedArticles.vue'
-import TagCloud from './sidebar/TagCloud.vue'
 import ServerStatus from './sidebar/ServerStatus.vue'
+import TagCloud from './sidebar/TagCloud.vue'
 
 // 组件引用
-const weatherCard = ref<InstanceType<typeof WeatherCard> | null>(null)
 const featuredArticles = ref<InstanceType<typeof FeaturedArticles> | null>(null)
 const tagCloud = ref<InstanceType<typeof TagCloud> | null>(null)
+const weatherCard = ref<InstanceType<typeof WeatherCard> | null>(null)
 const serverStatus = ref<InstanceType<typeof ServerStatus> | null>(null)
 
 // 暴露刷新方法
 defineExpose({
   refreshAll: () => {
-    weatherCard.value?.fetchWeather()
     featuredArticles.value?.fetchArticles()
     tagCloud.value?.fetchCategories()
+    weatherCard.value?.fetchWeather()
     serverStatus.value?.fetchServerStatus()
   }
 })
@@ -57,9 +59,9 @@ defineExpose({
 }
 
 .card-header {
-  padding: 50% 50%;
+  padding: 15px 20px;
   border-bottom: 1px solid #eee;
-  background: #f8f9fa;
+  background: white;
 }
 
 .card-header h3 {

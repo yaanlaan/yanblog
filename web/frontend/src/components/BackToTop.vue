@@ -37,7 +37,7 @@ onBeforeUnmount(() => {
   position: fixed;
   bottom: 50px;
   right: 10px;
-  background-color: #99bfdf;
+  background-color: #99dfd6ff;
   color: white;
   border: none;
   border-radius: 50%;
@@ -56,7 +56,7 @@ onBeforeUnmount(() => {
 }
 
 .back-to-top:hover {
-  background-color: #3894e0;
+  background-color: #0dc496ff;
   opacity: 1;
   transform: translateY(0);
 }

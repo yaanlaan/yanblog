@@ -25,20 +25,26 @@
       <!-- 描述 (仅列表模式显示) -->
       <p class="card-desc" v-if="viewMode === 'list'" v-html="highlightText(article.desc || '暂无简介')"></p>
 
-      <!-- 标签 -->
-      <div class="card-tags">
-        <template v-if="article.tags">
-          <span v-for="tag in splitTags(article.tags)" :key="tag" class="tag-pill">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tag-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-            {{ tag }}
+      <!-- Meta信息 -->
+      <div class="card-meta-row">
+        <span class="meta-item category">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          {{ article.categoryName }}
+        </span>
+        <div class="meta-item tags" v-if="article.tags">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+          <span v-for="(tag, index) in splitTags(article.tags)" :key="tag">
+            {{ tag }}{{ index < splitTags(article.tags).length - 1 ? ', ' : '' }}
           </span>
-        </template>
-        <span v-else class="category-pill">{{ article.categoryName }}</span>
+        </div>
       </div>
 
       <!-- 底部信息 -->
       <div class="card-footer">
-        <span class="date-text">Modify {{ formatDate(article.updatedAt || article.createdAt) }}</span>
+        <span class="date-text">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          {{ formatDate(article.updatedAt || article.createdAt) }}
+        </span>
       </div>
     </div>
   </div>
@@ -167,37 +173,40 @@ const highlightText = (text: string) => {
   color: #42b883;
 }
 
-.card-tags {
+.card-meta-row {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 15px;
   margin-bottom: 20px;
   flex-grow: 1;
+  font-size: 12px;
+  color: #999;
 }
 
-.tag-pill {
-  display: inline-flex;
+.meta-item {
+  display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
-  background-color: #e0f2f1;
-  color: #00695c;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
+  transition: color 0.3s ease;
+  cursor: pointer;
 }
 
-.tag-icon {
-  opacity: 0.7;
+.meta-item:hover {
+  color: #42b883;
 }
 
-.category-pill {
-  padding: 4px 10px;
-  background-color: #f3e5f5;
-  color: #7b1fa2;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
+.meta-item svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tags span {
+  margin-right: 4px;
+}
+
+.tags span:last-child {
+  margin-right: 0;
 }
 
 .card-footer {
@@ -211,6 +220,9 @@ const highlightText = (text: string) => {
   font-size: 12px;
   color: #999;
   font-family: monospace;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 /* 列表模式样式 */
@@ -251,7 +263,7 @@ const highlightText = (text: string) => {
   overflow: hidden;
 }
 
-.article-card.is-list-mode .card-tags {
+.article-card.is-list-mode .card-meta-row {
   margin-bottom: 15px;
   flex-grow: 0;
 }

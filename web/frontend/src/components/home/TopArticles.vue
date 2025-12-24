@@ -20,14 +20,12 @@
         <!-- seemore按钮 -->
         <div class="see-more-container">
           <button 
-            v-if="displayCount < articles.length"
             @click="loadMore"
             class="see-more-button"
           >
             <i class="iconfont icon-seemore"></i>
-            <span> 查看更多</span>
+            <span>See More</span>
           </button>
-          <p v-else class="no-more-hint">没有更多置顶文章了</p>
         </div>
       </div>
       
@@ -40,6 +38,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { ElMessage } from 'element-plus'
 import TopArticleCard from './TopArticleCard.vue'
 
 // 定义Props
@@ -73,6 +72,10 @@ const displayArticles = computed(() => {
 
 // 加载更多文章
 const loadMore = () => {
+  if (displayCount.value >= props.articles.length) {
+    ElMessage.info('没有更多文章了')
+    return
+  }
   displayCount.value += 2
 }
 </script>
@@ -88,7 +91,7 @@ const loadMore = () => {
   color: #333;
   text-align: left;
   padding-left: 10px;
-  border-left: 4px solid #ff6b6b;
+  border-left: 4px solid #42b883;
 }
 
 .loading-state {
@@ -103,7 +106,7 @@ const loadMore = () => {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
+  border-top: 4px solid #42b883;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 10px;
@@ -129,22 +132,23 @@ const loadMore = () => {
 
 .see-more-button {
   padding: 10px 30px;
-  background-color: white;
-  border: 1px solid #ddd;
+  background-color: #42b883;
+  border: none;
   border-radius: 20px;
   cursor: pointer;
   font-size: 14px;
-  color: #666;
+  color: white;
   transition: all 0.3s;
   display: flex;
   align-items: center;
   gap: 5px;
+  box-shadow: 0 4px 15px rgba(66, 184, 131, 0.4);
 }
 
 .see-more-button:hover {
-  background-color: #f8f9fa;
-  color: #333;
-  border-color: #ccc;
+  background-color: #3aa876;
+  box-shadow: 0 6px 20px rgba(66, 184, 131, 0.6);
+  transform: translateY(-2px);
 }
 
 .no-more-hint {
