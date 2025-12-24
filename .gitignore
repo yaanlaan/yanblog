@@ -82,5 +82,5 @@ test
 # Docker / Deployment
 server
 yanblog
-docker_field
+docker_field/mysql
 deploy

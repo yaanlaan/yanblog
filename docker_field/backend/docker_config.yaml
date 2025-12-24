@@ -1,19 +1,19 @@
 server:
   AppMode: debug
   HttpPort: :8080
-# 如果需要可以自己修改，这是docker的默认配置
+
 database:
-  Db: mysql
+  Db: MYSQL
   DbHost: db
   DbPort: 3306
   DbUser: root
   DbPassWord: rootpassword
   DbName: yanblog
   
-# openssl rand -hex 32（使用这个命令生成密钥，修改为你自己的密钥）
+# openssl rand -hex 32
 JwtKey: 1234567890
 
 weather:
   Provider: openweathermap
   ApiKey: 
-  DefaultCity: 
+  DefaultCity: Hefei
