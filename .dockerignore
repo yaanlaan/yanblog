@@ -26,5 +26,7 @@ logs
 *.swp
 *.swo
 
-
+# Data & Runtime
+docker_field/mysql
+docker_field/uploads
 
