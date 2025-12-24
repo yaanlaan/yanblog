@@ -14,6 +14,9 @@
       <span class="date">
         更新时间: {{ formatDate(article.updatedAt) }}
       </span>
+      <span class="tags" v-if="article.tags">
+        标签: {{ article.tags }}
+      </span>
       <span class="word-count">
         字数: {{ formatNumber(wordCount) }}
       </span>
@@ -36,6 +39,7 @@ interface Article {
   desc: string
   content: string
   img: string
+  tags: string
   createdAt: string
   updatedAt: string
 }

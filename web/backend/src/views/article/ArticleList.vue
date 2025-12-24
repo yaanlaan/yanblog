@@ -46,6 +46,18 @@
         <el-table-column prop="title" label="标题" show-overflow-tooltip />
         <el-table-column prop="desc" label="简介" show-overflow-tooltip />
         <el-table-column prop="categoryName" label="分类" width="120" />
+        <el-table-column prop="tags" label="标签" show-overflow-tooltip>
+          <template #default="scope">
+            <el-tag 
+              v-for="(tag, index) in (scope.row.tags ? scope.row.tags.split(',') : [])" 
+              :key="index"
+              size="small"
+              style="margin-right: 5px; margin-bottom: 5px;"
+            >
+              {{ tag }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="top" label="置顶等级" width="100">
           <template #default="scope">
             <el-tag v-if="scope.row.top > 0" type="danger">等级{{ scope.row.top }}</el-tag>
@@ -114,6 +126,7 @@ interface Article {
   content: string
   img: string
   top: number
+  tags: string
   createdAt: string
   updatedAt: string
 }
@@ -277,6 +290,7 @@ const getArticleList = async () => {
       desc: item.desc,
       content: item.content,
       img: item.img,
+      tags: item.tags || '',
       top: item.top || 0,
       createdAt: item.CreatedAt || item.created_at,
       updatedAt: item.UpdatedAt || item.updated_at

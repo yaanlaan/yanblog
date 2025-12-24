@@ -25,6 +25,7 @@ export interface Article {
   content: string
   img: string
   top: number // 置顶等级，0表示不置顶，1-6表示置顶等级，数字越小等级越高
+  tags: string
   createdAt: string
 }
 

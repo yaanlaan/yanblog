@@ -51,6 +51,7 @@ interface Article {
   content: string
   img: string
   top: number // 添加top字段
+  tags: string
   createdAt: string
   updatedAt: string
 }
@@ -110,7 +111,13 @@ const getArticles = async () => {
       });
     }
     
-    const { data } = response.data
+    const { data, status } = response.data
+    
+    if (status !== 200) {
+      console.error('获取文章列表失败:', response.data.message)
+      return
+    }
+
     allArticles.value = data.map((item: any) => ({
       id: item.ID,
       title: item.title,
@@ -120,6 +127,7 @@ const getArticles = async () => {
       content: item.content,
       img: item.img,
       top: item.top || 0, // 添加top字段
+      tags: item.tags || '', // 添加tags字段
       createdAt: item.CreatedAt || item.created_at,
       updatedAt: item.UpdatedAt || item.updated_at
     }))
@@ -175,7 +183,8 @@ const updateDisplayedArticles = () => {
     const keyword = searchKeyword.value.toLowerCase()
     filteredArticles = filteredArticles.filter(article => 
       article.title.toLowerCase().includes(keyword) || 
-      article.desc.toLowerCase().includes(keyword)
+      article.desc.toLowerCase().includes(keyword) ||
+      (article.tags && article.tags.toLowerCase().includes(keyword))
     )
   }
   
@@ -225,6 +234,10 @@ const handleCurrentChange = (val: number) => {
 
 // 组件挂载时获取数据
 onMounted(() => {
+  // 初始化搜索关键词
+  if (route.query.keyword) {
+    searchKeyword.value = route.query.keyword as string
+  }
   getCategories()
   getArticles()
 })

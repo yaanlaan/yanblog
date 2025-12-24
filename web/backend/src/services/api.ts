@@ -140,6 +140,7 @@ export const articleApi = {
     content: string; 
     img: string;
     top: number;
+    tags?: string;
   }) => 
     apiClient.post('/v1/article/add', data),
   
@@ -151,6 +152,7 @@ export const articleApi = {
     content: string; 
     img: string;
     top: number;
+    tags?: string;
   }) => 
     apiClient.put(`/v1/article/${id}`, data),
   

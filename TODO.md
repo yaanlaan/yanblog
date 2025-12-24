@@ -6,7 +6,7 @@
 - [ ] 添加评论功能
 - [X] 添加视频播放
 - [X] 添加音乐播放
-- [ ] 添加tag信息
+- [X] 添加tag信息
 - [X] 添加文章字数和耗时
 
 ## 一些前端效果的设想
@@ -25,3 +25,7 @@
 
 - [ ] 风格化工具（各类卡片或者封面生成？maybe）
 - [ ] 文章图谱联系（需等待tag的实现）
+
+http://t5591d1vv.hd-bkt.clouddn.com/FsNoyh6CCfZjtgHg2X01jJSkPrdc
+
+t5591d1vv.hd-bkt.clouddn.com/FsNoyh6CCfZjtgHg2X01jJSkPrdc

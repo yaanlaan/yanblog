@@ -3,8 +3,8 @@ package model
 import (
 	// "fmt"
 	// "os"
-	"yanblog/utils/errmsg"
 	"strings"
+	"yanblog/utils/errmsg"
 
 	"gorm.io/gorm"
 )
@@ -18,6 +18,7 @@ type Article struct {
 	Content string `gorm:"type:longtext" json:"content"`
 	Img     string `gorm:"type:varchar(100)" json:"img"`
 	Top     int    `gorm:"type:int;default:0" json:"top"` // 0表示不置顶，其他数字1-6表示置顶等级，数字越小等级越高
+	Tags    string `gorm:"type:varchar(200)" json:"tags"`
 }
 
 // CreateArt 新增文章
@@ -45,7 +46,7 @@ func SearchArticle(keyword string, cid int, pageSize int, pageNum int) ([]Articl
 	// 如果有关键词，则添加标题和描述的模糊搜索
 	if keyword != "" {
 		searchTerm := "%" + strings.ToLower(keyword) + "%"
-		query = query.Where("LOWER(title) LIKE ? OR LOWER(desc) LIKE ?", searchTerm, searchTerm)
+		query = query.Where("LOWER(title) LIKE ? OR LOWER(desc) LIKE ? OR LOWER(tags) LIKE ?", searchTerm, searchTerm, searchTerm)
 	}
 
 	// 如果有分类ID，则添加分类筛选
@@ -78,13 +79,13 @@ func GetCateArt(id int, pageSize int, pageNum int) ([]Article, int, int64) {
 	var cateArtList []Article
 	var total int64
 	var err error
-	
+
 	if pageSize == -1 || pageNum == -1 {
 		err = db.Preload("Category").Where("cid = ?", id).Order("top ASC, created_at DESC").Find(&cateArtList).Count(&total).Error
-	}else{
+	} else {
 		err = db.Preload("Category").Limit(pageSize).Offset((pageNum-1)*pageSize).Where("cid =?", id).Order("top ASC, created_at DESC").Find(&cateArtList).Count(&total).Error
 	}
-	
+
 	if err != nil {
 		return nil, errmsg.ERROR_CATE_NOT_EXIST, 0
 	}
@@ -112,8 +113,8 @@ func GetArt(pageSize int, pageNum int) ([]Article, int, int64) {
 	var total int64
 	if pageSize == -1 && pageNum == -1 { // 查询所有文章
 		err = db.Preload("Category").Order("top ASC, created_at DESC").Find(&articleList).Count(&total).Error
-	} else { // 分页查询	
-		err = db.Preload("Category").Order("top ASC, created_at DESC").Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&articleList).Count(&total).Error	
+	} else { // 分页查询
+		err = db.Preload("Category").Order("top ASC, created_at DESC").Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&articleList).Count(&total).Error
 	}
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errmsg.ERROR, 0
@@ -127,7 +128,7 @@ func GetArt(pageSize int, pageNum int) ([]Article, int, int64) {
 func GetTopArt(num int) ([]Article, int) {
 	var topArtList []Article
 	var err error
-	
+
 	err = db.Preload("Category").Where("top > 0").Order("top ASC").Limit(num).Find(&topArtList).Error
 	if err != nil {
 		return nil, errmsg.ERROR
@@ -147,6 +148,7 @@ func EditArt(id int, data *Article) int {
 	maps["content"] = data.Content
 	maps["img"] = data.Img
 	maps["top"] = data.Top
+	maps["tags"] = data.Tags
 
 	err = db.Model(&art).Where("id = ? ", id).Updates(maps).Error
 	if err != nil {

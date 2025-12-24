@@ -42,6 +42,7 @@ interface Article {
   content: string
   img: string
   top: number
+  tags: string
   createdAt: string
   updatedAt: string
 }

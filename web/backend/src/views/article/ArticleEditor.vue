@@ -119,7 +119,8 @@ const publishForm = reactive({
   categoryId: undefined as number | undefined,
   desc: '',
   img: '',
-  top: 0
+  top: 0,
+  tags: ''
 })
 
 // 分类列表
@@ -173,11 +174,12 @@ const getCategoryList = async () => {
 }
 
 // 处理发布表单更新
-const handlePublishFormUpdate = (value: {categoryId: number | undefined, desc: string, img: string, top: number}) => {
+const handlePublishFormUpdate = (value: {categoryId: number | undefined, desc: string, img: string, top: number, tags: string}) => {
   publishForm.categoryId = value.categoryId
   publishForm.desc = value.desc
   publishForm.img = value.img
   publishForm.top = value.top
+  publishForm.tags = value.tags
 }
 
 // 提交文章
@@ -200,7 +202,8 @@ const submitArticle = async () => {
         desc: publishForm.desc,
         content: articleForm.content,
         img: publishForm.img,
-        top: publishForm.top
+        top: publishForm.top,
+        tags: publishForm.tags
       })
       ElMessage.success('文章更新成功')
     } else {
@@ -211,7 +214,8 @@ const submitArticle = async () => {
         desc: publishForm.desc,
         content: articleForm.content,
         img: publishForm.img,
-        top: publishForm.top
+        top: publishForm.top,
+        tags: publishForm.tags
       })
       ElMessage.success('文章发布成功')
     }
@@ -242,6 +246,7 @@ const getArticleDetail = async (id: number) => {
     articleForm.content = article.content
     publishForm.categoryId = parseInt(article.cid, 10)
     publishForm.desc = article.desc
+    publishForm.tags = article.tags || ''
     publishForm.img = article.img
     publishForm.top = article.top || 0
   } catch (error) {

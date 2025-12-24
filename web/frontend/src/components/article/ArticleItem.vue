@@ -17,6 +17,9 @@
           <span class="date">
             发布时间: {{ formatDate(article.createdAt) }}
           </span>
+          <span class="tags" v-if="article.tags" style="margin-left: 10px;">
+            标签: {{ article.tags }}
+          </span>
         </div>
       </div>
       
@@ -44,6 +47,7 @@ interface Article {
   content: string
   img: string
   top: number
+  tags: string
   createdAt: string
   updatedAt: string
 }

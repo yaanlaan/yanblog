@@ -110,6 +110,7 @@ interface Article {
   desc: string
   content: string
   img: string
+  tags: string
   createdAt: string
   updatedAt: string
 }
@@ -136,6 +137,13 @@ const getArticleDetail = async (id: number) => {
   loading.value = true
   try {
     const response = await articleApi.getArticle(id)
+    
+    if (response.data.status !== 200) {
+      console.error('获取文章详情失败:', response.data.message)
+      article.value = null
+      return
+    }
+
     const data = response.data.data
     
     article.value = {
@@ -146,6 +154,7 @@ const getArticleDetail = async (id: number) => {
       desc: data.desc,
       content: data.content,
       img: data.img,
+      tags: data.tags || '',
       createdAt: data.CreatedAt || data.created_at,
       updatedAt: data.UpdatedAt || data.updated_at
     }
@@ -179,6 +188,10 @@ const getAdjacentArticles = async (currentId: number) => {
       pagenum: -1
     })
     
+    if (response.data.status !== 200) {
+      return
+    }
+
     const articles = response.data.data.map((item: any) => ({
       id: item.ID,
       title: item.title,
