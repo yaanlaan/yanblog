@@ -40,12 +40,7 @@
 
 在项目根目录下，你需要准备好配置文件。
 
-**后端配置：**
-将 `config/config_template.yaml` 复制并重命名为 `docker_field/backend/config.yaml`，并填入你的数据库信息、JWT 密钥等。
-
-**前端配置：**
-前端配置文件位于 `docker_field/frontend/config.yaml`。（一开始没有这个文件，但是有一个config.docker.yaml，如果是使用docker直接就行，如果想自己本地运行，把config.docker.yaml复制重命名为config.yaml即可）
-如果你不想在部署后修改，请提前编辑此文件，配置你的博客名称、头像路径、背景图等，自行查看配置）
+将docker_field文件夹下的docker_config.yaml复制重命名为config.yaml，记得填写好相关的信息（如果想自己本地运行，把docker_field文件夹下的docker_config.yaml复制重命名为config.yaml放到/config下，还有一个放到/web/frontend/public/config.yaml）
 
 ### 2. 启动服务
 
