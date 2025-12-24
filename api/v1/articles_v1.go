@@ -1,11 +1,12 @@
 package v1
 
 import (
-	"yanblog/model"
-	"yanblog/utils/errmsg"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"yanblog/model"
+	"yanblog/utils/errmsg"
+
+	"github.com/gin-gonic/gin"
 )
 
 // 添加文章
@@ -23,13 +24,22 @@ func AddArticle(c *gin.Context) {
 	})
 }
 
-//  查询分类下的所有文章
+// 查询分类下的所有文章
 func GetCateArt(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.Query("pagesize"))
 	pageNum, _ := strconv.Atoi(c.Query("pagenum"))
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "参数错误",
+		})
+		return
+	}
+
 	var code int
-	
+
 	if pageSize <= 0 {
 		pageSize = -1
 	}
@@ -49,7 +59,14 @@ func GetCateArt(c *gin.Context) {
 
 // 查询单个文章信息
 func GetArtInfo(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "参数错误",
+		})
+		return
+	}
 	var code int
 	data, code := model.GetArtInfo(id)
 	c.JSON(http.StatusOK, gin.H{
@@ -115,7 +132,7 @@ func GetTopArt(c *gin.Context) {
 	if num <= 0 {
 		num = 6
 	}
-	
+
 	data, code := model.GetTopArt(num)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -129,7 +146,14 @@ func GetTopArt(c *gin.Context) {
 func EditArt(c *gin.Context) {
 	var data model.Article
 	var code int
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "参数错误",
+		})
+		return
+	}
 	_ = c.ShouldBindJSON(&data)
 
 	code = model.EditArt(id, &data)
@@ -142,7 +166,14 @@ func EditArt(c *gin.Context) {
 
 // 删除文章
 func DeleteArt(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "参数错误",
+		})
+		return
+	}
 	var code int
 
 	code = model.DeleteArt(id)

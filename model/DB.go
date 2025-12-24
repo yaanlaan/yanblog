@@ -11,9 +11,12 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-
 var db *gorm.DB
 var err error
+
+func GetDB() *gorm.DB {
+	return db
+}
 
 // InitDB 初始化数据库连接
 // 参数: 无
@@ -35,28 +38,42 @@ func InitDB() {
 		// 禁用默认事务（提高运行速度）
 		SkipDefaultTransaction: true,
 		NamingStrategy: schema.NamingStrategy{
-		// 使用单数表名，启用该选项，此时，`User` 的表名应该是 `user`
-		SingularTable: true,
+			// 使用单数表名，启用该选项，此时，`User` 的表名应该是 `user`
+			SingularTable: true,
 		},
 	})
 	if err != nil {
 		panic("无法连接到数据库，请检查配置！: " + err.Error())
 	}
 
-	db.AutoMigrate(&User{}, &Category{}, &Article{})
-
-
-	// 迁移数据表，在没有数据表结构变更时候，建议注释不执行
-	// 注意:初次运行后可注销此行
-	_ = db.AutoMigrate()
-
+	// 获取通用数据库对象 sql.DB ，然后使用其提供的功能
 	sqlDB, _ := db.DB()
-	// SetMaxIdleCons 设置连接池中的最大闲置连接数。
+
+	// SetMaxIdleConns 设置空闲连接池中连接的最大数量
 	sqlDB.SetMaxIdleConns(10)
 
-	// SetMaxOpenCons 设置数据库的最大连接数量。
+	// SetMaxOpenConns 设置打开数据库连接的最大数量
 	sqlDB.SetMaxOpenConns(100)
 
-	// SetConnMaxLifetiment 设置连接的最大可复用时间。
+	// SetConnMaxLifetime 设置了连接可复用的最大时间
 	sqlDB.SetConnMaxLifetime(10 * time.Second)
+
+	db.AutoMigrate(&User{}, &Category{}, &Article{})
+
+	// 检查是否存在用户，如果不存在则创建默认超级管理员
+	var count int64
+	db.Model(&User{}).Count(&count)
+	if count == 0 {
+		admin := User{
+			Username: "admin",
+			Password: "123456",
+			Role:     1, // 超级管理员
+		}
+		// 这里会触发 BeforeSave 钩子，自动加密密码
+		if err := db.Create(&admin).Error; err != nil {
+			fmt.Println("创建默认超级管理员失败:", err)
+		} else {
+			fmt.Println("已创建默认超级管理员账号: admin, 密码: 123456")
+		}
+	}
 }

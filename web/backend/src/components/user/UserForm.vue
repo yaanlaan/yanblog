@@ -14,16 +14,17 @@
       <el-form-item label="用户名" prop="username">
         <el-input v-model="formData.username" placeholder="请输入用户名" />
       </el-form-item>
-      <el-form-item label="密码" prop="password" v-if="isAdd">
+      <el-form-item label="密码" prop="password">
         <el-input 
           v-model="formData.password" 
           type="password" 
-          placeholder="请输入密码" 
+          :placeholder="isAdd ? '请输入密码' : '不修改请留空'" 
           show-password
         />
       </el-form-item>
       <el-form-item label="角色" prop="role">
-        <el-select v-model="formData.role" placeholder="请选择角色">
+        <el-select v-model="formData.role" placeholder="请选择角色" :disabled="!canEditRole">
+          <el-option label="超级管理员" :value="1" disabled />
           <el-option label="管理员" :value="2" />
           <el-option label="普通用户" :value="3" />
         </el-select>
@@ -39,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, computed } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 
 // 定义组件属性
@@ -54,6 +55,26 @@ const props = defineProps<{
     role: number
   }
 }>()
+
+// 获取当前用户信息（假设存储在localStorage中，实际项目中建议使用Pinia）
+const currentUserRole = computed(() => {
+  const userStr = localStorage.getItem('user')
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr)
+      return user.role || 3 // 默认为普通用户
+    } catch (e) {
+      return 3
+    }
+  }
+  return 3
+})
+
+// 是否可以编辑角色
+const canEditRole = computed(() => {
+  // 只有超级管理员可以修改角色
+  return currentUserRole.value === 1
+})
 
 // 定义事件
 const emit = defineEmits<{
@@ -79,7 +100,7 @@ const formRules = reactive<FormRules>({
     { min: 4, max: 12, message: '用户名长度为4-12位', trigger: 'blur' }
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
+    { required: false, message: '请输入密码', trigger: 'blur' },
     { min: 6, max: 20, message: '密码长度为6-20位', trigger: 'blur' }
   ],
   role: [

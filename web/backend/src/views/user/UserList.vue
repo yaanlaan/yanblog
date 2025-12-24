@@ -346,22 +346,30 @@ const handleDelete = (row: User) => {
 // 提交用户表单
 const submitUserForm = async (formData: { username: string; role: number; password?: string }) => {
   try {
+    let res;
     if (isAdd.value) {
       // 新增用户
-      await userApi.createUser({
+      res = await userApi.createUser({
         username: formData.username,
         password: formData.password || '123456', // 默认密码
         role: formData.role
       })
-      ElMessage.success('用户创建成功')
     } else {
       // 编辑用户
-      await userApi.updateUser(userForm.id, {
+      res = await userApi.updateUser(userForm.id, {
         username: formData.username,
-        role: formData.role
+        role: formData.role,
+        password: formData.password // 传递密码
       })
-      ElMessage.success('用户更新成功')
     }
+
+    // 检查后端返回的状态码
+    if (res.data.status !== 200) {
+      ElMessage.error(res.data.message || (isAdd.value ? '用户创建失败' : '用户更新失败'))
+      return
+    }
+    
+    ElMessage.success(isAdd.value ? '用户创建成功' : '用户更新成功')
     
     // 关闭对话框
     dialogVisible.value = false

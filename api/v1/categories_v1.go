@@ -1,11 +1,12 @@
 package v1
 
 import (
-	"yanblog/model"
-	"yanblog/utils/errmsg"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"yanblog/model"
+	"yanblog/utils/errmsg"
+
+	"github.com/gin-gonic/gin"
 )
 
 // 添加分类
@@ -34,7 +35,14 @@ func AddCategory(c *gin.Context) {
 
 // 查询分类信息
 func GetCateInfo(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "参数错误",
+		})
+		return
+	}
 	var code int
 
 	data, code := model.GetCateInfo(id)
@@ -91,7 +99,7 @@ func SearchCate(c *gin.Context) {
 	data, total := model.SearchCategory(keyword, pageSize, pageNum)
 
 	code = errmsg.SUCCESS
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
 		"data":    data,
@@ -104,9 +112,16 @@ func SearchCate(c *gin.Context) {
 func EditCate(c *gin.Context) {
 	var data model.Category
 	var code int
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "参数错误",
+		})
+		return
+	}
 	_ = c.ShouldBindJSON(&data)
-	
+
 	code = model.CheckCategoryWithID(id, data.Name)
 
 	if code == errmsg.SUCCESS {
@@ -118,7 +133,7 @@ func EditCate(c *gin.Context) {
 		code = model.EditCate(id, &data)
 	}
 	if code == errmsg.ERROR_CATENAME_USED {
-		c.Abort()
+		// c.Abort() // 移除 Abort，确保返回 JSON
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -129,7 +144,14 @@ func EditCate(c *gin.Context) {
 
 // 删除用户
 func DeleteCate(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "参数错误",
+		})
+		return
+	}
 	var code int
 
 	code = model.DeleteCate(id)

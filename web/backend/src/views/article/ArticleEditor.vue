@@ -194,9 +194,10 @@ const submitArticle = async () => {
     // 提交数据
     submitLoading.value = true
     
+    let res;
     if (isEdit.value) {
       // 编辑文章
-      await articleApi.updateArticle(articleId.value, {
+      res = await articleApi.updateArticle(articleId.value, {
         title: articleForm.title,
         cid: publishForm.categoryId!,
         desc: publishForm.desc,
@@ -205,10 +206,9 @@ const submitArticle = async () => {
         top: publishForm.top,
         tags: publishForm.tags
       })
-      ElMessage.success('文章更新成功')
     } else {
       // 新增文章
-      await articleApi.createArticle({
+      res = await articleApi.createArticle({
         title: articleForm.title,
         cid: publishForm.categoryId!,
         desc: publishForm.desc,
@@ -217,8 +217,15 @@ const submitArticle = async () => {
         top: publishForm.top,
         tags: publishForm.tags
       })
-      ElMessage.success('文章发布成功')
     }
+
+    // 检查后端返回的状态码
+    if (res.data.status !== 200) {
+      ElMessage.error(res.data.message || (isEdit.value ? '文章更新失败' : '文章发布失败'))
+      return
+    }
+    
+    ElMessage.success(isEdit.value ? '文章更新成功' : '文章发布成功')
     
     // 返回文章列表
     goBack()

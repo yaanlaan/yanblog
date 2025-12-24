@@ -99,7 +99,7 @@ const handleLogin = () => {
         })
         
         // 解析后端返回的数据
-        const { status, message, token } = response.data
+        const { status, message, token, username, role } = response.data
         
         if (status === 200) {
           // 登录成功
@@ -107,6 +107,8 @@ const handleLogin = () => {
           
           // 保存token到localStorage
           localStorage.setItem('token', token)
+          // 保存用户信息到localStorage
+          localStorage.setItem('user', JSON.stringify({ username, role }))
           
           // 跳转到后台首页
           router.push('/dashboard')

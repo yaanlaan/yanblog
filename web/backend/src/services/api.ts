@@ -83,7 +83,7 @@ export const userApi = {
     apiClient.post('/v1/user/add', data),
   
   // 更新用户
-  updateUser: (id: number, data: { username: string; role: number }) => 
+  updateUser: (id: number, data: { username: string; role: number; password?: string }) => 
     apiClient.put(`/v1/user/${id}`, data),
   
   // 删除用户

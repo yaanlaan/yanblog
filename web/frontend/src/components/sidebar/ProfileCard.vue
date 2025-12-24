@@ -28,10 +28,6 @@
           <span class="stat-val">{{ categoryCount }}</span>
           <span class="stat-label">分类</span>
         </div>
-        <div class="stat-item">
-          <span class="stat-val">{{ wordCount }}</span>
-          <span class="stat-label">字数</span>
-        </div>
       </div>
       
       <div class="quote-area">
@@ -49,7 +45,6 @@ import { articleApi, categoryApi } from '@/services/api'
 
 const articleCount = ref(0)
 const categoryCount = ref(0)
-const wordCount = ref('50k')
 const currentQuote = ref('')
 const currentQuoteIndex = ref(0)
 let quoteInterval: number | null = null
@@ -58,8 +53,6 @@ const quotes = [
   "月亮想着我的心事，一只猫吃了我的奶酪",
   "草木山石，日月星辰",
   "雾霭山岚，风光雨霁",
-  "Talk is cheap. Show me the code.",
-  "Stay hungry, stay foolish."
 ]
 
 onMounted(async () => {

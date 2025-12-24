@@ -309,15 +309,15 @@ const handleDelete = (row: Category) => {
 const submitCategoryForm = async (formData: { id: number; name: string; img: string; top: number }) => {
   try {
     console.log('submitCategoryForm called with:', formData);
+    let res;
     if (isAdd.value) {
       // 新增分类
       console.log('Creating new category');
-      await categoryApi.createCategory({
+      res = await categoryApi.createCategory({
         name: formData.name,
         img: formData.img, // 不再设置默认值，保持为空或用户输入的值
         top: formData.top
       })
-      ElMessage.success('分类创建成功')
     } else {
       // 编辑分类
       console.log('Updating category with id:', formData.id);
@@ -337,9 +337,16 @@ const submitCategoryForm = async (formData: { id: number; name: string; img: str
       console.log('Sending PUT request to:', `/api/v1/category/${formData.id}`);
       console.log('Request data:', requestData);
       
-      await categoryApi.updateCategory(formData.id, requestData);
-      ElMessage.success('分类更新成功')
+      res = await categoryApi.updateCategory(formData.id, requestData);
     }
+
+    // 检查后端返回的状态码
+    if (res.data.status !== 200) {
+      ElMessage.error(res.data.message || (isAdd.value ? '分类创建失败' : '分类更新失败'))
+      return
+    }
+    
+    ElMessage.success(isAdd.value ? '分类创建成功' : '分类更新成功')
     
     // 关闭对话框
     dialogVisible.value = false
