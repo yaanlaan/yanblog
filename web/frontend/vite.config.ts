@@ -33,6 +33,6 @@ export default defineConfig({
       }
     },
     // 增加超时时间
-    timeout: 30000
+    // timeout: 30000
   }
 })

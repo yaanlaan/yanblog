@@ -74,6 +74,7 @@ export interface SiteInfo {
   }>
   contacts: {
     show: boolean
+    wechat_qr: string // 新增微信二维码配置
     items: Array<{
       name: string
       url: string
@@ -136,6 +137,7 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
     socials: [],
     contacts: {
       show: false,
+      wechat_qr: '', // 初始化
       items: []
     }
   })

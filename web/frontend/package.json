@@ -8,15 +8,17 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "vite build",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@types/js-yaml": "^4.0.9",
     "axios": "^1.11.0",
     "element-plus": "^2.10.5",
     "highlight.js": "^11.11.1",
+    "js-yaml": "^4.1.1",
     "katex": "^0.16.22",
     "marked": "^16.1.1",
     "mermaid": "^11.9.0",

@@ -47,7 +47,7 @@
     <div v-if="showWechatQR" class="qr-modal" @click="showWechatQR = false">
       <div class="qr-content" @click.stop>
         <h3>微信二维码</h3>
-        <img src="@/assets/wechat-qr.png" alt="微信二维码" @error="handleQRError">
+        <img :src="siteInfo.contacts?.wechat_qr || '/assets/default-qr.png'" alt="微信二维码" @error="handleQRError">
         <p>扫描二维码添加微信</p>
         <button class="close-btn" @click="showWechatQR = false">关闭</button>
       </div>
