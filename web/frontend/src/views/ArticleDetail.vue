@@ -70,11 +70,12 @@
         <button class="nav-btn prev-btn" @click="prevImage" v-if="imageList.length > 1">‹</button>
         <button class="nav-btn next-btn" @click="nextImage" v-if="imageList.length > 1">›</button>
         
-        <div class="image-container">
+        <div class="image-container" @wheel.prevent="handleWheel">
           <img 
             :src="currentImage" 
             :alt="`图片 ${currentImageIndex + 1}`"
             class="viewer-image"
+            :style="{ transform: `scale(${imageScale})`, transition: 'transform 0.1s ease' }"
             @load="onImageLoad"
             @error="onImageError"
           />
@@ -131,6 +132,14 @@ const imageList = ref<string[]>([])
 const imageAltList = ref<string[]>([])
 const currentImageIndex = ref(0)
 const currentImage = ref('')
+const imageScale = ref(1)
+
+// 处理滚轮缩放
+const handleWheel = (e: WheelEvent) => {
+  const delta = e.deltaY > 0 ? -0.1 : 0.1
+  const newScale = Math.max(0.1, Math.min(5, imageScale.value + delta))
+  imageScale.value = Number(newScale.toFixed(1))
+}
 
 // 获取文章详情
 const getArticleDetail = async (id: number) => {
@@ -244,6 +253,7 @@ const handleImageClick = (imageSrc: string, imageAlt: string, images: string[], 
 // 关闭图片查看器
 const closeImageViewer = () => {
   showImageViewer.value = false
+  imageScale.value = 1
   // 恢复body滚动
   document.body.style.overflow = ''
 }
@@ -253,6 +263,7 @@ const prevImage = () => {
   if (imageList.value.length <= 1) return
   currentImageIndex.value = (currentImageIndex.value - 1 + imageList.value.length) % imageList.value.length
   currentImage.value = imageList.value[currentImageIndex.value]
+  imageScale.value = 1
 }
 
 // 下一张图片
@@ -260,6 +271,7 @@ const nextImage = () => {
   if (imageList.value.length <= 1) return
   currentImageIndex.value = (currentImageIndex.value + 1) % imageList.value.length
   currentImage.value = imageList.value[currentImageIndex.value]
+  imageScale.value = 1
 }
 
 // 图片加载完成
@@ -326,7 +338,7 @@ onMounted(() => {
 }
 
 .back-link {
-  color: #007bff;
+  color: #00a5a5ff;
   text-decoration: none;
   font-size: 14px;
 }

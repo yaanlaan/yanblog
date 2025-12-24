@@ -74,9 +74,30 @@
           </div>
 
           <!-- <button class="login-btn">未登录</button> -->
+          
+          <!-- 圆形阅读进度 -->
+          <div class="reading-progress-circle">
+            <svg viewBox="0 0 36 36" class="circular-chart">
+              <path class="circle-bg"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path class="circle"
+                :stroke-dasharray="`${scrollProgress}, 100`"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <text x="18" y="20.35" class="percentage">{{ Math.round(scrollProgress) }}</text>
+            </svg>
+          </div>
         </div>
       </div>
     </div>
+    
+    <!-- 底部线性进度条 -->
+    <div class="progress-bar" :style="{ width: scrollProgress + '%' }"></div>
   </nav>
 </template>
 
@@ -89,6 +110,7 @@ const isNavVisible = ref(true)
 const isScrolled = ref(false)
 const lastScrollY = ref(0)
 const searchQuery = ref('')
+const scrollProgress = ref(0)
 
 const router = useRouter()
 
@@ -99,6 +121,14 @@ const handleScroll = () => {
   isNavVisible.value = true
   isScrolled.value = currentScrollY > 100
   lastScrollY.value = currentScrollY
+  
+  // 计算阅读进度
+  const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight
+  if (docHeight > 0) {
+    scrollProgress.value = Math.min(100, Math.max(0, (currentScrollY / docHeight) * 100))
+  } else {
+    scrollProgress.value = 0
+  }
 }
 
 // 处理搜索
@@ -358,6 +388,54 @@ onBeforeUnmount(() => {
   background-color: #3aa876;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(66, 184, 131, 0.3);
+}
+
+/* 阅读进度条样式 */
+.reading-progress-circle {
+  width: 36px;
+  height: 36px;
+  margin-left: 25px; /* 增加间距 */
+  flex-shrink: 0; /* 防止被压缩 */
+}
+
+.circular-chart {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.circle-bg {
+  fill: none;
+  stroke: #eee;
+  stroke-width: 3.8;
+}
+
+.circle {
+  fill: none;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke: #42b883;
+  animation: progress 1s ease-out forwards;
+  transition: stroke-dasharray 0.1s;
+}
+
+.percentage {
+  fill: #666;
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: 10px;
+  text-anchor: middle;
+}
+
+.progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(to right, #42b883, #3aa876);
+  transition: width 0.1s;
+  z-index: 1001;
 }
 
 .site-title-centered {

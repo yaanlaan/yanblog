@@ -39,6 +39,7 @@ import BackToTop from '@/components/BackToTop.vue'
   display: flex;
   gap: 20px;
   min-height: calc(100vh - 280px);
+  align-items: flex-start;
 }
 
 .main-content {
@@ -52,6 +53,8 @@ import BackToTop from '@/components/BackToTop.vue'
   display: flex;
   flex-direction: column;
   gap: 20px;
+  position: sticky;
+  top: 80px;
 }
 
 .right-sidebar {
@@ -60,6 +63,8 @@ import BackToTop from '@/components/BackToTop.vue'
   display: flex;
   flex-direction: column;
   gap: 20px;
+  position: sticky;
+  top: 80px;
 }
 
 @media (max-width: 1200px) {
@@ -82,6 +87,9 @@ import BackToTop from '@/components/BackToTop.vue'
     width: 100%;
     flex-direction: row;
     flex-wrap: wrap;
+    position: static;
+    max-height: none;
+    overflow-y: visible;
   }
   
   .sidebar-card {

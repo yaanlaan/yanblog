@@ -35,29 +35,43 @@
       </div>
       
       <div class="quote-area">
-        <p class="quote-text">"{{ currentQuote }}"</p>
+        <Transition name="fade-slide" mode="out-in">
+          <p class="quote-text" :key="currentQuote">"{{ currentQuote }}"</p>
+        </Transition>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { articleApi, categoryApi } from '@/services/api'
 
 const articleCount = ref(0)
 const categoryCount = ref(0)
 const wordCount = ref('50k')
-const currentQuote = ref('Talk is cheap. Show me the code.')
+const currentQuote = ref('')
+const currentQuoteIndex = ref(0)
+let quoteInterval: number | null = null
 
 const quotes = [
   "月亮想着我的心事，一只猫吃了我的奶酪",
   "草木山石，日月星辰",
-  "雾霭山岚，风光雨霁"
+  "雾霭山岚，风光雨霁",
+  "Talk is cheap. Show me the code.",
+  "Stay hungry, stay foolish."
 ]
 
 onMounted(async () => {
-  currentQuote.value = quotes[Math.floor(Math.random() * quotes.length)]
+  // 初始化名言
+  currentQuote.value = quotes[0]
+  
+  // 启动轮播
+  quoteInterval = setInterval(() => {
+    currentQuoteIndex.value = (currentQuoteIndex.value + 1) % quotes.length
+    currentQuote.value = quotes[currentQuoteIndex.value]
+  }, 4000) as unknown as number
+
   try {
     const artRes = await articleApi.getArticles({ pagesize: 1, pagenum: 1 })
     if (artRes.data && artRes.data.total) {
@@ -72,13 +86,19 @@ onMounted(async () => {
     console.error('Failed to fetch stats', e)
   }
 })
+
+onUnmounted(() => {
+  if (quoteInterval) {
+    clearInterval(quoteInterval)
+  }
+})
 </script>
 
 <style scoped>
 .profile-card {
   text-align: center;
   overflow: visible; /* Allow avatar to overlap */
-  margin-top: 30px; /* Space for overlapping avatar */
+  margin-top: 0; 
 }
 
 .profile-header {
@@ -180,6 +200,10 @@ onMounted(async () => {
   background-color: #f9f9f9;
   border-radius: 8px;
   border-left: 3px solid #42b883;
+  min-height: 60px; /* 预留高度防止跳动 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .quote-text {
@@ -188,5 +212,21 @@ onMounted(async () => {
   font-style: italic;
   margin: 0;
   line-height: 1.5;
+}
+
+/* 动画效果 */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.5s ease;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>

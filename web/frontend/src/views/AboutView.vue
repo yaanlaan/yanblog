@@ -3,111 +3,11 @@
     <MainLayout>
       <template #main>
         <div class="about-content">
-          <h1>关于我们</h1>
-
-          <div class="section">
-            <h2>项目简介</h2>
-            <p>这是一个使用 Vue 3、Go 语言和现代 Web 技术构建的全栈博客系统。项目采用前后端分离架构，后端使用 Gin 框架提供 RESTful API，前端使用 Vue 3 构建响应式界面。</p>
-          </div>
-
-          <div class="section">
-            <h2>技术栈</h2>
-            <div class="tech-stack">
-              <div class="tech-category">
-                <h3>后端技术</h3>
-                <ul>
-                  <li>Go 语言</li>
-                  <li>Gin Web 框架</li>
-                  <li>GORM (数据库ORM)</li>
-                  <li>JWT (身份认证)</li>
-                  <li>MySQL (数据库)</li>
-                </ul>
-              </div>
-
-              <div class="tech-category">
-                <h3>前端技术</h3>
-                <ul>
-                  <li>Vue 3 (Composition API)</li>
-                  <li>TypeScript</li>
-                  <li>Vite (构建工具)</li>
-                  <li>Element Plus (UI组件库)</li>
-                  <li>Vue Router (路由管理)</li>
-                </ul>
-              </div>
-
-              <div class="tech-category">
-                <h3>部署与工具</h3>
-                <ul>
-                  <li>Git (版本控制)</li>
-                  <li>RESTful API 设计</li>
-                  <li>响应式设计</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div class="section">
-            <h2>功能特性</h2>
-            <div class="features">
-              <div class="feature-card">
-                <i class="iconfont icon-article"></i>
-                <h3>文章管理</h3>
-                <p>完整的文章发布、编辑、删除功能，支持Markdown格式</p>
-              </div>
-
-              <div class="feature-card">
-                <i class="iconfont icon-category"></i>
-                <h3>分类系统</h3>
-                <p>灵活的文章分类管理，便于内容组织</p>
-              </div>
-
-              <div class="feature-card">
-                <i class="iconfont icon-user"></i>
-                <h3>用户权限</h3>
-                <p>基于JWT的用户认证和权限控制系统</p>
-              </div>
-
-              <div class="feature-card">
-                <i class="iconfont icon-upload"></i>
-                <h3>文件上传</h3>
-                <p>支持图片等文件上传到云存储服务</p>
-              </div>
-
-              <div class="feature-card">
-                <i class="iconfont icon-weather"></i>
-                <h3>天气信息</h3>
-                <p>集成第三方天气API，实时显示天气状况</p>
-              </div>
-
-              <div class="feature-card">
-                <i class="iconfont icon-monitor"></i>
-                <h3>系统监控</h3>
-                <p>实时监控服务器状态，包括内存、CPU使用率等</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="section">
-            <h2>视频插入</h2>
-            <div class="demo-content">
-              <h3>视频示例（博客配图可以上传七牛云并复制外链添加，视频就自己从bilibili引外链吧，下面是一个例子）</h3>
-              <div class="video-container">
-                <iframe
-                  src="//player.bilibili.com/player.html?isOutside=true&aid=638975717&bvid=BV1HY4y1r731&cid=717992692&page=1&high_quality=1&danmaku=0"
-                  allowfullscreen="allowfullscreen" width="100%" height="500" scrolling="no" frameborder="0"
-                  sandbox="allow-top-navigation allow-same-origin allow-forms allow-scripts"></iframe>
-              </div>
-              <p class="video-description">莫扎特 D大调嬉游曲 K. 136丨Pekka Kuusisto丨挪威室内乐团</p>
-            </div>
-          </div>
-          <div class="section"> 
-            <h2>参考说明</h2>
-          <p>本博客主要参考了ginblog项目的后端，和知乎恢锦的博客元素设计</p>
-          </div>
+          <!-- Markdown 内容渲染区域 -->
+          <div class="markdown-body" v-html="renderedContent"></div>
         </div>
       </template>
       <template #sidebar>
-        <div class="sidebar right-sidebar">
           <!-- 个人卡片 -->
           <ProfileCard />
 
@@ -148,7 +48,6 @@
               </div>
             </div>
           </div>
-        </div>
       </template>
     </MainLayout>
 
@@ -165,9 +64,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { marked } from 'marked'
 import MainLayout from '@/components/layout/MainLayout.vue'
 import ProfileCard from '@/components/sidebar/ProfileCard.vue'
+import aboutContent from '@/assets/about/about.md?raw'
+
+// 渲染 Markdown 内容
+const renderedContent = ref('')
+
+onMounted(() => {
+  renderedContent.value = marked.parse(aboutContent) as string
+})
 
 // 微信二维码显示状态
 const showWechatQR = ref(false)
@@ -226,6 +134,50 @@ const showQRCode = (type: string) => {
   font-size: 32px;
   margin-bottom: 20px;
   color: #333;
+}
+
+/* Markdown 样式 */
+.markdown-body {
+  color: #333;
+  line-height: 1.6;
+}
+
+.markdown-body :deep(h2) {
+  font-size: 24px;
+  margin: 30px 0 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+.markdown-body :deep(h3) {
+  font-size: 20px;
+  margin: 20px 0 10px;
+  color: #444;
+}
+
+.markdown-body :deep(p) {
+  margin-bottom: 16px;
+  color: #666;
+}
+
+.markdown-body :deep(ul) {
+  padding-left: 20px;
+  margin-bottom: 16px;
+}
+
+.markdown-body :deep(li) {
+  margin-bottom: 8px;
+  color: #666;
+}
+
+.markdown-body :deep(a) {
+  color: #42b883;
+  text-decoration: none;
+}
+
+.markdown-body :deep(a:hover) {
+  text-decoration: underline;
 }
 
 .about-content h2 {

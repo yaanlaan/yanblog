@@ -1,12 +1,10 @@
 <!-- Sidebar 组件：展示侧边栏内容 -->
 <template>
-  <div class="sidebar">
-    <WeatherCard ref="weatherCard" />
-    <ShortcutsCard />
-    <FeaturedArticles ref="featuredArticles" />
-    <ServerStatus ref="serverStatus" />
-    <TagCloud ref="tagCloud" />
-  </div>
+  <WeatherCard ref="weatherCard" />
+  <ShortcutsCard />
+  <FeaturedArticles ref="featuredArticles" />
+  <ServerStatus ref="serverStatus" />
+  <TagCloud ref="tagCloud" />
 </template>
 
 <script setup lang="ts">
@@ -35,14 +33,6 @@ defineExpose({
 </script>
 
 <style scoped>
-.sidebar {
-  width: 300px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
 /* ==================== 通用卡片样式 ==================== */
 .sidebar-card {
   background: white;
@@ -76,12 +66,6 @@ defineExpose({
 
 /* ==================== 响应式样式 ==================== */
 @media (max-width: 992px) {
-  .sidebar {
-    width: 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-  
   .sidebar-card {
     flex: 1 1 calc(50% - 10px);
     min-width: 200px;
@@ -89,10 +73,6 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
-  .sidebar {
-    flex-direction: column;
-  }
-  
   .sidebar-card {
     flex: 1 1 100%;
   }

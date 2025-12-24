@@ -136,7 +136,7 @@ const formatNumber = (num: number) => {
   background-color: #f0f8ff;
   padding: 2px 8px;
   border-radius: 4px;
-  color: #409eff;
+  color: #05a784ff;
 }
 
 @media (max-width: 768px) {
