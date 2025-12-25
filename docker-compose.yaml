@@ -29,8 +29,6 @@ services:
     volumes:
       # 修正：只挂载配置文件，而不是整个根目录
       - ./docker_field/frontend/config.yaml:/usr/share/nginx/html/config.yaml
-      # 修正：挂载静态资源目录（如图片），确保路径匹配
-      - ./docker_field/frontend/public:/usr/share/nginx/html/static
     depends_on:
       - backend
     networks:

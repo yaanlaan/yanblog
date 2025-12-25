@@ -11,7 +11,7 @@ database:
   DbName: yanblog
   
 # openssl rand -hex 32
-JwtKey: 1234567890
+JwtKey: 2a959d62cef45c07c167a280dd370c34c38ccfe4d378b1440bf5f68da928f951
 
 weather:
   Provider: openweathermap
