@@ -18,8 +18,13 @@
           class="article-item"
         >
           <router-link :to="`/article/${article.id}`" class="article-link">
-            <i class="iconfont icon-rss article-icon"></i>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="title-icon">
+              <path d="M4 11a9 9 0 0 1 9 9"></path>
+              <path d="M4 4a16 16 0 0 1 16 16"></path>
+              <circle cx="5" cy="19" r="1"></circle>
+            </svg>
             <span class="article-title">{{ article.title }}</span>
+            <span class="hover-line"></span>
           </router-link>
         </div>
       </div>
@@ -127,6 +132,13 @@ onMounted(() => {
   box-shadow: none !important;
   border: none !important;
   padding: 0;
+  transform: none !important;
+  transition: none !important;
+}
+
+.sidebar-card.featured-articles:hover {
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .card-header {
@@ -159,11 +171,13 @@ onMounted(() => {
   padding: 0;
   margin: 0;
   width: 100%;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .article-item:hover {
-  background-color: transparent;
-  box-shadow: none;
+  transform: translateY(-2px);
+  z-index: 1;
+  position: relative;
 }
 
 .article-link {
@@ -173,10 +187,18 @@ onMounted(() => {
   align-items: flex-start;
   gap: 8px;
   transition: color 0.3s ease;
+  position: relative;
+  padding: 5px 0;
 }
 
 .article-link:hover {
   color: #42b883;
+}
+
+.title-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .article-icon {
@@ -187,13 +209,28 @@ onMounted(() => {
 
 .article-title {
   font-size: 15px;
-  font-weight: 400;
+  font-weight: 500;
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.hover-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #42b883;
+  transition: width 0.3s ease;
+  content: "";
+}
+
+.article-link:hover .hover-line {
+  width: 100%;
 }
 
 /* Skeleton & Error styles remain similar but simplified */

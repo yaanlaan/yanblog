@@ -20,8 +20,8 @@
           {{ article.categoryName }}
         </span>
         <div class="meta-item tags" v-if="article.tags">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-          <span v-for="(tag, index) in splitTags(article.tags)" :key="tag">
+          <i class="iconfont icon-tag"></i>
+          <span v-for="(tag, index) in splitTags(article.tags)" :key="`${tag}_${index}`">
             {{ tag }}{{ index < splitTags(article.tags).length - 1 ? ', ' : '' }}
           </span>
         </div>
@@ -75,7 +75,7 @@ const formatDate = (dateString: string) => {
 // 分割标签
 const splitTags = (tags: string) => {
   if (!tags) return []
-  return tags.replace(/，/g, ',').split(',').map(t => t.trim()).filter(t => t).slice(0, 3) // 最多显示3个标签
+  return tags.replace(/，/g, ',').split(',').map(t => t.trim()).filter(t => t)
 }
 </script>
 

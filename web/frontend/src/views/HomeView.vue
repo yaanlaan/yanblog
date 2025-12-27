@@ -1,6 +1,13 @@
 <template>
   <div class="home-page">
-    <MainLayout>
+    <!-- 全局加载动画 -->
+    <div v-if="pageLoading" class="loading-overlay">
+      <div class="arc"></div>
+      <h1 class="loading-text"><span>LOADING</span></h1>
+    </div>
+    
+    <!-- 主页内容 -->
+    <MainLayout v-else>
       <template #main>
         <HeroSection />
         <TopArticles :articles="topArticles" :loading="topLoading" />
@@ -41,6 +48,7 @@ const topArticles = ref<Article[]>([])
 const latestArticles = ref<Article[]>([])
 const topLoading = ref(false)
 const latestLoading = ref(false)
+const pageLoading = ref(true) // 页面全局加载状态
 
 // 获取置顶文章
 const getTopArticles = async () => {
@@ -69,6 +77,7 @@ const getTopArticles = async () => {
     console.error('获取置顶文章失败:', error)
   } finally {
     topLoading.value = false
+    checkPageLoading()
   }
 }
 
@@ -109,6 +118,18 @@ const getLatestArticles = async () => {
     console.error('获取最新文章失败:', error)
   } finally {
     latestLoading.value = false
+    checkPageLoading()
+  }
+}
+
+// 检查页面加载状态
+const checkPageLoading = () => {
+  // 当所有数据加载完成时，隐藏全局加载动画
+  if (!topLoading.value && !latestLoading.value) {
+    // 添加一点延迟以确保用户体验
+    setTimeout(() => {
+      pageLoading.value = false
+    }, 300)
   }
 }
 
@@ -123,5 +144,128 @@ onMounted(() => {
 .home-page {
   width: 100%;
   min-height: calc(100vh - 200px);
+  position: relative;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: #faf8f2;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.arc {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border-top: 3px solid #55a2a0;
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+  animation: rt 2s infinite linear;
+}
+
+.arc::before {
+  content: "";
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border-top: 2px solid #c85540;
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+  animation: rt 4s infinite linear reverse;
+  margin: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.arc::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  border-top: initial;
+  border-left: initial;
+  border-right: initial;
+  animation: cw 1s infinite;
+  margin: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: #428381;
+}
+
+.loading-text {
+  position: absolute;
+  height: 40px;
+  margin: auto;
+  top: 200px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 0.1em;
+  font-size: 14px;
+  font-weight: lighter;
+  color: #55a2a0;
+}
+
+.loading-text span {
+  display: none;
+}
+
+.loading-text::after {
+  content: "";
+  animation: txt 5s infinite;
+}
+
+@keyframes rt {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes cw {
+  0% {
+    width: 0;
+    height: 0;
+  }
+
+  75% {
+    width: 40px;
+    height: 40px;
+  }
+
+  100% {
+    width: 0;
+    height: 0;
+  }
+}
+
+@keyframes txt {
+  0% {
+    content: "LOADING.";
+  }
+
+  50% {
+    content: "LOADING..";
+  }
+
+  100% {
+    content: "LOADING...";
+  }
 }
 </style>

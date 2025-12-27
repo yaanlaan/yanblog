@@ -48,16 +48,23 @@
         v-else-if="is3DView && tags.length > 0" 
         class="tags-3d-container"
         ref="containerRef"
-        @mousemove="handleMouseMove"
+        @mousedown="handleMouseDown"
+        @mousemove="handleMouseMove3D"
+        @mouseup="handleMouseUp"
         @mouseleave="handleMouseLeave"
+        @touchstart="handleTouchStart"
+        @touchmove="handleTouchMove"
+        @touchend="handleTouchEnd"
       >
-        <div class="tags-3d-wrapper">
+        <canvas class="connections-canvas" ref="canvasRef"></canvas>
+        <div class="tags-3d-wrapper" ref="wrapperRef">
           <router-link
             v-for="(tag, index) in tags3D" 
             :key="tag.name" 
             :to="`/articles?keyword=${tag.name}`"
             class="tag-3d"
             :style="tag.style"
+            :data-index="index"
           >
             {{ tag.name }} <span class="tag-count">({{ tag.count }})</span>
           </router-link>
@@ -104,6 +111,8 @@ const is3DView = ref(false)
 
 // 3D 动画相关
 const containerRef = ref<HTMLElement | null>(null)
+const wrapperRef = ref<HTMLElement | null>(null)
+const canvasRef = ref<HTMLCanvasElement | null>(null)
 let animationId: number | null = null
 const radius = 100 // 球体半径
 const baseSpeed = 0.005 // 基础旋转速度
@@ -111,6 +120,9 @@ let angleX = baseSpeed
 let angleY = baseSpeed
 let mouseX = 0
 let mouseY = 0
+let isDragging = false
+let lastX = 0
+let lastY = 0
 
 // 计算显示的标签 (列表视图)
 const displayedTags = computed(() => {
@@ -132,10 +144,20 @@ const toggleView = () => {
     nextTick(() => {
       init3D()
       startAnimation()
+      initCanvas()
     })
   } else {
     stopAnimation()
   }
+}
+
+// 初始化 Canvas
+const initCanvas = () => {
+  if (!canvasRef.value || !containerRef.value) return
+  
+  const container = containerRef.value
+  canvasRef.value.width = container.offsetWidth
+  canvasRef.value.height = container.offsetHeight
 }
 
 // 初始化 3D 坐标 (斐波那契球分布)
@@ -152,6 +174,50 @@ const init3D = () => {
       style: {}
     }
   })
+}
+
+// 绘制连线
+const drawConnections = () => {
+  if (!canvasRef.value || !wrapperRef.value) return
+  
+  const ctx = canvasRef.value.getContext('2d')
+  if (!ctx) return
+  
+  // 清空画布
+  ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+  
+  // 获取容器中心点
+  const containerRect = containerRef.value!.getBoundingClientRect()
+  const centerX = (containerRect.width) / 2
+  const centerY = (containerRect.height) / 2
+  
+  // 获取所有标签元素的位置
+  const tagElements = wrapperRef.value.querySelectorAll('.tag-3d')
+  
+  // 绘制从中心到每个标签的连线
+  ctx.strokeStyle = 'rgb(114, 117, 117, 0.8)';
+  ctx.lineWidth = 1.2;
+  ctx.lineCap = 'round';
+  
+  tagElements.forEach((el, index) => {
+    const rect = el.getBoundingClientRect()
+    
+    // 计算相对于容器的位置
+    const x = rect.left - containerRect.left + rect.width / 2
+    const y = rect.top - containerRect.top + rect.height / 2
+    
+    // 根据标签的z轴深度调整透明度，更接近视角的连线更明显
+    const zDepth = tags3D.value[index].z
+    const depthFactor = Math.max(0.3, (zDepth + radius) / (2 * radius))
+    ctx.globalAlpha = 0.4 * depthFactor
+    
+    ctx.beginPath()
+    ctx.moveTo(centerX, centerY) // 从中心点开始
+    ctx.lineTo(x, y) // 连接到标签位置
+    ctx.stroke()
+  })
+  
+  ctx.globalAlpha = 1.0
 }
 
 // 3D 动画循环
@@ -188,6 +254,8 @@ const animate = () => {
       fontSize: calculateFontSize(tag.count) // 保持原有的大小逻辑
     }
   })
+  
+  drawConnections()
   animationId = requestAnimationFrame(animate)
 }
 
@@ -204,23 +272,100 @@ const stopAnimation = () => {
   }
 }
 
-// 鼠标交互
-const handleMouseMove = (e: MouseEvent) => {
-  if (!containerRef.value) return
-  const rect = containerRef.value.getBoundingClientRect()
-  // 计算鼠标相对于容器中心的坐标 (-1 到 1)
-  mouseX = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2)
-  mouseY = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2)
+// 鼠标/触摸事件处理
+const handleMouseDown = (e: MouseEvent) => {
+  isDragging = true
+  lastX = e.clientX
+  lastY = e.clientY
+  containerRef.value!.style.cursor = 'grabbing'
+}
+
+const handleMouseMove3D = (e: MouseEvent) => {
+  if (!isDragging) {
+    // 鼠标移动时调整旋转速度（仅在未拖拽时）
+    if (!is3DView.value) return
+    if (!containerRef.value) return
+    const rect = containerRef.value.getBoundingClientRect()
+    // 计算鼠标相对于容器中心的坐标 (-1 到 1)
+    mouseX = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2)
+    mouseY = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2)
+    
+    // 根据鼠标位置调整旋转速度和方向
+    angleY = mouseX * 0.02
+    angleX = -mouseY * 0.02
+    return
+  }
   
-  // 根据鼠标位置调整旋转速度和方向
-  angleY = mouseX * 0.02
-  angleX = -mouseY * 0.02
+  // 拖拽旋转
+  const deltaX = e.clientX - lastX
+  const deltaY = e.clientY - lastY
+  
+  angleY = deltaX * 0.005
+  angleX = -deltaY * 0.005
+  
+  lastX = e.clientX
+  lastY = e.clientY
+}
+
+const handleMouseUp = () => {
+  if (isDragging) {
+    isDragging = false
+    containerRef.value!.style.cursor = 'grab'
+    // 恢复默认旋转
+    setTimeout(() => {
+      if (!isDragging) {
+        angleX = baseSpeed
+        angleY = baseSpeed
+      }
+    }, 2000) // 2秒后恢复自动旋转
+  }
 }
 
 const handleMouseLeave = () => {
-  // 恢复默认旋转
-  angleX = baseSpeed
-  angleY = baseSpeed
+  if (!isDragging) {
+    // 恢复默认旋转
+    angleX = baseSpeed
+    angleY = baseSpeed
+  }
+  containerRef.value!.style.cursor = 'default'
+}
+
+// 触摸事件处理
+const handleTouchStart = (e: TouchEvent) => {
+  isDragging = true
+  lastX = e.touches[0].clientX
+  lastY = e.touches[0].clientY
+  containerRef.value!.style.cursor = 'grabbing'
+  e.preventDefault()
+}
+
+const handleTouchMove = (e: TouchEvent) => {
+  if (!isDragging) return
+  
+  const deltaX = e.touches[0].clientX - lastX
+  const deltaY = e.touches[0].clientY - lastY
+  
+  angleY = deltaX * 0.005
+  angleX = -deltaY * 0.005
+  
+  lastX = e.touches[0].clientX
+  lastY = e.touches[0].clientY
+  
+  e.preventDefault()
+}
+
+const handleTouchEnd = () => {
+  if (isDragging) {
+    isDragging = false
+    containerRef.value!.style.cursor = 'grab'
+    // 恢复默认旋转
+    setTimeout(() => {
+      if (!isDragging) {
+        angleX = baseSpeed
+        angleY = baseSpeed
+      }
+    }, 2000) // 2秒后恢复自动旋转
+  }
 }
 
 // 获取标签列表（通过获取文章列表聚合）
@@ -440,7 +585,21 @@ onBeforeUnmount(() => {
   justify-content: center;
   align-items: center;
   perspective: 800px;
-  cursor: move;
+  cursor: grab;
+  position: relative;
+}
+
+.tags-3d-container:active {
+  cursor: grabbing;
+}
+
+.connections-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .tags-3d-wrapper {
@@ -462,12 +621,14 @@ onBeforeUnmount(() => {
   will-change: transform, opacity;
   /* 移除背景色，只显示文字 */
   text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+  transition: all 0.3s ease;
 }
 
 .tag-3d:hover {
   color: #3daa79ff;
   z-index: 1000 !important; /* 确保 hover 时在最上层 */
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transform: scale(1.1);
 }
 
 .empty-state {

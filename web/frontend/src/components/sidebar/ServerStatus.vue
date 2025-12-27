@@ -8,34 +8,17 @@
         <p>状态加载中...</p>
       </div>
       <div v-else-if="!error" class="status-list">
-        <div class="status-item">
+        <div class="status-item" v-for="(item, index) in statusItems" :key="item.label">
           <div class="status-header">
-            <span class="label">MEM</span>
-            <span class="value">{{ serverStatus.memoryUsage }}%</span>
+            <span class="label">{{ item.label }}</span>
+            <span class="value">{{ serverStatus[item.valueKey] }}%</span>
           </div>
           <div class="progress-bar">
-            <div class="progress-fill mem" :style="{ width: serverStatus.memoryUsage + '%' }"></div>
-          </div>
-        </div>
-        
-        <div class="status-item">
-          <div class="status-header">
-            <span class="label">CPU</span>
-            <span class="value">{{ serverStatus.cpuUsage }}%</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill cpu" :style="{ width: serverStatus.cpuUsage + '%' }"></div>
-          </div>
-        </div>
-
-        <!-- Disk usage -->
-        <div class="status-item">
-          <div class="status-header">
-            <span class="label">DISK</span>
-            <span class="value">{{ serverStatus.diskUsage }}%</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill disk" :style="{ width: serverStatus.diskUsage + '%' }"></div>
+            <div 
+              class="progress-fill" 
+              :class="item.type" 
+              :style="{ width: serverStatus[item.valueKey] + '%' }"
+            ></div>
           </div>
         </div>
       </div>
@@ -48,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { systemApi } from '@/services/api'
 
 interface ServerStatus {
@@ -72,6 +55,13 @@ const serverStatus = ref<ServerStatus>({
 const loading = ref(false)
 const error = ref('')
 let timer: number | null = null
+
+// 定义状态项配置
+const statusItems = computed(() => [
+  { label: 'MEM', valueKey: 'memoryUsage', type: 'mem' },
+  { label: 'CPU', valueKey: 'cpuUsage', type: 'cpu' },
+  { label: 'DISK', valueKey: 'diskUsage', type: 'disk' }
+])
 
 const fetchServerStatus = async () => {
   try {
@@ -124,6 +114,13 @@ onBeforeUnmount(() => {
   box-shadow: none !important;
   border: none !important;
   padding: 0;
+  transform: none !important;
+  transition: none !important;
+}
+
+.sidebar-card.server-status:hover {
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .card-header {
@@ -150,6 +147,21 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 15px;
+}
+
+.status-item {
+  border-bottom: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding: 5px 0;
+}
+
+.status-item:hover {
+  transform: translateY(-2px);
+  z-index: 1;
+  position: relative;
 }
 
 .status-header {
