@@ -523,12 +523,23 @@ onBeforeUnmount(() => {
 }
 
 .card-content {
-  min-height: 200px;
+  height: 300px;
   position: relative;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  transition: all 0.3s ease;
+}
+
+.card-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.card-content::-webkit-scrollbar-thumb {
+  background-color: #ddd;
+  border-radius: 2px;
 }
 
 .content-3d {
-  height: 300px; /* 3D 视图需要固定高度 */
   overflow: hidden;
 }
 
