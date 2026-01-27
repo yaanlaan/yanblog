@@ -21,11 +21,8 @@
           :articles="articles"
           :loading="loading"
           :total="total"
-          :current-page="pagination.currentPage"
-          :page-size="pagination.pageSize"
           :view-mode="viewMode"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
+          @load-more="loadMore"
         />
       </template>
       <template #sidebar>
@@ -77,10 +74,8 @@ const selectedCategory = ref('')
 const searchKeyword = ref('')
 const viewMode = ref<'grid' | 'list'>('grid')
 
-const pagination = reactive({
-  currentPage: 1,
-  pageSize: 10
-})
+// 无限滚动显示数量
+const displayCount = ref(10)
 
 // 计算属性
 const activeCategoryId = computed(() => {
@@ -143,6 +138,7 @@ const getArticles = async () => {
     })
     
     // 初始化显示数据
+    displayCount.value = 10
     updateDisplayedArticles()
   } catch (error) {
     console.error('获取文章列表失败:', error)
@@ -195,23 +191,28 @@ const updateDisplayedArticles = () => {
   // 更新总数
   total.value = filteredArticles.length
   
-  // 应用分页
-  const start = (pagination.currentPage - 1) * pagination.pageSize
-  const end = start + pagination.pageSize
-  articles.value = filteredArticles.slice(start, end)
+  // 应用切片 (无限滚动)
+  articles.value = filteredArticles.slice(0, displayCount.value)
+}
+
+// 加载更多文章
+const loadMore = () => {
+    // 增加显示数量
+    displayCount.value += 10
+    updateDisplayedArticles()
 }
 
 // 处理分类变化
 const handleCategoryChange = (value: string) => {
   selectedCategory.value = value
-  pagination.currentPage = 1
+  displayCount.value = 10
   updateDisplayedArticles()
 }
 
 // 处理搜索
 const handleSearch = (keyword: string) => {
   searchKeyword.value = keyword
-  pagination.currentPage = 1
+  displayCount.value = 10
   updateDisplayedArticles()
 }
 
@@ -219,20 +220,7 @@ const handleSearch = (keyword: string) => {
 const handleReset = () => {
   searchKeyword.value = ''
   selectedCategory.value = ''
-  pagination.currentPage = 1
-  updateDisplayedArticles()
-}
-
-// 处理分页大小变化
-const handleSizeChange = (val: number) => {
-  pagination.pageSize = val
-  pagination.currentPage = 1
-  updateDisplayedArticles()
-}
-
-// 处理当前页变化
-const handleCurrentChange = (val: number) => {
-  pagination.currentPage = val
+  displayCount.value = 10
   updateDisplayedArticles()
 }
 
@@ -249,14 +237,14 @@ onMounted(() => {
 // 监听路由参数变化
 watch(() => route.params, (newParams, oldParams) => {
   // 当路由参数变化时，重新获取文章数据
-  pagination.currentPage = 1
+  // displayCount 在 getArticles 内部会重置
   getArticles()
 }, { deep: true })
 
 // 监听路由查询参数变化（如果有的话）
 watch(() => route.query, () => {
-  pagination.currentPage = 1
-  updateDisplayedArticles()
+    displayCount.value = 10
+    updateDisplayedArticles()
 }, { deep: true })
 </script>
 

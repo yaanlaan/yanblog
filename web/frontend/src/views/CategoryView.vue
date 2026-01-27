@@ -34,27 +34,25 @@
         </div>
       </div>
       
-      <!-- 分页 -->
-      <div class="pagination">
-        <el-pagination
-          :current-page="pagination.currentPage"
-          :page-size="pagination.pageSize"
-          :total="total"
-          :page-sizes="[8, 16, 24, 32]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
+      <!-- 滚动加载触发器 -->
+      <div ref="loadingTrigger" class="loading-trigger">
+        <div v-if="loadingCategories" class="loading-more">
+           <!-- loading state is usually for initial load, but here we can reuse or use a separate loadingMore flag if async -->
+           <!-- Since we fetch ALL at start, 'loading' is only for initial fetch. 
+                Scrolling is instant, so we might not need a spinner unless we simulate delay. -->
+           <span v-if="displayedCategories.length < total">- 向下滑动加载更多 -</span>
+           <span v-else>- 也就是这些了 -</span>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { categoryApi } from '@/services/api'
-import { ElPagination } from 'element-plus'
+// import { ElPagination } from 'element-plus'
 
 // 定义分类类型
 interface Category {
@@ -74,13 +72,13 @@ const router = useRouter()
 const allCategories = ref<Category[]>([]) // 存储所有分类数据
 const displayedCategories = ref<Category[]>([]) // 存储当前显示的分类数据
 const loading = ref(true)
+const loadingCategories = ref(false) // Just for uniformity if needed
 const total = ref(0)
+const displayCount = ref(12)
 
-// 分页配置
-const pagination = reactive({
-  currentPage: 1,
-  pageSize: 8
-})
+// 滚动监听
+const loadingTrigger = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
 
 // 默认图片
 const defaultImage = new URL('@/assets/img/无封面.jpg', import.meta.url).href
@@ -137,75 +135,52 @@ const goToCategory = (id: number) => {
   router.push(`/category/${id}`)
 }
 
-// 更新显示的分类列表（前端分页）
+// 更新显示的分类列表（无限滚动）
 const updateDisplayedCategories = () => {
-  // 应用分页
-  const start = (pagination.currentPage - 1) * pagination.pageSize
-  const end = start + pagination.pageSize
-  displayedCategories.value = allCategories.value.slice(start, end)
-  
-  // 更新路由查询参数
-  router.replace({
-    query: {
-      ...route.query,
-      page: pagination.currentPage,
-      size: pagination.pageSize
-    }
-  })
+  // 应用切片
+  displayedCategories.value = allCategories.value.slice(0, displayCount.value)
 }
 
-// 处理分页大小变化
-const handleSizeChange = (val: number) => {
-  pagination.pageSize = val
-  pagination.currentPage = 1
-  updateDisplayedCategories()
+// 加载更多
+const loadMore = () => {
+    if (displayedCategories.value.length >= total.value) return
+    displayCount.value += 8
+    updateDisplayedCategories()
 }
 
-// 处理当前页变化
-const handleCurrentChange = (val: number) => {
-  pagination.currentPage = val
-  updateDisplayedCategories()
-}
-
-// 更新路由查询参数并获取数据
-const updateRouteQueryAndFetch = () => {
-  router.replace({
-    query: {
-      ...route.query,
-      page: pagination.currentPage,
-      size: pagination.pageSize
-    }
-  }).then(() => {
-    // 路由更新后再获取数据
-    getCategories()
-  })
-}
-
-// 监听路由查询参数变化
-watch(
-  () => route.query,
-  (newQuery) => {
-    const page = Number(newQuery.page) || 1
-    const size = Number(newQuery.size) || 8
+// 监听器设置
+const setupObserver = () => {
+    if (observer) observer.disconnect()
     
-    // 只有当分页参数真正发生变化时才更新
-    if (page !== pagination.currentPage || size !== pagination.pageSize) {
-      pagination.currentPage = page
-      pagination.pageSize = size
-      updateDisplayedCategories()
+    observer = new IntersectionObserver((entries) => {
+        const entry = entries[0]
+        if (entry.isIntersecting && !loading.value && displayedCategories.value.length < total.value) {
+            loadMore()
+        }
+    }, {
+        rootMargin: '100px'
+    })
+    
+    if (loadingTrigger.value) {
+        observer.observe(loadingTrigger.value)
     }
-  },
-  { deep: true } // 深度监听查询参数变化
-)
+}
 
 // 组件挂载时获取数据
-onMounted(() => {
-  // 从路由查询参数中初始化分页状态
-  const page = Number(route.query.page) || 1
-  const size = Number(route.query.size) || 8
-  pagination.currentPage = page
-  pagination.pageSize = size
-  getCategories()
+onMounted(async () => {
+  await getCategories()
+  nextTick(() => {
+      setupObserver()
+  })
+})
+
+onUnmounted(() => {
+    if (observer) observer.disconnect()
+})
+
+// 监听数据显示变化，确保 observer 有效
+watch(() => displayedCategories.value, () => {
+    // DOM更新后可能位置变化，但 observer 通常不需要重置
 })
 
 // 在组件卸载前清理watcher（可选）
@@ -317,10 +292,20 @@ onMounted(() => {
   color: #666;
 }
 
-.pagination {
+.loading-trigger {
+  height: 60px;
   display: flex;
   justify-content: center;
+  align-items: center;
   margin-top: 30px;
+}
+
+.loading-more {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #999;
+  font-size: 14px;
 }
 
 @media (max-width: 768px) {
