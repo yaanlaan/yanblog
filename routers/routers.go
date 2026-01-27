@@ -22,6 +22,11 @@ func InitRouter() {
 
 	// 静态文件服务
 	r.Static("/uploads", "./uploads")
+	// 代理前台静态资源，方便后台预览
+	r.Static("/assets", "./web/frontend/public/assets")
+	r.Static("/static", "./web/frontend/public/static")
+	r.Static("/iconfont", "./web/frontend/public/iconfont")
+	r.StaticFile("/favicon.ico", "./web/frontend/public/favicon.ico")
 
 	// 用户路由分组
 	auth := r.Group("api/v1")

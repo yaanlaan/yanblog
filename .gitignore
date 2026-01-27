@@ -84,3 +84,4 @@ server
 yanblog
 docker_field/mysql
 deploy
+node_modules/
