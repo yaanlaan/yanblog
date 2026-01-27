@@ -84,7 +84,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
-import { articleApi } from '@/services/api'
+import { tagApi } from '@/services/api'
 
 // 定义标签接口
 interface Tag {
@@ -368,15 +368,14 @@ const handleTouchEnd = () => {
   }
 }
 
-// 获取标签列表（通过获取文章列表聚合）
+// 获取标签列表
 const fetchTags = async () => {
   try {
     loading.value = true
     error.value = ''
     emit('loading', true)
     
-    // 获取最新100篇文章来生成标签云
-    const response = await articleApi.getArticles({
+    const response = await tagApi.getTags({
       pagesize: 100,
       pagenum: 1
     })
@@ -390,30 +389,14 @@ const fetchTags = async () => {
     const { data, status, message } = response.data
     
     if (status !== 200) {
-      error.value = message || '获取文章列表失败'
+      error.value = message || '获取标签列表失败'
       return
     }
     
-    const articles = data
-    const tagMap = new Map<string, number>()
-    
-    articles.forEach((article: any) => {
-      if (article.tags) {
-        // 支持中文逗号和英文逗号
-        const articleTags = article.tags.replace(/，/g, ',').split(',')
-        articleTags.forEach((tag: string) => {
-          const trimmedTag = tag.trim()
-          if (trimmedTag) {
-            tagMap.set(trimmedTag, (tagMap.get(trimmedTag) || 0) + 1)
-          }
-        })
-      }
-    })
-    
-    tags.value = Array.from(tagMap.entries()).map(([name, count]) => ({
-      name,
-      count
-    })).sort((a, b) => b.count - a.count)
+    tags.value = data.map((tag: any) => ({
+      name: tag.name,
+      count: tag.count
+    })).sort((a: any, b: any) => b.count - a.count)
     
     // 如果当前是3D视图，重新初始化
     if (is3DView.value) {

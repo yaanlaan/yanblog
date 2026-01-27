@@ -1,6 +1,9 @@
 <template>
   <div class="article-toc" v-if="tocItems.length > 0">
-    <h3 class="toc-title">目录</h3>
+    <div class="toc-header" @click="$emit('close')" title="收起目录栏">
+      <h3 class="toc-title">目录</h3>
+      <span class="toggle-icon">◀</span>
+    </div>
     <ul class="toc-list" ref="tocListRef">
       <li 
         v-for="item in tocItems" 
@@ -25,6 +28,10 @@ interface TocItem {
 
 const props = defineProps<{
   content: string
+}>()
+
+const emit = defineEmits<{
+  (e: 'close'): void
 }>()
 
 const tocItems = ref<TocItem[]>([])
@@ -140,12 +147,34 @@ onBeforeUnmount(() => {
   flex-direction: column;
 }
 
-.toc-title {
-  font-size: 16px;
-  font-weight: 600;
+.toc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 15px;
   padding-bottom: 10px;
   border-bottom: 1px solid #eee;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toc-header:hover .toggle-icon {
+  color: #42b883;
+}
+
+.toc-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.toggle-icon {
+  font-size: 14px;
+  color: #999;
+  transition: transform 0.3s;
+  display: inline-block;
 }
 
 .toc-list {

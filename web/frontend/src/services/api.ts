@@ -80,6 +80,13 @@ export const categoryApi = {
     apiClient.get(`/category/info/${id}`)
 }
 
+// 标签相关API
+export const tagApi = {
+  // 获取标签列表
+  getTags: (params: { pagesize: number; pagenum: number }) => 
+    apiClient.get('/tags', { params })
+}
+
 // 天气相关API
 export const weatherApi = {
   // 获取天气信息

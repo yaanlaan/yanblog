@@ -25,7 +25,7 @@ const serverStatus = ref<InstanceType<typeof ServerStatus> | null>(null)
 defineExpose({
   refreshAll: () => {
     featuredArticles.value?.fetchArticles()
-    tagCloud.value?.fetchCategories()
+    tagCloud.value?.fetchTags()
     weatherCard.value?.fetchWeather()
     serverStatus.value?.fetchServerStatus()
   }

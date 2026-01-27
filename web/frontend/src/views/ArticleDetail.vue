@@ -1,15 +1,26 @@
 <template>
   <div class="article-detail-page">
     <MainLayout>
-      <template #leftSidebar>
+      <template #leftSidebar v-if="article && article.type !== 2 && isTocOpen">
+        <!-- 仅非 PDF 文章显示目录 -->
         <ArticleToc 
-          v-if="article" 
           :content="article.content" 
           ref="tocRef"
+          @close="isTocOpen = false"
         />
       </template>
-      
+
       <template #main>
+        <!-- 目录展开按钮 (当目录收起时显示) -->
+        <div 
+          v-if="!isTocOpen && article && article.type !== 2" 
+          class="toc-fab" 
+          @click="isTocOpen = true"
+          title="展开目录"
+        >
+          <span class="fab-icon">☰</span>
+        </div>
+
         <div class="page-header">
           <router-link to="/articles" class="back-link">
             « 返回文章列表
@@ -127,6 +138,7 @@ const article = ref<Article | null>(null)
 const loading = ref(false)
 const previousArticle = ref<Article | null>(null)
 const nextArticle = ref<Article | null>(null)
+const isTocOpen = ref(true)
 
 // 图片查看器相关
 const showImageViewer = ref(false)
@@ -602,5 +614,37 @@ onMounted(() => {
 
 .image-alt {
   font-size: 16px;
+}
+
+.toc-fab {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  width: 50px;
+  height: 50px;
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 99;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  color: #555;
+  border: 1px solid #ebeef5;
+}
+
+.toc-fab:hover {
+  transform: translateY(-5px) scale(1.05);
+  background-color: #42b883;
+  color: white;
+  box-shadow: 0 8px 24px rgba(66, 184, 131, 0.3);
+  border-color: #42b883;
+}
+
+.toc-fab .fab-icon {
+  font-size: 20px;
+  font-weight: bold;
 }
 </style>
