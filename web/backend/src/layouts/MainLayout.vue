@@ -53,6 +53,7 @@
             <span>系统设置</span>
           </template>
           <el-menu-item index="/system/config">前台配置</el-menu-item>
+          <el-menu-item index="/system/about">关于页管理</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>

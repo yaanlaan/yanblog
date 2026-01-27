@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"strings"
 	"time"
 	"yanblog/utils"
 
@@ -58,7 +59,10 @@ func InitDB() {
 	// SetConnMaxLifetime 设置了连接可复用的最大时间
 	sqlDB.SetConnMaxLifetime(10 * time.Second)
 
-	db.AutoMigrate(&User{}, &Category{}, &Article{})
+	db.AutoMigrate(&User{}, &Category{}, &Article{}, &Tag{})
+
+	// 检查并迁移旧的标签数据 (从 articles.tags 字符串迁移到 tag 表)
+	migrateTags()
 
 	// 检查是否存在用户，如果不存在则创建默认超级管理员
 	var count int64
@@ -76,4 +80,60 @@ func InitDB() {
 			fmt.Println("已创建默认超级管理员账号: admin, 密码: 123456")
 		}
 	}
+}
+
+// migrateTags 迁移旧标签数据
+func migrateTags() {
+	var count int64
+	// table might not exist if logic runs too early? No, AutoMigrate runs before this.
+	err := db.Model(&Tag{}).Count(&count).Error
+	if err != nil {
+		fmt.Println("Check tag count failed:", err)
+		return
+	}
+	if count > 0 {
+		return // 已有标签数据，不执行迁移
+	}
+
+	fmt.Println("Detected empty tags table, starting migration from articles...")
+
+	var articles []Article
+	db.Find(&articles)
+
+	for _, art := range articles {
+		if art.Tags == "" {
+			continue
+		}
+		tagsStr := strings.ReplaceAll(art.Tags, "，", ",")
+		tagNames := strings.Split(tagsStr, ",")
+
+		var newTags []Tag
+		for _, name := range tagNames {
+			name = strings.TrimSpace(name)
+			if name == "" {
+				continue
+			}
+			var tag Tag
+			// 查找或创建标签
+			if err := db.Where("name = ?", name).First(&tag).Error; err != nil {
+				tag = Tag{Name: name}
+				if err := db.Create(&tag).Error; err != nil {
+					fmt.Printf("Create tag %s failed: %s\n", name, err)
+					continue
+				}
+			}
+			newTags = append(newTags, tag)
+		}
+
+		if len(newTags) > 0 {
+			// 更新关联
+			// 需要先设置主键
+			// art 是 gorm.Find 出来的，主键应该有
+			err := db.Model(&art).Association("TagModels").Replace(newTags)
+			if err != nil {
+				fmt.Printf("Update article %d tags failed: %s\n", art.ID, err)
+			}
+		}
+	}
+	fmt.Println("Tag migration completed.")
 }

@@ -49,7 +49,6 @@ func InitRouter() {
 		auth.DELETE("article/:id", v1.DeleteArt)
 		// 标签模块
 		auth.POST("tags/add", v1.AddTag)
-		auth.GET("tags", v1.GetTags)
 		auth.PUT("tags/:id", v1.EditTag)
 		auth.DELETE("tags/:id", v1.DeleteTag)
 		// 上传文件
@@ -62,6 +61,8 @@ func InitRouter() {
 		// 前端配置管理
 		auth.GET("frontend/config", v1.GetFrontEndConfig)
 		auth.PUT("frontend/config", v1.UpdateFrontEndConfig)
+		// 关于页面内容管理
+		auth.PUT("about", v1.UpdateAboutContent)
 	}
 
 	// 公共路由分组
@@ -71,6 +72,7 @@ func InitRouter() {
 		// router.POST("user/add", v1.AddUser) // 移至认证组
 		// router.GET("users", v1.GetUsers) // 移至认证组
 		// router.GET("users/search", v1.SearchUsers) // 移至认证组
+		router.GET("about", v1.GetAboutContent) // 获取关于页面内容 (公开接口，虽然前端直接读取静态文件，但提供 API 更统一)
 		router.GET("category", v1.GetCate)
 		router.GET("category/search", v1.SearchCate)    // 搜索分类
 		router.GET("category/info/:id", v1.GetCateInfo) // 获取分类信息
@@ -80,6 +82,7 @@ func InitRouter() {
 		router.GET("article/archive", v1.GetArchive) // 归档
 		router.GET("article/list/:id", v1.GetCateArt)
 		router.GET("article/info/:id", v1.GetArtInfo)
+		router.GET("tags", v1.GetTags)                  // 获取标签列表
 		router.GET("weather", v1.GetWeather)            // 获取天气信息
 		router.GET("system/status", v1.GetSystemStatus) // 获取系统状态信息
 		router.POST("login", v1.Login)

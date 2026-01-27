@@ -13,6 +13,7 @@ const ArticleList = () => import('@/views/article/ArticleList.vue')
 const ArticleEditor = () => import('@/views/article/ArticleEditor.vue')
 const MediaManager = () => import('@/views/media/MediaManager.vue')
 const ConfigEditor = () => import('@/views/system/ConfigEditor.vue')
+const AboutEditor = () => import('@/views/system/AboutEditor.vue')
 
 // 定义路由
 const routes: RouteRecordRaw[] = [
@@ -135,6 +136,15 @@ const routes: RouteRecordRaw[] = [
         component: ConfigEditor,
         meta: {
           title: '前台配置',
+          activeMenu: '/system'
+        }
+      },
+      {
+        path: '/system/about',
+        name: 'AboutEditor',
+        component: AboutEditor,
+        meta: {
+          title: '关于页管理',
           activeMenu: '/system'
         }
       }

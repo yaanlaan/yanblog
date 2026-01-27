@@ -91,6 +91,14 @@ export const userApi = {
     apiClient.delete(`/v1/user/${id}`)
 }
 
+// 标签相关API
+export const tagApi = {
+  // 获取标签列表
+  getTags: (params: { pagesize: number; pagenum: number }) => apiClient.get('/v1/tags', { params }),
+  // 添加标签
+  addTag: (data: { name: string }) => apiClient.post('/v1/tags/add', data),
+}
+
 // 文件管理API
 export const fileApi = {
   // 获取文件列表

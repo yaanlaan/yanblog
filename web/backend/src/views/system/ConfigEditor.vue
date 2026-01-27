@@ -160,6 +160,42 @@
             </el-form>
           </el-tab-pane>
 
+          <!-- 评论配置 -->
+          <el-tab-pane label="评论系统" name="comment">
+            <el-form label-width="120px" class="config-form" v-if="configForm.comment">
+              <el-form-item label="启用评论">
+                <el-switch v-model="configForm.comment.enable" />
+              </el-form-item>
+              
+              <template v-if="configForm.comment.enable">
+                <el-form-item label="类型">
+                  <el-select v-model="configForm.comment.type">
+                    <el-option label="Giscus" value="giscus" />
+                  </el-select>
+                </el-form-item>
+
+                <div v-if="configForm.comment.type === 'giscus' && configForm.comment.giscus" class="sub-config">
+                  <el-divider content-position="left">Giscus 配置</el-divider>
+                  <el-form-item label="GitHub 仓库">
+                    <el-input v-model="configForm.comment.giscus.repo" placeholder="username/repo" />
+                  </el-form-item>
+                  <el-form-item label="仓库 ID">
+                    <el-input v-model="configForm.comment.giscus.repo_id" />
+                  </el-form-item>
+                  <el-form-item label="分类 (Category)">
+                    <el-input v-model="configForm.comment.giscus.category" />
+                  </el-form-item>
+                  <el-form-item label="分类 ID">
+                    <el-input v-model="configForm.comment.giscus.category_id" />
+                  </el-form-item>
+                </div>
+              </template>
+            </el-form>
+            <div v-else class="empty-tip">
+              配置文件中缺少 comment 字段，请先点击"重置"或在源码模式手动添加。
+            </div>
+          </el-tab-pane>
+
         </el-tabs>
       </div>
     </el-card>
@@ -494,5 +530,20 @@ onMounted(() => {
   background: #f4f4f5;
   padding: 2px 6px;
   border-radius: 4px;
+}
+
+.sub-config {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #eee;
+}
+
+.empty-tip {
+  color: #909399;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
 }
 </style>

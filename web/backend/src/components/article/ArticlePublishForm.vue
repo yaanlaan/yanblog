@@ -31,11 +31,23 @@
         </el-form-item>
         
         <el-form-item label="标签">
-          <el-input 
-            v-model="publishData.tags" 
-            placeholder="请输入标签，多个标签用逗号分隔" 
-            @input="handleFormChange"
-          />
+          <el-select
+            v-model="selectedTags"
+            multiple
+            filterable
+            allow-create
+            default-first-option
+            placeholder="请选择或输入标签"
+            style="width: 100%"
+            @change="handleTagsChange"
+          >
+            <el-option
+              v-for="item in tagOptions"
+              :key="item.id"
+              :label="item.name"
+              :value="item.name"
+            />
+          </el-select>
         </el-form-item>
 
         <el-form-item label="摘要">
@@ -105,10 +117,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import type { FormInstance, FormRules, UploadProps } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
+import { tagApi } from '@/services/api'
 
 // 定义组件属性
 const props = defineProps<{
@@ -134,6 +147,28 @@ const emit = defineEmits<{
 
 // 表单引用
 const formRef = ref<FormInstance>()
+const tagOptions = ref<{id: number, name: string}[]>([])
+const selectedTags = ref<string[]>([])
+
+const getTags = async () => {
+  try {
+    const res = await tagApi.getTags({ pagesize: 1000, pagenum: 1 })
+    if (res.data.status === 200) {
+      tagOptions.value = res.data.data || []
+    }
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+onMounted(() => {
+  getTags()
+})
+
+const handleTagsChange = (val: string[]) => {
+  publishData.tags = val.join(',')
+  handleFormChange()
+}
 
 // 发布数据
 const publishData = reactive({
@@ -151,7 +186,13 @@ watch(() => props.modelValue, (newVal) => {
   publishData.img = newVal.img
   publishData.top = newVal.top || 0
   publishData.tags = newVal.tags || ''
-}, { deep: true })
+
+  if (newVal.tags) {
+    selectedTags.value = newVal.tags.split(',').filter(t => t.trim())
+  } else {
+    selectedTags.value = []
+  }
+}, { deep: true, immediate: true })
 
 // 表单验证规则
 const publishRules = reactive<FormRules>({
