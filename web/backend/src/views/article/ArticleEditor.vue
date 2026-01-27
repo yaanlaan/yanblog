@@ -130,14 +130,14 @@
 
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, onActivated } from 'vue'
+import { ref, reactive, onMounted, computed, onActivated, watch } from 'vue'
 
 defineOptions({
   name: 'ArticleEditor'
 })
 
 import type { FormInstance, FormRules, UploadProps } from 'element-plus'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { UploadFilled, Document } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { articleApi, categoryApi } from '@/services/api'
@@ -151,10 +151,25 @@ const router = useRouter()
 // 表单引用
 const articleFormRef = ref<FormInstance>()
 const markdownEditorRef = ref()
+const textareaRef = ref<HTMLTextAreaElement>() // 添加这行
 
 // 是否为编辑模式
-const isEdit = ref(false)
-const articleId = ref(0)
+const isEdit = computed(() => !!route.params.id) // 改为 computed
+const articleId = computed(() => { // 改为 computed
+  const id = route.params.id
+  return id ? parseInt(id as string) : 0
+})
+
+// === 草稿自动保存相关逻辑 ===
+const DRAFT_KEY_PREFIX = 'article_draft_'
+const AUTOSAVE_DELAY = 3000 // 3秒无操作自动保存
+let autoSaveTimer: ReturnType<typeof setTimeout> | null = null
+
+// 计算当前草稿的Key
+const draftKey = computed(() => {
+  // 编辑模式用文章ID区分，新增模式用 new
+  return `${DRAFT_KEY_PREFIX}${isEdit.value ? articleId.value : 'new'}`
+})
 
 // 是否显示Markdown编辑器
 const showMarkdownEditor = ref(false)
@@ -181,6 +196,55 @@ const articleForm = reactive({
   title: '',
   content: ''
 })
+
+// 监听内容变化自动保存
+watch(() => articleForm.content, (newVal) => {
+  if (articleType.value !== 1) return // 仅针对 Markdown/文本 模式
+  if (!newVal && !isEdit.value) return // 新增模式内容为空时不保存
+
+  if (autoSaveTimer) clearTimeout(autoSaveTimer)
+  
+  autoSaveTimer = setTimeout(() => {
+    localStorage.setItem(draftKey.value, newVal)
+  }, AUTOSAVE_DELAY)
+})
+
+// 检查并恢复草稿
+const checkDraft = () => {
+  // 仅在 Markdown 模式下检查
+  if (articleType.value !== 1) return
+
+  const draft = localStorage.getItem(draftKey.value)
+  if (!draft) return
+
+  // 如果内容完全一样，不需要提示
+  if (draft === articleForm.content) return
+
+  ElMessageBox.confirm(
+    '检测到您有未保存的草稿内容，是否恢复？',
+    '恢复草稿',
+    {
+      confirmButtonText: '恢复',
+      cancelButtonText: '丢弃',
+      distinguishCancelAndClose: true,
+      type: 'info',
+    }
+  ).then(() => {
+    articleForm.content = draft
+    ElMessage.success('草稿已恢复')
+  }).catch((action) => {
+    // 只有点击"丢弃"才删除，点击关闭/ESC保留草稿
+    if (action === 'cancel') {
+        localStorage.removeItem(draftKey.value)
+        ElMessage.info('草稿已丢弃')
+    }
+  })
+}
+
+// 清除草稿
+const clearDraft = () => {
+  localStorage.removeItem(draftKey.value)
+}
 
 // 发布表单
 const publishForm = reactive({
@@ -335,6 +399,9 @@ const submitArticle = async () => {
     
     ElMessage.success(isEdit.value ? '文章更新成功' : '文章发布成功')
     
+    // 清除对应的草稿
+    clearDraft()
+
     // 返回文章列表
     goBack()
   } catch (error: any) {
@@ -366,6 +433,9 @@ const getArticleDetail = async (id: number) => {
     publishForm.top = article.top || 0
     articleType.value = article.type || 1
     pdfUrl.value = article.pdf_url || ''
+
+    // 详情加载完后检查是否有更新的草稿 (针对编辑模式)
+    checkDraft()
   } catch (error) {
     ElMessage.error('获取文章详情失败')
     console.error(error)
@@ -378,9 +448,11 @@ onMounted(() => {
   
   // 检查是否为编辑模式
   if (route.name === 'ArticleEdit' && route.params.id) {
-    isEdit.value = true
-    articleId.value = parseInt(route.params.id as string, 10)
+    // isEdit 和 articleId 已改为 computed，这里不需要手动赋值
     getArticleDetail(articleId.value)
+  } else {
+    // 新增模式，直接检查草稿
+    checkDraft()
   }
 })
 

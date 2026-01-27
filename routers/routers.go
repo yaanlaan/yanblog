@@ -6,6 +6,7 @@ import (
 	middleware "yanblog/middlewares"
 	"yanblog/utils"
 
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,6 +19,7 @@ func InitRouter() {
 	// 使用中间件
 	r.Use(middleware.Logger())
 	r.Use(gin.Recovery())
+	r.Use(gzip.Gzip(gzip.DefaultCompression)) // 开启 gzip 压缩
 	r.Use(middleware.Cors())
 
 	// 静态文件服务
