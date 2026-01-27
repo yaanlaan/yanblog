@@ -28,7 +28,18 @@ export default defineConfig({
       '/uploads': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-      }
-    }
+      },
+      '/assets': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/static': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/iconfont': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },    }
   }
 })
