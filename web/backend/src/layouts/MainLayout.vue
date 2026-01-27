@@ -87,7 +87,11 @@
       
       <!-- 内容区域 -->
       <el-main class="main">
-        <router-view />
+        <router-view v-slot="{ Component, route }">
+          <keep-alive>
+             <component :is="Component" :key="route.fullPath" />
+          </keep-alive>
+        </router-view>
       </el-main>
     </el-container>
   </div>

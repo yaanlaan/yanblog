@@ -80,7 +80,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, watch, onActivated } from 'vue'
+
+defineOptions({
+  name: 'CategoryList'
+})
+
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
 import { Picture } from '@element-plus/icons-vue'
@@ -441,6 +446,11 @@ watch(
 // 组件挂载时获取数据
 onMounted(() => {
   initFromUrlParams()
+  getCategoryList()
+})
+
+// 组件激活时更新数据
+onActivated(() => {
   getCategoryList()
 })
 </script>

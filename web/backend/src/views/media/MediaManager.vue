@@ -72,7 +72,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onActivated } from 'vue'
+
+defineOptions({
+  name: 'MediaManager'
+})
+
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Folder, Document, Refresh, Back, FolderAdd } from '@element-plus/icons-vue'
 import { fileApi } from '@/services/api'
@@ -224,6 +229,10 @@ const deleteItem = async (item: FileInfo) => {
 }
 
 onMounted(() => {
+  refreshFiles()
+})
+
+onActivated(() => {
   refreshFiles()
 })
 </script>

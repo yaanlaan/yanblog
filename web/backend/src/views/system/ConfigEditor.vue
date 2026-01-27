@@ -34,6 +34,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+
+defineOptions({
+  name: 'ConfigEditor'
+})
+
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Check, Refresh } from '@element-plus/icons-vue'
 import { systemApi } from '@/services/api' // We need to add this

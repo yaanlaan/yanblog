@@ -130,7 +130,12 @@
 
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, onActivated } from 'vue'
+
+defineOptions({
+  name: 'ArticleEditor'
+})
+
 import type { FormInstance, FormRules, UploadProps } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { UploadFilled, Document } from '@element-plus/icons-vue'
@@ -377,6 +382,11 @@ onMounted(() => {
     articleId.value = parseInt(route.params.id as string, 10)
     getArticleDetail(articleId.value)
   }
+})
+
+// 组件激活时只更新分类列表，保留已输入的表单内容
+onActivated(() => {
+  getCategoryList() 
 })
 </script>
 

@@ -74,7 +74,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, watch, onActivated } from 'vue'
+
+defineOptions({
+  name: 'UserList'
+})
+
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
 import { userApi } from '@/services/api'
@@ -407,6 +412,11 @@ watch(
 // 组件挂载时获取数据
 onMounted(() => {
   initFromUrlParams()
+  getUserList()
+})
+
+// 组件激活时更新数据
+onActivated(() => {
   getUserList()
 })
 </script>
