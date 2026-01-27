@@ -12,21 +12,39 @@ import (
 type Article struct {
 	Category Category `gorm:"foreignkey:Cid"`
 	gorm.Model
-	Title   string `gorm:"type:varchar(100);not null" json:"title"`
-	Cid     int    `gorm:"type:int;not null" json:"cid"`
-	Desc    string `gorm:"type:varchar(200)" json:"desc"`
-	Content string `gorm:"type:longtext" json:"content"`
-	Img     string `gorm:"type:varchar(100)" json:"img"`
-	Type    int    `gorm:"type:int;default:1" json:"type"` // 1: Markdown, 2: PDF
-	PdfUrl  string `gorm:"type:varchar(200)" json:"pdf_url"`
-	Top     int    `gorm:"type:int;default:0" json:"top"` // 0表示不置顶，其他数字1-6表示置顶等级，数字越小等级越高
-	Tags    string `gorm:"type:varchar(200)" json:"tags"`
+	Title     string `gorm:"type:varchar(100);not null" json:"title"`
+	Cid       int    `gorm:"type:int;not null" json:"cid"`
+	Desc      string `gorm:"type:varchar(200)" json:"desc"`
+	Content   string `gorm:"type:longtext" json:"content"`
+	Img       string `gorm:"type:varchar(100)" json:"img"`
+	Type      int    `gorm:"type:int;default:1" json:"type"` // 1: Markdown, 2: PDF
+	PdfUrl    string `gorm:"type:varchar(200)" json:"pdf_url"`
+	Top       int    `gorm:"type:int;default:0" json:"top"` // 0表示不置顶，其他数字1-6表示置顶等级，数字越小等级越高
+	Tags      string `gorm:"type:varchar(200)" json:"tags"`
+	TagModels []Tag  `gorm:"many2many:article_tags" json:"tag_models"`
 }
 
 // CreateArt 新增文章
 // 参数: data - 文章信息
 // 返回: 状态码
 func CreateArt(data *Article) int {
+	// 1. 处理标签逻辑：将 Tags 字符串解析为 Tag 模型
+	if data.Tags != "" {
+		tagNames := strings.Split(data.Tags, ",") // 假设前端传逗号分隔 e.g. "go,web"
+		var tags []Tag
+		for _, name := range tagNames {
+			name = strings.TrimSpace(name)
+			if name == "" {
+				continue
+			}
+			var tag Tag
+			// FirstOrCreate: 如果不存在则创建，存在则查找
+			db.FirstOrCreate(&tag, Tag{Name: name})
+			tags = append(tags, tag)
+		}
+		data.TagModels = tags
+	}
+
 	err := db.Create(&data).Error
 	if err != nil {
 		return errmsg.ERROR // 500
@@ -138,6 +156,27 @@ func GetTopArt(num int) ([]Article, int) {
 	return topArtList, errmsg.SUCCESS
 }
 
+type Archive struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+// GetArchive 获取文章归档
+func GetArchive() ([]Archive, int) {
+	var archives []Archive
+	// MySQL 使用 DATE_FORMAT(created_at, '%Y-%m')
+	err := db.Model(&Article{}).
+		Select("DATE_FORMAT(created_at, '%Y-%m') as date, count(*) as count").
+		Group("date").
+		Order("date desc").
+		Scan(&archives).Error
+
+	if err != nil {
+		return nil, errmsg.ERROR
+	}
+	return archives, errmsg.SUCCESS
+}
+
 // EditArt 编辑文章
 // 参数: id - 文章ID, data - 更新的文章信息
 // 返回: 状态码
@@ -151,11 +190,34 @@ func EditArt(id int, data *Article) int {
 	maps["img"] = data.Img
 	maps["top"] = data.Top
 	maps["tags"] = data.Tags
+	// 补全缺失的更新字段
+	maps["type"] = data.Type
+	maps["pdf_url"] = data.PdfUrl
+
+	// 处理标签更新
+	var newTags []Tag
+	if data.Tags != "" {
+		tagNames := strings.Split(data.Tags, ",")
+		for _, name := range tagNames {
+			name = strings.TrimSpace(name)
+			if name == "" {
+				continue
+			}
+			var tag Tag
+			db.FirstOrCreate(&tag, Tag{Name: name})
+			newTags = append(newTags, tag)
+		}
+	}
 
 	err = db.Model(&art).Where("id = ? ", id).Updates(maps).Error
 	if err != nil {
 		return errmsg.ERROR
 	}
+
+	// 更新关联
+	art.ID = uint(id)
+	db.Model(&art).Association("TagModels").Replace(newTags)
+
 	return errmsg.SUCCESS
 }
 

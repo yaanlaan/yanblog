@@ -47,6 +47,11 @@ func InitRouter() {
 		auth.POST("article/add", v1.AddArticle)
 		auth.PUT("article/:id", v1.EditArt)
 		auth.DELETE("article/:id", v1.DeleteArt)
+		// 标签模块
+		auth.POST("tags/add", v1.AddTag)
+		auth.GET("tags", v1.GetTags)
+		auth.PUT("tags/:id", v1.EditTag)
+		auth.DELETE("tags/:id", v1.DeleteTag)
 		// 上传文件
 		auth.POST("upload", v1.UpLoad)
 		// 文件管理
@@ -70,8 +75,9 @@ func InitRouter() {
 		router.GET("category/search", v1.SearchCate)    // 搜索分类
 		router.GET("category/info/:id", v1.GetCateInfo) // 获取分类信息
 		router.GET("article", v1.GetArt)
-		router.GET("article/search", v1.SearchArt) // 搜索文章
-		router.GET("article/top", v1.GetTopArt)    // 获取置顶文章
+		router.GET("article/search", v1.SearchArt)   // 搜索文章
+		router.GET("article/top", v1.GetTopArt)      // 获取置顶文章
+		router.GET("article/archive", v1.GetArchive) // 归档
 		router.GET("article/list/:id", v1.GetCateArt)
 		router.GET("article/info/:id", v1.GetArtInfo)
 		router.GET("weather", v1.GetWeather)            // 获取天气信息
