@@ -31,6 +31,16 @@ func AddArticle(c *gin.Context) {
 	})
 }
 
+// GetArchive 获取归档文章
+func GetArchive(c *gin.Context) {
+	data, code := model.GetArchive()
+	c.JSON(http.StatusOK, gin.H{
+		"status":  code,
+		"data":    data,
+		"message": errmsg.GetErrMsg(code),
+	})
+}
+
 // 查询分类下的所有文章
 func GetCateArt(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.Query("pagesize"))

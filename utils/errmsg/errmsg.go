@@ -20,6 +20,10 @@ const (
 	// 分类模块的错误
 	ERROR_CATENAME_USED  = 3001
 	ERROR_CATE_NOT_EXIST = 3002
+
+	// 标签模块的错误
+	ERROR_TAG_EXIST     = 4001
+	ERROR_TAG_NOT_EXIST = 4002
 )
 
 var codeMsg = map[int]string{
@@ -39,6 +43,9 @@ var codeMsg = map[int]string{
 
 	ERROR_CATENAME_USED:  "该分类已存在",
 	ERROR_CATE_NOT_EXIST: "该分类不存在",
+
+	ERROR_TAG_EXIST:     "标签已存在",
+	ERROR_TAG_NOT_EXIST: "标签不存在",
 }
 
 // 获取codeMsg
