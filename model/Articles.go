@@ -232,3 +232,14 @@ func DeleteArt(id int) int {
 	}
 	return errmsg.SUCCESS
 }
+
+// GetSitemapData 获取站点地图所需数据
+func GetSitemapData() ([]Article, int) {
+	var articles []Article
+	// 只查询 ID 和 UpdatedAt，减少数据量
+	err := db.Select("id", "updated_at").Find(&articles).Error
+	if err != nil {
+		return nil, errmsg.ERROR
+	}
+	return articles, errmsg.SUCCESS
+}

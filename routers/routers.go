@@ -86,6 +86,7 @@ func InitRouter() {
 		router.GET("weather", v1.GetWeather)            // 获取天气信息
 		router.GET("system/status", v1.GetSystemStatus) // 获取系统状态信息
 		router.POST("login", v1.Login)
+		router.GET("sitemap.xml", v1.GetSitemap) // 站点地图
 	}
 
 	_ = r.Run(utils.ServerConfig.Server.HttpPort) // 启动服务，监听端口

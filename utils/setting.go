@@ -13,6 +13,7 @@ type Config struct {
 	Server struct { //服务器
 		AppMode  string `yaml:"AppMode"`
 		HttpPort string `yaml:"HttpPort"`
+		SiteUrl  string `yaml:"SiteUrl"`
 	} `yaml:"server"`
 
 	Database struct { //数据库
