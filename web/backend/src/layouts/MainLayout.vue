@@ -46,6 +46,14 @@
           <el-icon><Picture /></el-icon>
           <span>媒体库</span>
         </el-menu-item>
+
+        <el-sub-menu index="/system">
+          <template #title>
+            <el-icon><Setting /></el-icon>
+            <span>系统设置</span>
+          </template>
+          <el-menu-item index="/system/config">前台配置</el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
     
@@ -89,7 +97,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Odometer, User, Folder, Document, Picture } from '@element-plus/icons-vue'
+import { Odometer, User, Folder, Document, Picture, Setting } from '@element-plus/icons-vue'
 
 // 获取路由实例
 const route = useRoute()
