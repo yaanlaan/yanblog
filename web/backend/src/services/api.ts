@@ -99,7 +99,15 @@ export const fileApi = {
   
   // 删除文件
   deleteFile: (path: string) => 
-    apiClient.delete('/v1/files', { params: { path } })
+    apiClient.delete('/v1/files', { params: { path } }),
+
+  // 创建目录
+  createFolder: (path: string, name: string) => 
+    apiClient.post('/v1/files/folder', { path, name }),
+    
+  // 重命名
+  renameFile: (path: string, newName: string) => 
+    apiClient.put('/v1/files', { path, newName })
 }
 
 // 分类相关API

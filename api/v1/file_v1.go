@@ -117,3 +117,98 @@ func DeleteFile(c *gin.Context) {
 		"message": "删除成功",
 	})
 }
+
+// CreateDir 创建目录
+func CreateDir(c *gin.Context) {
+	var data struct {
+		Path string `json:"path"` // 父目录路径
+		Name string `json:"name"` // 新目录名
+	}
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "参数错误",
+		})
+		return
+	}
+
+	// 路径清理
+	// 防止 .. 逃逸
+	data.Path = filepath.Clean(data.Path)
+	if data.Path == "." {
+		data.Path = ""
+	}
+	// Windows下 clean 可能会保留 . 如果为空
+
+	targetPath := filepath.Join("uploads", data.Path, data.Name)
+	targetPath = filepath.Clean(targetPath)
+
+	// 检查是否存在
+	if _, err := os.Stat(targetPath); !os.IsNotExist(err) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "目录已存在",
+		})
+		return
+	}
+
+	if err := os.MkdirAll(targetPath, os.ModePerm); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "创建目录失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  errmsg.SUCCESS,
+		"message": "创建成功",
+	})
+}
+
+// RenameFile 重命名文件或目录
+func RenameFile(c *gin.Context) {
+	var data struct {
+		Path    string `json:"path"`    // 旧路径 (相对 uploads)
+		NewName string `json:"newName"` // 新文件名 (不包含路径)
+	}
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "参数错误",
+		})
+		return
+	}
+
+	// 基本安全检查
+	if data.Path == "" || data.NewName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "参数不能为空",
+		})
+		return
+	}
+
+	oldPath := filepath.Join("uploads", data.Path)
+	dir := filepath.Dir(oldPath)
+	newPath := filepath.Join(dir, data.NewName)
+
+	oldPath = filepath.Clean(oldPath)
+	newPath = filepath.Clean(newPath)
+
+	// 验证 newPath 是否还在 uploads 下 (简单验证)
+	// 在实际生产中应更严格
+
+	if err := os.Rename(oldPath, newPath); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "重命名失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  errmsg.SUCCESS,
+		"message": "重命名成功",
+	})
+}

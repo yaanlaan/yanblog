@@ -5,6 +5,7 @@
         <div class="card-header">
           <span>媒体库管理</span>
           <div class="header-actions">
+            <el-button @click="createFolderBtn" :icon="FolderAdd">新建文件夹</el-button>
             <el-button @click="refreshFiles" :icon="Refresh">刷新</el-button>
             <el-button @click="goUp" :disabled="currentPath === ''" :icon="Back">返回上级</el-button>
           </div>
@@ -31,7 +32,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="size" label="大小" width="120" :formatter="formatSize" />
-        <el-table-column label="操作" width="150">
+        <el-table-column label="操作" width="200">
           <template #default="scope">
             <el-button 
               v-if="!scope.row.isDir" 
@@ -40,6 +41,13 @@
               @click="previewFile(scope.row)"
             >
               预览
+            </el-button>
+            <el-button 
+              type="warning" 
+              link 
+              @click="renameItem(scope.row)"
+            >
+              重命名
             </el-button>
             <el-popconfirm 
               title="确定要删除吗？" 
@@ -65,8 +73,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Folder, Document, Refresh, Back } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Folder, Document, Refresh, Back, FolderAdd } from '@element-plus/icons-vue'
 import { fileApi } from '@/services/api'
 
 interface FileInfo {
@@ -138,6 +146,54 @@ const goUp = () => {
 const navigateTo = (path: string) => {
   currentPath.value = path
   refreshFiles()
+}
+
+// 创建文件夹
+const createFolderBtn = () => {
+  ElMessageBox.prompt('请输入文件夹名称', '新建文件夹', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputPattern: /^[^\\/:*?"<>|]+$/,
+    inputErrorMessage: '包含非法字符'
+  }).then(async ({ value }) => {
+    try {
+      const res = await fileApi.createFolder(currentPath.value, value)
+      if (res.data.status === 200) {
+        ElMessage.success('创建成功')
+        refreshFiles()
+      } else {
+        ElMessage.error(res.data.message || '创建失败')
+      }
+    } catch (e) {
+      ElMessage.error('网络错误')
+    }
+  }).catch(() => {})
+}
+
+// 重命名
+const renameItem = (row: FileInfo) => {
+  ElMessageBox.prompt('请输入新名称', '重命名', {
+    inputValue: row.name,
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputPattern: /^[^\\/:*?"<>|]+$/,
+    inputErrorMessage: '包含非法字符'
+  }).then(async ({ value }) => {
+    if (value === row.name) return
+    try {
+      // 这里的 row.path 已经是相对 uploads 的路径，例如 "a/b/file.txt"
+      // 后端 RenameFile 接收 path (旧路径) 和 newName (新文件名)
+      const res = await fileApi.renameFile(row.path, value)
+      if (res.data.status === 200) {
+        ElMessage.success('重命名成功')
+        refreshFiles()
+      } else {
+        ElMessage.error(res.data.message || '重命名失败')
+      }
+    } catch (e) {
+      ElMessage.error('网络错误')
+    }
+  }).catch(() => {})
 }
 
 const navigateToPart = (index: number) => {
