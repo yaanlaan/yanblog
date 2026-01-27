@@ -23,6 +23,9 @@
       <span class="reading-time">
         预计阅读: {{ readingTime }} 分钟
       </span>
+      <span class="views">
+        阅读: {{ article.views || 0 }}
+      </span>
     </div>
   </div>
 </template>
@@ -40,6 +43,7 @@ interface Article {
   content: string
   img: string
   tags: string
+  views: number
   createdAt: string
   updatedAt: string
 }

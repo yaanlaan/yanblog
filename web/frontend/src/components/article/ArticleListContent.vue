@@ -1,6 +1,43 @@
 <template>
-  <div class="articles" v-loading="loading">
-    <div class="articles-grid" :class="{ 'list-view': viewMode === 'list' }">
+  <div class="articles">
+    <!-- 骨架屏加载状态 (仅在无数据且加载中显示) -->
+    <div v-if="loading && articles.length === 0" class="articles-grid" :class="{ 'list-view': viewMode === 'list' }">
+      <div v-for="i in 6" :key="i" class="skeleton-card" :class="{ 'is-list-mode': viewMode === 'list' }">
+        <el-skeleton animated class="skeleton-content">
+          <template #template>
+            <!-- Grid 模式 -->
+            <div v-if="viewMode === 'grid'" class="skeleton-grid-layout">
+              <el-skeleton-item variant="image" class="skeleton-cover" />
+              <div class="skeleton-body">
+                <el-skeleton-item variant="h3" style="width: 60%; margin-bottom: 15px;" />
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                  <el-skeleton-item variant="text" style="width: 30%" />
+                  <el-skeleton-item variant="text" style="width: 20%" />
+                </div>
+                 <el-skeleton-item variant="text" style="width: 40%" />
+              </div>
+            </div>
+
+            <!-- List 模式 -->
+            <div v-else class="skeleton-list-layout">
+              <el-skeleton-item variant="image" class="skeleton-cover-list" />
+              <div class="skeleton-body-list">
+                <el-skeleton-item variant="h1" style="width: 40%; margin-bottom: 15px; height: 28px;" />
+                <el-skeleton-item variant="p" style="width: 90%; margin-bottom: 10px;" />
+                <el-skeleton-item variant="p" style="width: 70%; margin-bottom: 15px;" />
+                <div style="display: flex; gap: 15px;">
+                  <el-skeleton-item variant="text" style="width: 100px;" />
+                  <el-skeleton-item variant="text" style="width: 150px;" />
+                </div>
+              </div>
+            </div>
+          </template>
+        </el-skeleton>
+      </div>
+    </div>
+
+    <!-- 真实文章列表 -->
+    <div v-else class="articles-grid" :class="{ 'list-view': viewMode === 'list' }">
       <ArticleItem
         v-for="article in articles" 
         :key="article.id" 
@@ -161,6 +198,69 @@ watch(() => props.articles, () => {
   .articles-grid {
     grid-template-columns: 1fr;
     gap: 20px;
+  }
+}
+
+/* 骨架屏样式 */
+.skeleton-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Grid 模式骨架屏 */
+.skeleton-grid-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.skeleton-cover {
+  width: 100%;
+  height: 180px !important; /* 强制覆盖 el-skeleton-item 默认样式 */
+}
+
+.skeleton-body {
+  padding: 20px;
+}
+
+/* List 模式骨架屏 */
+.skeleton-card.is-list-mode {
+  height: 200px;
+}
+
+.skeleton-list-layout {
+  display: flex;
+  height: 100%;
+}
+
+.skeleton-cover-list {
+  width: 320px !important;
+  height: 100% !important;
+  flex-shrink: 0;
+}
+
+.skeleton-body-list {
+  padding: 25px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .skeleton-card.is-list-mode {
+    height: auto;
+  }
+  
+  .skeleton-list-layout {
+    flex-direction: column;
+  }
+
+  .skeleton-cover-list {
+    width: 100% !important;
+    height: 180px !important;
   }
 }
 </style>

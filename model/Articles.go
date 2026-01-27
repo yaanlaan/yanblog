@@ -19,7 +19,8 @@ type Article struct {
 	Img       string `gorm:"type:varchar(100)" json:"img"`
 	Type      int    `gorm:"type:int;default:1" json:"type"` // 1: Markdown, 2: PDF
 	PdfUrl    string `gorm:"type:varchar(200)" json:"pdf_url"`
-	Top       int    `gorm:"type:int;default:0" json:"top"` // 0表示不置顶，其他数字1-6表示置顶等级，数字越小等级越高
+	Top       int    `gorm:"type:int;default:0" json:"top"`   // 0表示不置顶，其他数字1-6表示置顶等级，数字越小等级越高
+	Views     int    `gorm:"type:int;default:0" json:"views"` // 阅读量
 	Tags      string `gorm:"type:varchar(200)" json:"tags"`
 	TagModels []Tag  `gorm:"many2many:article_tags" json:"tag_models"`
 }
@@ -122,6 +123,12 @@ func GetArtInfo(id int) (Article, int) {
 		return art, errmsg.ERROR_ART_NOT_EXIST
 	}
 	return art, errmsg.SUCCESS
+}
+
+// IncrementArtViews 增加文章阅读量
+func IncrementArtViews(id int) {
+	// 使用 UpdateColumn 避免更新 UpdatedAt 字段，使用 gorm.Expr 实现原子增加
+	db.Model(&Article{}).Where("id = ?", id).UpdateColumn("views", gorm.Expr("views + ?", 1))
 }
 
 // GetArt 查询文章列表

@@ -84,6 +84,10 @@ func GetArtInfo(c *gin.Context) {
 		})
 		return
 	}
+
+	// 增加阅读量
+	model.IncrementArtViews(id)
+
 	var code int
 	data, code := model.GetArtInfo(id)
 	c.JSON(http.StatusOK, gin.H{

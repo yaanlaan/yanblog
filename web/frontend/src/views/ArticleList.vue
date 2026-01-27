@@ -52,6 +52,7 @@ interface Article {
   img: string
   top: number // 添加top字段
   tags: string
+  views: number // 添加views字段
   createdAt: string
   updatedAt: string
 }
@@ -127,6 +128,7 @@ const getArticles = async () => {
       img: item.img,
       top: item.top || 0, // 添加top字段
       tags: item.tags || '', // 添加tags字段
+      views: item.views || 0, // 添加views字段
       createdAt: item.CreatedAt || item.created_at,
       updatedAt: item.UpdatedAt || item.updated_at
     }))
