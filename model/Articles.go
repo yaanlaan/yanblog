@@ -17,6 +17,8 @@ type Article struct {
 	Desc    string `gorm:"type:varchar(200)" json:"desc"`
 	Content string `gorm:"type:longtext" json:"content"`
 	Img     string `gorm:"type:varchar(100)" json:"img"`
+	Type    int    `gorm:"type:int;default:1" json:"type"` // 1: Markdown, 2: PDF
+	PdfUrl  string `gorm:"type:varchar(200)" json:"pdf_url"`
 	Top     int    `gorm:"type:int;default:0" json:"top"` // 0表示不置顶，其他数字1-6表示置顶等级，数字越小等级越高
 	Tags    string `gorm:"type:varchar(200)" json:"tags"`
 }

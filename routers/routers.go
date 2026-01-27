@@ -47,6 +47,9 @@ func InitRouter() {
 		// 文件管理
 		auth.GET("files", v1.GetFileList)
 		auth.DELETE("files", v1.DeleteFile)
+		// 前端配置管理
+		auth.GET("frontend/config", v1.GetFrontEndConfig)
+		auth.PUT("frontend/config", v1.UpdateFrontEndConfig)
 	}
 
 	// 公共路由分组

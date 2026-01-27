@@ -152,6 +152,8 @@ export const articleApi = {
     img: string;
     top: number;
     tags?: string;
+    type?: number;
+    pdf_url?: string;
   }) => 
     apiClient.post('/v1/article/add', data),
   
@@ -164,6 +166,8 @@ export const articleApi = {
     img: string;
     top: number;
     tags?: string;
+    type?: number;
+    pdf_url?: string;
   }) => 
     apiClient.put(`/v1/article/${id}`, data),
   
@@ -181,6 +185,17 @@ export const uploadApi = {
         'Content-Type': 'multipart/form-data'
       }
     })
+}
+
+// 系统配置API
+export const systemApi = {
+  // 获取前端配置
+  getFrontEndConfig: () => 
+    apiClient.get('/v1/frontend/config'),
+  
+  // 更新前端配置
+  updateFrontEndConfig: (data: { content: string }) => 
+    apiClient.put('/v1/frontend/config', data)
 }
 
 export default apiClient

@@ -5,18 +5,20 @@
         <div class="card-header">
           <span>{{ isEdit ? '编辑文章' : '新增文章' }}</span>
           <div>
-            <el-button @click="toggleMarkdownEditor" v-if="!showMarkdownEditor">
-              Markdown编辑
-            </el-button>
-            <el-button @click="toggleMarkdownEditor" v-else>
-              普通编辑
-            </el-button>
-            <el-button @click="togglePreviewOnly" v-if="showMarkdownEditor && !previewOnly">
-              仅预览
-            </el-button>
-            <el-button @click="togglePreviewOnly" v-if="showMarkdownEditor && previewOnly">
-              双栏显示
-            </el-button>
+            <template v-if="articleType === 1">
+              <el-button @click="toggleMarkdownEditor" v-if="!showMarkdownEditor">
+                Markdown编辑
+              </el-button>
+              <el-button @click="toggleMarkdownEditor" v-else>
+                普通编辑
+              </el-button>
+              <el-button @click="togglePreviewOnly" v-if="showMarkdownEditor && !previewOnly">
+                仅预览
+              </el-button>
+              <el-button @click="togglePreviewOnly" v-if="showMarkdownEditor && previewOnly">
+                双栏显示
+              </el-button>
+            </template>
             <el-button @click="goBack">返回</el-button>
           </div>
         </div>
@@ -37,8 +39,15 @@
                 size="large"
               />
             </el-form-item>
+
+            <el-form-item label="类型">
+              <el-radio-group v-model="articleType">
+                <el-radio :label="1" :value="1">文本/Markdown</el-radio>
+                <el-radio :label="2" :value="2">PDF上传</el-radio>
+              </el-radio-group>
+            </el-form-item>
             
-            <el-form-item label="内容" prop="content">
+            <el-form-item label="内容" prop="content" v-if="articleType === 1">
               <!-- 普通文本编辑模式 -->
               <el-input 
                 v-model="articleForm.content" 
@@ -63,6 +72,42 @@
                 class="content-editor"
               />
             </el-form-item>
+
+            <el-form-item label="PDF文件" required v-if="articleType === 2">
+              <div class="pdf-edit-container">
+                <div class="upload-bar">
+                  <el-upload
+                    class="pdf-uploader-bar"
+                    drag
+                    action="/api/v1/upload"
+                    :data="{ type: 'pdf' }" 
+                    :headers="uploadHeaders"
+                    :on-success="handlePdfSuccess"
+                    :on-error="handlePdfError"
+                    :before-upload="beforePdfUpload"
+                    :show-file-list="false"
+                    accept=".pdf"
+                  >
+                    <div class="upload-bar-content">
+                       <el-icon class="upload-icon"><Document /></el-icon>
+                       <span v-if="pdfUrl" class="file-text">{{ pdfUrl }}</span>
+                       <span class="upload-hint">{{ pdfUrl ? ' (拖拽或点击替换)' : '拖拽 PDF 文件到此处或点击上传' }}</span>
+                    </div>
+                  </el-upload>
+                </div>
+                
+                <div v-if="pdfUrl" class="preview-section-full">
+                   <div class="preview-frame">
+                     <iframe 
+                        :src="pdfUrl" 
+                        width="100%" 
+                        height="100%" 
+                        frameborder="0"
+                     ></iframe>
+                   </div>
+                </div>
+              </div>
+            </el-form-item>
           </el-form>
         </el-col>
         
@@ -83,10 +128,12 @@
   </div>
 </template>
 
+
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
+import type { FormInstance, FormRules, UploadProps } from 'element-plus'
 import { ElMessage } from 'element-plus'
+import { UploadFilled, Document } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { articleApi, categoryApi } from '@/services/api'
 import ArticleEditor from '@/components/article/ArticleEditor.vue'
@@ -113,6 +160,17 @@ const previewOnly = ref(false)
 // 提交状态
 const submitLoading = ref(false)
 
+// 文章类型
+const articleType = ref(1) // 1: Markdown, 2: PDF
+const pdfUrl = ref('')
+
+// 上传Header
+const uploadHeaders = computed(() => {
+  return {
+    Authorization: `Bearer ${localStorage.getItem('token')}`
+  }
+})
+
 // 文章表单
 const articleForm = reactive({
   title: '',
@@ -138,7 +196,18 @@ const articleFormRules = reactive<FormRules>({
     { min: 2, max: 100, message: '标题长度为2-100位', trigger: 'blur' }
   ],
   content: [
-    { required: true, message: '请输入文章内容', trigger: 'blur' }
+    { 
+      validator: (rule: any, value: any, callback: any) => {
+        if (articleType.value === 1 && !value) {
+          callback(new Error('请输入文章内容'))
+        } else if (articleType.value === 2 && !pdfUrl.value) {
+          callback(new Error('请上传PDF文件'))
+        } else {
+          callback()
+        }
+      }, 
+      trigger: 'blur' 
+    }
   ]
 })
 
@@ -156,6 +225,36 @@ const togglePreviewOnly = () => {
 // 处理文本区域滚动
 const handleTextareaScroll = () => {
   // 普通文本区域滚动处理逻辑
+}
+
+// PDF上传成功
+const handlePdfSuccess: UploadProps['onSuccess'] = (response) => {
+  if (response.status === 200) {
+    pdfUrl.value = response.url
+    articleForm.content = 'PDF文章: ' + response.url // 填充一点内容通过必填校验，实际使用pdf_url
+    ElMessage.success('PDF上传成功')
+  } else {
+    ElMessage.error(response.message || 'PDF上传失败')
+  }
+}
+
+// PDF上传失败
+const handlePdfError: UploadProps['onError'] = (error) => {
+  ElMessage.error('PDF上传失败')
+  console.error(error)
+}
+
+// PDF上传前检查
+const beforePdfUpload: UploadProps['beforeUpload'] = (rawFile) => {
+  if (rawFile.type !== 'application/pdf') {
+    ElMessage.error('必须上传PDF文件!')
+    return false
+  }
+  if (rawFile.size / 1024 / 1024 > 50) { // 50MB限制
+    ElMessage.error('PDF文件大小不能超过50MB!')
+    return false
+  }
+  return true
 }
 
 // 获取分类列表
@@ -199,29 +298,28 @@ const submitArticle = async () => {
     // 提交数据
     submitLoading.value = true
     
+    // PDF文章内容处理
+    const contentToSend = articleType.value === 2 ? (articleForm.content || 'PDF Article') : articleForm.content
+    
     let res;
+    const articleData = {
+      title: articleForm.title,
+      cid: publishForm.categoryId!,
+      desc: publishForm.desc,
+      content: contentToSend,
+      img: publishForm.img,
+      top: publishForm.top,
+      tags: publishForm.tags,
+      type: articleType.value,
+      pdf_url: pdfUrl.value
+    }
+
     if (isEdit.value) {
       // 编辑文章
-      res = await articleApi.updateArticle(articleId.value, {
-        title: articleForm.title,
-        cid: publishForm.categoryId!,
-        desc: publishForm.desc,
-        content: articleForm.content,
-        img: publishForm.img,
-        top: publishForm.top,
-        tags: publishForm.tags
-      })
+      res = await articleApi.updateArticle(articleId.value, articleData)
     } else {
       // 新增文章
-      res = await articleApi.createArticle({
-        title: articleForm.title,
-        cid: publishForm.categoryId!,
-        desc: publishForm.desc,
-        content: articleForm.content,
-        img: publishForm.img,
-        top: publishForm.top,
-        tags: publishForm.tags
-      })
+      res = await articleApi.createArticle(articleData)
     }
 
     // 检查后端返回的状态码
@@ -261,6 +359,8 @@ const getArticleDetail = async (id: number) => {
     publishForm.tags = article.tags || ''
     publishForm.img = article.img
     publishForm.top = article.top || 0
+    articleType.value = article.type || 1
+    pdfUrl.value = article.pdf_url || ''
   } catch (error) {
     ElMessage.error('获取文章详情失败')
     console.error(error)
@@ -295,4 +395,91 @@ onMounted(() => {
 .content-editor {
   width: 100%;
 }
+
+.pdf-edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.upload-bar {
+  width: 100%;
+}
+
+.pdf-uploader-bar :deep(.el-upload) {
+  width: 100%;
+}
+
+.pdf-uploader-bar :deep(.el-upload-dragger) {
+  width: 100% !important;
+  height: 40px;
+  padding: 0 15px;
+  border: 1px solid #dcdfe6; /* 类似 Input 边框 */
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: #fff;
+  transition: border-color 0.2s;
+}
+
+.pdf-uploader-bar :deep(.el-upload-dragger:hover) {
+  border-color: #409eff;
+}
+
+.pdf-uploader-bar :deep(.el-upload-dragger.is-dragover) {
+  border-color: #409eff;
+  background-color: rgba(64, 158, 255, 0.1);
+}
+
+.upload-bar-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  overflow: hidden;
+}
+
+.upload-icon {
+  margin-right: 8px;
+  font-size: 16px;
+  color: #909399;
+}
+
+.file-text {
+  color: #606266;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 10px;
+  max-width: 70%;
+}
+
+.upload-hint {
+  color: #c0c4cc;
+  font-size: 13px;
+  /* 如果没有文件，提示文字颜色可以深一点 */
+  white-space: nowrap;
+}
+
+.upload-bar:not(:has(.file-text)) .upload-hint {
+    color: #909399;
+}
+
+.preview-section-full {
+  width: 100%;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+  padding: 15px;
+}
+
+.preview-frame {
+  height: 700px;
+  background: white;
+  border: 1px solid #e4e7ed;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
 </style>

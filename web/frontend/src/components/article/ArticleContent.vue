@@ -1,10 +1,30 @@
+
 <template>
   <div class="article-main-content">
     <div class="article-description" v-if="article.desc">
       <blockquote>{{ article.desc }}</blockquote>
     </div>
     
-    <div class="content" v-html="renderedContent" ref="contentRef" @click="handleContentClick"></div>
+    <!-- PDF 文章 -->
+    <div v-if="article.type === 2" class="pdf-container">
+      <div v-if="article.pdf_url" class="pdf-wrapper">
+         <iframe 
+            :src="article.pdf_url" 
+            width="100%" 
+            height="800px" 
+            style="border: none;"
+            title="PDF Viewer"
+         >
+            <p>您的浏览器不支持 PDF 预览，请<a :href="article.pdf_url">下载 PDF</a>查看。</p>
+         </iframe>
+      </div>
+      <div v-else class="pdf-error">
+        PDF 文件未找到
+      </div>
+    </div>
+
+    <!-- Markdwon 文章 -->
+    <div v-else class="content" v-html="renderedContent" ref="contentRef" @click="handleContentClick"></div>
   </div>
 </template>
 
@@ -26,6 +46,9 @@ interface Article {
   desc: string
   content: string
   img: string
+  // Extend for PDF
+  type?: number
+  pdf_url?: string
   createdAt: string
   updatedAt: string
 }
@@ -36,6 +59,7 @@ interface Props {
 
 const props = defineProps<Props>()
 const contentRef = ref<HTMLElement | null>(null)
+
 
 // 定义事件
 const emit = defineEmits<{
@@ -578,5 +602,26 @@ onUpdated(() => {
   color: #333;
   display: block;
   text-align: left;
+}
+
+/* PDF 样式 */
+.pdf-container {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.pdf-wrapper {
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pdf-error {
+  padding: 40px;
+  text-align: center;
+  background: #f8f9fa;
+  color: #666;
+  border-radius: 8px;
 }
 </style>

@@ -51,7 +51,7 @@ func GetFileList(c *gin.Context) {
 		return
 	}
 
-	var fileList []FileInfo
+	fileList := make([]FileInfo, 0)
 	for _, f := range files {
 		// 计算相对路径，用于前端导航
 		// 注意：filepath.Join(reqPath, f.Name()) 得到的是完整路径 (如 uploads/articles/title)

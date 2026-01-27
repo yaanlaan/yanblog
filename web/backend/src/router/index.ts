@@ -12,6 +12,7 @@ const CategoryList = () => import('@/views/category/CategoryList.vue')
 const ArticleList = () => import('@/views/article/ArticleList.vue')
 const ArticleEditor = () => import('@/views/article/ArticleEditor.vue')
 const MediaManager = () => import('@/views/media/MediaManager.vue')
+const ConfigEditor = () => import('@/views/system/ConfigEditor.vue')
 
 // 定义路由
 const routes: RouteRecordRaw[] = [
@@ -117,6 +118,24 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: '媒体库',
           icon: 'Picture'
+        }
+      },
+      {
+        path: '/system',
+        name: 'System',
+        redirect: '/system/config',
+        meta: {
+          title: '系统设置',
+          icon: 'Setting'
+        }
+      },
+      {
+        path: '/system/config',
+        name: 'ConfigEditor',
+        component: ConfigEditor,
+        meta: {
+          title: '前台配置',
+          activeMenu: '/system'
         }
       }
     ]

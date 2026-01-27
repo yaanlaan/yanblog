@@ -112,6 +112,8 @@ interface Article {
   content: string
   img: string
   tags: string
+  type?: number
+  pdf_url?: string
   createdAt: string
   updatedAt: string
 }
@@ -164,6 +166,8 @@ const getArticleDetail = async (id: number) => {
       content: data.content,
       img: data.img,
       tags: data.tags || '',
+      type: data.type,
+      pdf_url: data.pdf_url,
       createdAt: data.CreatedAt || data.created_at,
       updatedAt: data.UpdatedAt || data.updated_at
     }

@@ -49,9 +49,8 @@ const handleUploadImg = async (files: File[], callback: (urls: string[]) => void
     files.map(async (file) => {
       const formdata = new FormData()
       formdata.append('file', file)
-      formdata.append('type', 'article')
-      formdata.append('key', props.title || 'default')
-      formdata.append('id', (props.articleId || 0).toString())
+      formdata.append('type', 'markdown')
+      // formdata.append('key', props.title || 'default') // 已废弃，后端使用日期目录
 
       try {
         const response = await axios({

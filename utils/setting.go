@@ -34,6 +34,8 @@ type Config struct {
 		DefaultCity string `yaml:"DefaultCity"`
 	} `yaml:"weather"`
 
+	FrontEndConfigPath string `yaml:"FrontEndConfigPath"`
+
 	// Cities 城市配置
 	Cities []struct {
 		Name  string `yaml:"Name"`

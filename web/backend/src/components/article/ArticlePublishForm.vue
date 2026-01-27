@@ -81,7 +81,7 @@
             :on-error="handleAvatarError"
             :before-upload="beforeAvatarUpload"
             :headers="uploadHeaders"
-            :data="uploadData"
+            :data="{ type: 'cover' }"
           >
             <img v-if="publishData.img" :src="publishData.img" class="avatar" />
             <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>

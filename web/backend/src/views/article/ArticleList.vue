@@ -26,6 +26,12 @@
         :empty-text="error ? '数据加载失败，请检查网络连接' : '暂无数据'"
       >
         <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column label="类型" width="80">
+          <template #default="scope">
+            <el-tag v-if="scope.row.type === 2" type="warning" size="small">PDF</el-tag>
+            <el-tag v-else type="success" size="small">文章</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="封面" width="120">
           <template #default="scope">
             <el-image
@@ -127,6 +133,8 @@ interface Article {
   img: string
   top: number
   tags: string
+  type?: number
+  pdf_url?: string
   createdAt: string
   updatedAt: string
 }

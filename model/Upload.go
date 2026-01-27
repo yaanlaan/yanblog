@@ -19,19 +19,31 @@ func UpLoadFile(file multipart.File, fileHeader *multipart.FileHeader, uploadTyp
 	targetDir := baseDir
 
 	// 简单的文件名清理函数，防止路径遍历和非法字符
-	cleanKey := filepath.Clean(key)
-	// 移除可能导致问题的字符，这里简单处理，实际可能需要更严格的正则
-	// 比如将空格替换为下划线，移除特殊符号
+	// cleanKey := filepath.Clean(key) // 废弃: 不再依赖用户输入的 key 作为目录名，避免改名带来的路径失效问题
 
-	if uploadType == "category" {
+	switch uploadType {
+	case "avatar":
+		// 用户头像
+		targetDir = filepath.Join(baseDir, "avatar")
+	case "category":
+		// 分类封面
 		targetDir = filepath.Join(baseDir, "category")
-	} else if uploadType == "article" {
-		if cleanKey != "" && cleanKey != "." {
-			targetDir = filepath.Join(baseDir, "articles", cleanKey)
-		} else {
-			targetDir = filepath.Join(baseDir, "articles", "default")
-		}
-	} else {
+	case "article", "markdown":
+		// 文章内容图片 (Markdown中插入的)
+		// 使用 年/月 格式，避免单文件夹文件过多
+		now := time.Now()
+		targetDir = filepath.Join(baseDir, "article", "content", fmt.Sprintf("%d%02d", now.Year(), now.Month()))
+	case "cover":
+		// 文章封面
+		targetDir = filepath.Join(baseDir, "article", "cover")
+	case "pdf":
+		// PDF文件
+		targetDir = filepath.Join(baseDir, "article", "pdf")
+	case "system":
+		// 系统配置图片 (Logo, 背景等)
+		targetDir = filepath.Join(baseDir, "system")
+	default:
+		// 其他/通用
 		targetDir = filepath.Join(baseDir, "common")
 	}
 

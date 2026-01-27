@@ -6,6 +6,8 @@ services:
     volumes:
       - ./docker_field/backend:/app/config
       - ./docker_field/uploads:/app/uploads
+      # 挂载前端配置文件供后端修改
+      - ./docker_field/frontend/config.yaml:/app/frontend_config.yaml
     depends_on:
       - db
     networks:
