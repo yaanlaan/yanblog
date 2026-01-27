@@ -149,6 +149,55 @@ func GetArt(pageSize int, pageNum int) ([]Article, int, int64) {
 	return articleList, errmsg.SUCCESS, total
 }
 
+// GetHotArticles 查询热门文章
+func GetHotArticles(limit int) ([]Article, int) {
+	var articleList []Article
+	err := db.Preload("Category").Order("views DESC").Limit(limit).Find(&articleList).Error
+	if err != nil {
+		return nil, errmsg.ERROR
+	}
+	return articleList, errmsg.SUCCESS
+}
+
+// GetRelatedArticles 查询相关文章 (基于标签)
+func GetRelatedArticles(id int, tags string) ([]Article, int) {
+	var articleList []Article
+	// if tags == "" {
+	// 	// 如果没有标签，返回空的但成功的响应，或者随机推荐？这里暂且返回空
+	// 	return []Article{}, errmsg.SUCCESS
+	// }
+
+	// 分割标签
+	tagList := strings.Split(tags, ",") // 假设前端传逗号分隔 e.g. "go,web"
+
+	tx := db.Preload("Category").Where("id != ?", id)
+
+	// 构建 OR 查询条件
+	var conditions []string
+	var args []interface{}
+	for _, tag := range tagList {
+		tag = strings.TrimSpace(tag)
+		if tag != "" {
+			conditions = append(conditions, "tags LIKE ?")
+			args = append(args, "%"+tag+"%")
+		}
+	}
+
+	if len(conditions) > 0 {
+		tx = tx.Where(strings.Join(conditions, " OR "), args...)
+	} else {
+		// 如果没有有效标签，直接返回空
+		return []Article{}, errmsg.SUCCESS
+	}
+
+	// 按最新发布排序，取前 5 条
+	err := tx.Order("created_at DESC").Limit(5).Find(&articleList).Error
+	if err != nil {
+		return nil, errmsg.ERROR
+	}
+	return articleList, errmsg.SUCCESS
+}
+
 // GetTopArt 查询置顶文章
 // 参数: num - 查询置顶文章的数量
 // 返回: 置顶文章列表和状态码

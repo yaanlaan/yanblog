@@ -79,9 +79,11 @@ func InitRouter() {
 		router.GET("category/search", v1.SearchCate)    // 搜索分类
 		router.GET("category/info/:id", v1.GetCateInfo) // 获取分类信息
 		router.GET("article", v1.GetArt)
-		router.GET("article/search", v1.SearchArt)   // 搜索文章
-		router.GET("article/top", v1.GetTopArt)      // 获取置顶文章
-		router.GET("article/archive", v1.GetArchive) // 归档
+		router.GET("article/search", v1.SearchArt)          // 搜索文章
+		router.GET("article/top", v1.GetTopArt)             // 获取置顶文章
+		router.GET("article/hot", v1.GetHotArt)             // 获取热门文章
+		router.GET("article/related/:id", v1.GetRelatedArt) // 获取相关文章
+		router.GET("article/archive", v1.GetArchive)        // 归档
 		router.GET("article/list/:id", v1.GetCateArt)
 		router.GET("article/info/:id", v1.GetArtInfo)
 		router.GET("tags", v1.GetTags)                  // 获取标签列表

@@ -66,6 +66,27 @@
               </div>
             </div>
 
+            <!-- 相关文章推荐 -->
+            <div class="related-articles-section" v-if="relatedArticles.length > 0">
+              <h3 class="section-title">✨ 相关推荐</h3>
+              <div class="related-grid">
+                <router-link 
+                  v-for="item in relatedArticles" 
+                  :key="item.id" 
+                  :to="`/article/${item.id}`" 
+                  class="related-card"
+                >
+                  <div class="related-cover">
+                    <img :src="item.img || defaultImage" :alt="item.title" loading="lazy" />
+                  </div>
+                  <div class="related-info">
+                    <h4 class="related-item-title">{{ item.title }}</h4>
+                    <span class="related-date">{{ formatDate(item.createdAt) }}</span>
+                  </div>
+                </router-link>
+              </div>
+            </div>
+
             <!-- 评论区 -->
             <GiscusComment />
             
@@ -143,6 +164,7 @@ const article = ref<Article | null>(null)
 const loading = ref(false)
 const previousArticle = ref<Article | null>(null)
 const nextArticle = ref<Article | null>(null)
+const relatedArticles = ref<Article[]>([])
 const isTocOpen = ref(true)
 
 // 图片查看器相关
@@ -192,6 +214,9 @@ const getArticleDetail = async (id: number) => {
     
     // 获取相邻文章
     await getAdjacentArticles(id)
+
+    // 获取相关文章
+    await getRelatedArticles(id)
     
     // 更新目录
     setTimeout(() => {
@@ -204,6 +229,30 @@ const getArticleDetail = async (id: number) => {
     article.value = null
   } finally {
     loading.value = false
+  }
+}
+
+// 格式化日期
+const formatDate = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleDateString('zh-CN')
+}
+
+// 获取相关文章
+const getRelatedArticles = async (id: number) => {
+  try {
+    const response = await articleApi.getRelatedArticles(id)
+    if (response.data.status === 200) {
+       relatedArticles.value = response.data.data.map((item: any) => ({
+        id: item.ID,
+        title: item.title,
+        img: item.img,
+        createdAt: item.CreatedAt || item.created_at,
+       }))
+    }
+  } catch (error) {
+    console.error('获取相关文章失败:', error)
   }
 }
 
@@ -652,5 +701,78 @@ onMounted(() => {
 .toc-fab .fab-icon {
   font-size: 20px;
   font-weight: bold;
+}
+
+/* 相关文章样式 */
+.related-articles-section {
+  margin: 40px 0;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.section-title {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #333;
+  font-weight: 600;
+}
+
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.related-card {
+  display: block;
+  text-decoration: none;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.related-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.related-cover {
+  height: 120px;
+  overflow: hidden;
+}
+
+.related-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.related-card:hover .related-cover img {
+  transform: scale(1.1);
+}
+
+.related-info {
+  padding: 12px;
+}
+
+.related-item-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: #333;
+  line-height: 1.4;
+  height: 42px; /* 2 lines */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.related-date {
+  font-size: 12px;
+  color: #999;
 }
 </style>

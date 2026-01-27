@@ -1,7 +1,14 @@
 <template>
   <div class="sidebar-card featured-articles">
     <div class="card-header">
-      <h3><i class="iconfont icon-pushpin" style="color: #333; margin-right: 5px;"></i> 置顶博客</h3>
+      <h3>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px;">
+          <path d="M4 11a9 9 0 0 1 9 9"></path>
+          <path d="M4 4a16 16 0 0 1 16 16"></path>
+          <circle cx="5" cy="19" r="1"></circle>
+        </svg>
+        热门博客
+      </h3>
     </div>
     <div class="card-content">
       <div v-if="loading" class="skeleton-loader">
@@ -33,7 +40,7 @@
         <button @click="onRetry" class="retry-button">重试</button>
       </div>
       <div class="empty-state" v-else>
-        <p>暂无置顶文章</p>
+        <p>暂无热门文章</p>
       </div>
     </div>
   </div>
@@ -52,6 +59,7 @@ interface Article {
   desc: string
   content: string
   img: string
+  views: number
   createdAt: string
   updatedAt: string
 }
@@ -65,64 +73,49 @@ const emit = defineEmits<{
   (e: 'loading', value: boolean): void
 }>()
 
-// 获取置顶文章
+// 获取热门文章
 const fetchArticles = async () => {
   try {
     loading.value = true
     error.value = ''
     emit('loading', true)
     
-    const response = await articleApi.getTopArticles({ num: 5 })
+    const response = await articleApi.getHotArticles({ num: 5 })
     const { data, status } = response.data
     
     // 检查API返回状态
     if (status !== 200) {
-      error.value = response.data.message || '获取置顶文章失败'
-      console.error('获取置顶文章失败:', response.data.message)
+      error.value = response.data.message || '获取热门文章失败'
       return
     }
     
-    // 设置文章数据
     articles.value = data.map((item: any) => ({
       id: item.ID,
       title: item.title,
       categoryId: item.cid,
-      categoryName: item.Category?.name || '',
+      categoryName: item.Category?.name || '未分类',
       desc: item.desc,
       content: item.content,
       img: item.img,
-      createdAt: item.CreatedAt || item.created_at || '',
-      updatedAt: item.UpdatedAt || item.updated_at || ''
+      views: item.views || 0,
+      createdAt: item.CreatedAt || item.created_at,
+      updatedAt: item.UpdatedAt || item.updated_at
     }))
   } catch (err: any) {
-    error.value = err.message || '获取置顶文章失败'
-    console.error('获取置顶文章失败:', err)
+    console.error('获取热门文章错误:', err)
+    error.value = '网络请求失败'
   } finally {
     loading.value = false
     emit('loading', false)
   }
 }
 
-// 格式化日期
-const formatDate = (dateString: string) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN')
-}
-
-// 重试函数
-const onRetry = () => {
-  fetchArticles()
-}
-
-// 暴露方法给父组件
-defineExpose({
-  fetchArticles
-})
-
-// 组件挂载时获取数据
 onMounted(() => {
   fetchArticles()
+})
+
+defineExpose({
+  fetchArticles
 })
 </script>
 
@@ -201,12 +194,6 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.article-icon {
-  font-size: 18px;
-  color: #333;
-  margin-top: 2px;
-}
-
 .article-title {
   font-size: 15px;
   font-weight: 500;
@@ -233,10 +220,43 @@ onMounted(() => {
   width: 100%;
 }
 
-/* Skeleton & Error styles remain similar but simplified */
+.retry-button {
+  margin-top: 10px;
+  padding: 5px 15px;
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
 .empty-state, .error-message {
   text-align: center;
   padding: 20px 0;
   color: #888;
+}
+
+/* Skeleton Loading */
+.skeleton-loader {
+  padding: 10px;
+}
+
+.skeleton-header {
+  height: 20px;
+  background-color: #eee;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  width: 60%;
+}
+
+.skeleton-line {
+  height: 16px;
+  background-color: #eee;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.skeleton-line:last-child {
+  width: 80%;
 }
 </style>

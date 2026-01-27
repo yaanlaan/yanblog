@@ -66,7 +66,15 @@ export const articleApi = {
     
   // 获取置顶文章
   getTopArticles: (params?: { num: number }) => 
-    apiClient.get('/article/top', { params })
+    apiClient.get('/article/top', { params }),
+
+  // 获取热门文章
+  getHotArticles: (params?: { num: number }) => 
+    apiClient.get('/article/hot', { params }),
+
+  // 获取相关文章
+  getRelatedArticles: (id: number) => 
+    apiClient.get(`/article/related/${id}`)
 }
 
 // 分类相关API

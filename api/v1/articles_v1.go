@@ -163,6 +163,57 @@ func GetTopArt(c *gin.Context) {
 	})
 }
 
+// 查询热门文章
+func GetHotArt(c *gin.Context) {
+	num, _ := strconv.Atoi(c.Query("num"))
+	var code int
+	if num <= 0 {
+		num = 5
+	}
+
+	data, code := model.GetHotArticles(num)
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  code,
+		"data":    data,
+		"message": errmsg.GetErrMsg(code),
+	})
+}
+
+// 查询相关文章
+func GetRelatedArt(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "参数错误",
+		})
+		return
+	}
+
+	// 从查询参数获取 tags (通常前端不方便传太长，但这里可以接受 query param 或者 POST，这里选 query param 简单点，或者先获取文章详情再查？
+	// 为了效率，让前端作为参数传过来比较好，避免后端多查一次数据库)
+	// 或者，更安全的做法是后端先查 id 对应的 tags，再查相关文章。这样避免前端瞎传 tags。
+	// 这里选择后端自查，虽然多一次 DB 交互，但逻辑更闭环。
+
+	art, code := model.GetArtInfo(id)
+	if code != errmsg.SUCCESS {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  code,
+			"message": errmsg.GetErrMsg(code),
+		})
+		return
+	}
+
+	data, code := model.GetRelatedArticles(id, art.Tags)
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  code,
+		"data":    data,
+		"message": errmsg.GetErrMsg(code),
+	})
+}
+
 // 编辑文章
 func EditArt(c *gin.Context) {
 	var data model.Article
