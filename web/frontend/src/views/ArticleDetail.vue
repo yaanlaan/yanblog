@@ -65,6 +65,9 @@
                 </router-link>
               </div>
             </div>
+
+            <!-- 评论区 -->
+            <GiscusComment />
             
             <div class="empty-state" v-if="!article">
               <p>文章不存在或已被删除</p>
@@ -109,6 +112,7 @@ import MainLayout from '@/components/layout/MainLayout.vue'
 import ArticleHeader from '@/components/article/ArticleHeader.vue'
 import ArticleContent from '@/components/article/ArticleContent.vue'
 import ArticleToc from '@/components/article/ArticleToc.vue'
+import GiscusComment from '@/components/comment/GiscusComment.vue'
 
 // 默认图片
 const defaultImage = new URL('@/assets/img/无封面.jpg', import.meta.url).href

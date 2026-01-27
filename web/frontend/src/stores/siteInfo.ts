@@ -83,6 +83,23 @@ export interface SiteInfo {
       is_circle: boolean
     }>
   }
+  comment: {
+    enable: boolean
+    type: 'giscus' | 'other'
+    giscus: {
+      repo: string
+      repo_id: string
+      category: string
+      category_id: string
+      mapping: string
+      reactions_enabled: string
+      emit_metadata: string
+      input_position: string
+      theme: string
+      lang: string
+      loading: string
+    }
+  }
 }
 
 export const useSiteInfoStore = defineStore('siteInfo', () => {
@@ -139,13 +156,30 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
       show: false,
       wechat_qr: '', // 初始化
       items: []
+    },
+    comment: {
+      enable: false,
+      type: 'giscus',
+      giscus: {
+        repo: '',
+        repo_id: '',
+        category: '',
+        category_id: '',
+        mapping: 'pathname',
+        reactions_enabled: '1',
+        emit_metadata: '0',
+        input_position: 'top',
+        theme: 'light',
+        lang: 'zh-CN',
+        loading: 'lazy'
+      }
     }
   })
 
   const fetchSiteInfo = async () => {
     try {
-      // 直接请求 public 目录下的 config.yaml
-      const response = await axios.get('/config.yaml')
+      // 直接请求 public 目录下的 config.yaml，添加时间戳防止缓存
+      const response = await axios.get(`/config.yaml?t=${new Date().getTime()}`)
       if (response.data) {
         // 解析 YAML 内容
         const parsedConfig = yaml.load(response.data) as SiteInfo
