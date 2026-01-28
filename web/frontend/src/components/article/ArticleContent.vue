@@ -195,6 +195,28 @@ const renderedContent = computed(() => {
             </div>`
   }
 
+  // 自定义链接渲染 (Link Card Support)
+  // Syntax: [card: Title | Description](URL)
+  renderer.link = ({ href, title, text }: { href: string, title?: string | null, text: string }) => {
+    if (text.startsWith('card:')) {
+      const content = text.replace(/^card:\s*/, '')
+      const parts = content.split('|')
+      const cardTitle = parts[0].trim()
+      const cardDesc = parts[1] ? parts[1].trim() : href.replace(/^https?:\/\//, '')
+      
+      return `
+        <a class="link-card" href="${href}" target="_blank" rel="noopener noreferrer">
+          <span class="link-card-content">
+            <span class="link-card-title">${cardTitle}</span>
+            <span class="link-card-desc">${cardDesc}</span>
+          </span>
+        </a>
+      `
+    }
+    
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer" title="${title || ''}">${text}</a>`
+  }
+
   // 首先使用marked解析Markdown
   let html: string = marked.parse(contentWithIds, { renderer }) as string
   
@@ -781,5 +803,65 @@ onUpdated(() => {
   background: #f8f9fa;
   color: #666;
   border-radius: 8px;
+}
+
+/* Link Card Styles */
+.content :deep(.link-card) {
+  display: block; /* 块级显示 */
+  max-width: 390px; /* 限制宽度 */
+  width: 100%;
+  margin: 20px auto; /* 上下20px，左右自动(居中) */
+  padding: 16px 20px; /* 增加内边距 */
+  background-color: #f6f6f6; /* 知乎卡片背景色 */
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.2s;
+  border: none;
+}
+
+.content :deep(.link-card:hover) {
+  background-color: #f0f0f0; /* 悬停颜色稍深 */
+}
+
+.content :deep(.link-card-content) {
+  display: flex;
+  flex-direction: column; /* 上下布局 */
+  justify-content: center;
+}
+
+.content :deep(.link-card-title) {
+  display: block; /* 覆盖默认inline */
+  font-weight: 600;
+  font-size: 16px;
+  color: #121212;
+  margin-bottom: 4px; /* 标题和描述的间距 */
+  line-height: 1.4;
+  /* 允许换行，最多两行 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.content :deep(.link-card-desc) {
+  display: block; /* 覆盖默认inline */
+  font-size: 13px;
+  color: #999;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.content :deep(.link-card-icon) {
+  /* 隐藏之前的图标样式 */
+  display: none;
+}
+
+/* 适配移动端 */
+@media (max-width: 768px) {
+  .content :deep(.link-card) {
+    max-width: 100%; /* 移动端占满 */
+  }
 }
 </style>
