@@ -189,8 +189,8 @@ watch(() => props.articles, () => {
 .empty-state {
   text-align: center;
   padding: 60px 0;
-  color: #888;
-  background: #f9f9f9;
+  color: var(--color-text-secondary);
+  background: var(--color-background-soft);
   border-radius: 12px;
 }
 
@@ -203,11 +203,11 @@ watch(() => props.articles, () => {
 
 /* 骨架屏样式 */
 .skeleton-card {
-  background: #fff;
+  background: var(--color-background-soft);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 2px 12px var(--color-shadow);
+  border: 1px solid var(--color-border);
 }
 
 /* Grid 模式骨架屏 */

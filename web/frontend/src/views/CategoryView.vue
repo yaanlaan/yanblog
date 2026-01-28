@@ -209,34 +209,34 @@ watch(() => displayedCategories.value, () => {
 .page-header h1 {
   font-size: 2rem;
   margin-bottom: 10px;
-  color: #333;
+  color: var(--color-heading);
 }
 
 .page-header p {
-  color: #666;
+  color: var(--color-text-secondary);
   font-size: 1rem;
 }
 
 .category-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
 }
 
 .category-card {
-  border: 1px solid #eaeaea;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--color-background-soft);
+  box-shadow: 0 2px 8px var(--color-shadow);
   position: relative;
 }
 
 .category-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px var(--color-shadow);
 }
 
 .category-top-tag {
@@ -276,12 +276,12 @@ watch(() => displayedCategories.value, () => {
 .category-info h3 {
   margin: 0 0 8px 0;
   font-size: 1.2rem;
-  color: #333;
+  color: var(--color-heading);
 }
 
 .category-info p {
   margin: 0;
-  color: #666;
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
 
@@ -289,7 +289,7 @@ watch(() => displayedCategories.value, () => {
   grid-column: 1 / -1;
   text-align: center;
   padding: 40px;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .loading-trigger {
@@ -304,7 +304,7 @@ watch(() => displayedCategories.value, () => {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #999;
+  color: var(--color-text-secondary);
   font-size: 14px;
 }
 

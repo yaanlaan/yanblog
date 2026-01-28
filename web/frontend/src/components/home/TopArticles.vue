@@ -88,10 +88,10 @@ const loadMore = () => {
 .section-title {
   font-size: 24px;
   margin-bottom: 20px;
-  color: #333;
+  color: var(--color-heading);
   text-align: left;
   padding-left: 10px;
-  border-left: 4px solid #42b883;
+  border-left: 4px solid var(--color-accent);
 }
 
 .loading-state {

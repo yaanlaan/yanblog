@@ -153,7 +153,7 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   left: 0;
-  background-color: #faf8f2;
+  background-color: var(--color-background);
   z-index: 9999;
   display: flex;
   justify-content: center;
@@ -166,7 +166,7 @@ onMounted(() => {
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  border-top: 3px solid #55a2a0;
+  border-top: 3px solid var(--color-accent);
   border-left: 1px solid transparent;
   border-right: 1px solid transparent;
   animation: rt 2s infinite linear;
@@ -204,7 +204,8 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   left: 0;
-  background: #428381;
+  background: var(--color-accent);
+  opacity: 0.5;
 }
 
 .loading-text {
@@ -220,7 +221,7 @@ onMounted(() => {
   letter-spacing: 0.1em;
   font-size: 14px;
   font-weight: lighter;
-  color: #55a2a0;
+  color: var(--color-accent);
 }
 
 .loading-text span {

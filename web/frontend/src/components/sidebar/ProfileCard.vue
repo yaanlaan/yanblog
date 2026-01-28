@@ -119,7 +119,7 @@ onUnmounted(() => {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  border: 4px solid white;
+  border: 4px solid var(--color-background-soft);
   position: absolute;
   bottom: -40px;
   left: 50%;
@@ -139,13 +139,13 @@ onUnmounted(() => {
 .name {
   font-size: 20px;
   font-weight: bold;
-  color: #333;
+  color: var(--color-heading);
   margin-bottom: 5px;
 }
 
 .bio {
   font-size: 14px;
-  color: #666;
+  color: var(--color-text-secondary);
   margin-bottom: 15px;
 }
 
@@ -160,17 +160,17 @@ onUnmounted(() => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #f5f5f5;
+  background: var(--color-background-mute);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666;
+  color: var(--color-text-secondary);
   text-decoration: none;
   transition: all 0.3s;
 }
 
 .social-item:hover {
-  background: var(--hover-bg, #42b883);
+  background: var(--hover-bg, var(--color-accent));
   color: white;
   transform: translateY(-3px);
 }
@@ -180,8 +180,8 @@ onUnmounted(() => {
   justify-content: space-around;
   margin-bottom: 20px;
   padding: 15px 0;
-  border-top: 1px solid #eee;
-  border-bottom: 1px solid #eee;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .stat-item {
@@ -192,20 +192,20 @@ onUnmounted(() => {
 .stat-val {
   font-size: 18px;
   font-weight: bold;
-  color: #333;
+  color: var(--color-heading);
 }
 
 .stat-label {
   font-size: 12px;
-  color: #999;
+  color: var(--color-text-secondary);
 }
 
 .quote-area {
   margin-top: 15px;
   padding: 10px;
-  background-color: #f9f9f9;
+  background-color: var(--color-background-mute);
   border-radius: 8px;
-  border-left: 3px solid #42b883;
+  border-left: 3px solid var(--color-accent);
   min-height: 60px; /* 预留高度防止跳动 */
   display: flex;
   align-items: center;
@@ -214,7 +214,7 @@ onUnmounted(() => {
 
 .quote-text {
   font-size: 13px;
-  color: #666;
+  color: var(--color-text-secondary);
   font-style: italic;
   margin: 0;
   line-height: 1.5;

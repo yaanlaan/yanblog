@@ -454,9 +454,9 @@ onMounted(() => {
 }
 
 .article-content {
-  background: white;
+  background: var(--color-background-soft);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--color-shadow);
   padding: 30px;
   min-height: 400px;
 }
@@ -472,8 +472,8 @@ onMounted(() => {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
+  border: 4px solid var(--color-background-mute);
+  border-top: 4px solid var(--color-accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
@@ -496,7 +496,7 @@ onMounted(() => {
   justify-content: space-between;
   margin-top: 40px;
   padding-top: 20px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border);
 }
 
 .nav-item {
@@ -516,18 +516,18 @@ onMounted(() => {
 .nav-link {
   display: block;
   text-decoration: none;
-  color: #333;
+  color: var(--color-heading);
   transition: all 0.3s ease;
 }
 
 .nav-link:hover {
-  color: #007bff;
+  color: var(--color-accent);
 }
 
 .nav-label {
   display: block;
   font-size: 12px;
-  color: #888;
+  color: var(--color-text-secondary);
   margin-bottom: 5px;
 }
 
@@ -547,7 +547,7 @@ onMounted(() => {
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 10px;
-  background-color: #f5f5f5;
+  background-color: var(--color-background-mute);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -712,25 +712,25 @@ onMounted(() => {
   left: 30px;
   width: 50px;
   height: 50px;
-  background-color: white;
+  background-color: var(--color-background-soft);
   border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px var(--color-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 99;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  color: #555;
-  border: 1px solid #ebeef5;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
 
 .toc-fab:hover {
   transform: translateY(-5px) scale(1.05);
-  background-color: #42b883;
+  background-color: var(--color-accent);
   color: white;
-  box-shadow: 0 8px 24px rgba(66, 184, 131, 0.3);
-  border-color: #42b883;
+  box-shadow: 0 8px 24px var(--color-shadow);
+  border-color: var(--color-accent);
 }
 
 .toc-fab .fab-icon {
@@ -742,13 +742,13 @@ onMounted(() => {
 .related-articles-section {
   margin: 40px 0;
   padding-top: 20px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border);
 }
 
 .section-title {
   font-size: 20px;
   margin-bottom: 20px;
-  color: #333;
+  color: var(--color-heading);
   font-weight: 600;
 }
 
@@ -761,17 +761,17 @@ onMounted(() => {
 .related-card {
   display: block;
   text-decoration: none;
-  background: #fff;
+  background: var(--color-background-soft);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px var(--color-shadow);
   transition: all 0.3s ease;
   height: 100%;
 }
 
 .related-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 15px var(--color-shadow);
 }
 
 .related-cover {
@@ -797,7 +797,7 @@ onMounted(() => {
 .related-item-title {
   margin: 0 0 8px;
   font-size: 15px;
-  color: #333;
+  color: var(--color-text);
   line-height: 1.4;
   height: 42px; /* 2 lines */
   overflow: hidden;
@@ -808,7 +808,7 @@ onMounted(() => {
 
 .related-date {
   font-size: 12px;
-  color: #999;
+  color: var(--color-text-secondary);
 }
 
 /* 文章操作栏 */
@@ -817,6 +817,7 @@ onMounted(() => {
   justify-content: flex-end;
   margin-bottom: 20px;
   padding: 0 10px;
+  margin-top: 20px;
 }
 
 .action-btn {
@@ -825,19 +826,19 @@ onMounted(() => {
   gap: 6px;
   padding: 8px 16px;
   border-radius: 20px;
-  border: 1px solid #eee;
-  background: white;
-  color: #666;
+  border: 1px solid var(--color-border);
+  background: var(--color-background-soft);
+  color: var(--color-text-secondary);
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px var(--color-shadow);
 }
 
 .action-btn:hover {
-  background: #f0f2f5;
-  color: #1890ff;
-  border-color: #1890ff;
+  background: var(--color-background-mute);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 .action-btn i {

@@ -9,6 +9,8 @@
   --vt-c-black-mute: #282828;
 
   --vt-c-indigo: #2c3e50;
+  
+  --vt-c-green: hsla(160, 100%, 37%, 1);
 
   --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
   --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
@@ -23,32 +25,59 @@
 
 /* semantic color variables for this project */
 :root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
+  --color-background: #ffffff; /* Pure white for better contrast */
+  --color-background-soft: #f8f8f8; /* Soft gray for cards */
+  --color-background-mute: #f2f2f2;
+  
+  --color-border: #e2e2e3;
+  --color-border-hover: #c1c1c2;
 
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
+  --color-heading: #2c3e50; /* Dark Blue-Gray, very readable */
+  --color-text: #2c3e50; /* Same as heading for maximum contrast */
+  --color-text-secondary: #606266; /* Element Plus regular text color */
+  
+  --color-shadow: rgba(0, 0, 0, 0.1); /* Slightly stronger shadow */
+  --color-accent: var(--vt-c-green);
 
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
+  --color-background-overlay: rgba(255, 255, 255, 0.85); /* Global background overlay */
 
   --section-gap: 160px;
 }
 
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
+[data-theme="dark"] {
+  --color-background: #121212;
+  --color-background-soft: #1e1e1e;
+  --color-background-mute: #2b2b2b;
 
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
+  --color-border: #363637;
+  --color-border-hover: #4c4d4f;
 
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
-} */
+  --color-heading: #e1e1e1;
+  --color-text: #e1e1e1;
+  --color-text-secondary: #a1a1a1;
+  
+  --color-shadow: rgba(0, 0, 0, 0.5);
+  --color-accent: #42b883;
+
+  --color-background-overlay: rgba(18, 18, 18, 0.92); /* Dark overlay */
+
+  /* Element Plus Dark Theme Overrides */
+  --el-bg-color: #121212;
+  --el-bg-color-overlay: #1d1e1f;
+  --el-text-color-primary: #e1e1e1;
+  --el-text-color-regular: #a1a1a1;
+  --el-border-color: #363637;
+  --el-border-color-light: #4c4d4f;
+  --el-fill-color-blank: #121212;
+
+  /* Skeleton */
+  --el-skeleton-color: #2b2b2b;
+  --el-skeleton-to-color: #1e1e1e;
+  
+  /* Loading Mask */
+  --el-mask-color: rgba(0, 0, 0, 0.8);
+  --el-mask-color-extra-light: rgba(0, 0, 0, 0.3);
+}
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
@@ -57,7 +86,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--color-background-soft);
   border-radius: 4px;
 }
 

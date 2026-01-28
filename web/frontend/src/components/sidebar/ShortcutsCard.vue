@@ -26,23 +26,23 @@ const { siteInfo } = storeToRefs(siteInfoStore)
 
 <style scoped>
 .shortcuts-card {
-  background: white;
+  background: var(--color-background-soft);
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px var(--color-shadow);
   overflow: hidden;
   margin-bottom: 20px;
 }
 
 .card-header {
   padding: 15px 20px;
-  border-bottom: 1px solid #f0f0f0;
-  background: white;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-background-soft);
 }
 
 .card-header h3 {
   margin: 0;
   font-size: 16px;
-  color: #333;
+  color: var(--color-heading);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -62,14 +62,14 @@ const { siteInfo } = storeToRefs(siteInfoStore)
   display: flex;
   align-items: center;
   padding: 10px;
-  background: #f9f9f9;
+  background: var(--color-background-mute);
   border-radius: 8px;
   text-decoration: none;
   transition: all 0.3s ease;
 }
 
 .shortcut-item:hover {
-  background: #f0f0f0;
+  background: var(--color-border-hover);
   transform: translateX(5px);
 }
 
@@ -87,7 +87,7 @@ const { siteInfo } = storeToRefs(siteInfoStore)
 }
 
 .name {
-  color: #333;
+  color: var(--color-text);
   font-size: 14px;
   font-weight: 500;
 }

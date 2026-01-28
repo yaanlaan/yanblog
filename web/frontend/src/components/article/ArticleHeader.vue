@@ -103,14 +103,14 @@ const formatNumber = (num: number) => {
 .article-header {
   margin-bottom: 30px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .article-title {
   font-size: 32px;
   font-weight: 700;
   margin-bottom: 20px;
-  color: #333;
+  color: var(--color-heading);
   line-height: 1.3;
 }
 
@@ -132,15 +132,15 @@ const formatNumber = (num: number) => {
   display: flex;
   gap: 20px;
   font-size: 14px;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .article-meta .word-count,
 .article-meta .reading-time {
-  background-color: #f0f8ff;
+  background-color: var(--color-background-mute);
   padding: 2px 8px;
   border-radius: 4px;
-  color: #05a784ff;
+  color: var(--color-accent);
 }
 
 @media (max-width: 768px) {

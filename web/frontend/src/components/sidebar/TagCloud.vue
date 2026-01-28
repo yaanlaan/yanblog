@@ -452,8 +452,8 @@ onBeforeUnmount(() => {
 
 .card-header {
   padding: 15px 20px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  background: white;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -463,7 +463,7 @@ onBeforeUnmount(() => {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: #333;
+  color: var(--color-heading);
   position: relative;
   padding-left: 12px;
 }

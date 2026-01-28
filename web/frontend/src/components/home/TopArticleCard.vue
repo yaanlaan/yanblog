@@ -136,7 +136,7 @@ const splitTags = (tags: string) => {
 .article-item {
   display: flex;
   flex-direction: row;
-  background: #fdfdfd; /* 极淡的背景色 */
+  background: var(--color-background-soft);
   border-radius: 0 12px 12px 0; /* 左侧无圆角 */
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
   overflow: hidden;
@@ -144,6 +144,7 @@ const splitTags = (tags: string) => {
   margin-bottom: 15px;
   height: 180px; /* 固定高度 */
   position: relative;
+  border: 1px solid var(--color-border);
 }
 
 .article-item::before {
@@ -153,7 +154,7 @@ const splitTags = (tags: string) => {
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #42b883 0%, #35495e 100%); /* 置顶文章使用绿色渐变 */
+  background: linear-gradient(180deg, var(--color-accent) 0%, #35495e 100%); /* 置顶文章使用绿色渐变 */
   z-index: 1;
 }
 
@@ -185,11 +186,11 @@ const splitTags = (tags: string) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #2c3e50;
+  color: var(--color-heading);
 }
 
 .title-icon {
-  color: #309988ff; /* 置顶图标颜色 */
+  color: var(--color-accent); /* 置顶图标颜色 */
   width: 18px;
   height: 18px;
 }
@@ -207,7 +208,7 @@ const splitTags = (tags: string) => {
 }
 
 .article-title a:hover {
-  color: #42b883;
+  color: var(--color-accent);
 }
 
 /* 摘要 */
@@ -218,7 +219,7 @@ const splitTags = (tags: string) => {
 }
 
 .article-summary p {
-  color: #666;
+  color: var(--color-text);
   font-size: 14px;
   line-height: 1.6;
   margin: 0;
@@ -235,8 +236,8 @@ const splitTags = (tags: string) => {
   justify-content: space-between;
   align-items: center;
   font-size: 13px;
-  color: #999;
-  border-top: 1px solid rgba(0,0,0,0.03);
+  color: var(--color-text-light);
+  border-top: 1px solid var(--color-border);
   padding-top: 10px;
 }
 

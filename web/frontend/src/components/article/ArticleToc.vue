@@ -138,13 +138,14 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .article-toc {
-  background: #fff;
+  background: var(--color-background-soft);
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 12px 0 var(--color-shadow);
   max-height: calc(100vh - 100px);
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--color-border);
 }
 
 .toc-header {
@@ -153,13 +154,13 @@ onBeforeUnmount(() => {
   align-items: center;
   margin-bottom: 15px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
   cursor: pointer;
   user-select: none;
 }
 
 .toc-header:hover .toggle-icon {
-  color: #42b883;
+  color: var(--color-accent);
 }
 
 .toc-title {
@@ -168,11 +169,12 @@ onBeforeUnmount(() => {
   margin: 0;
   padding: 0;
   border: none;
+  color: var(--color-heading);
 }
 
 .toggle-icon {
   font-size: 14px;
-  color: #999;
+  color: var(--color-text-secondary);
   transition: transform 0.3s;
   display: inline-block;
 }
@@ -210,7 +212,7 @@ onBeforeUnmount(() => {
 }
 
 .toc-link {
-  color: #666;
+  color: var(--color-text);
   text-decoration: none;
   display: block;
   padding: 6px 0;
@@ -221,16 +223,16 @@ onBeforeUnmount(() => {
 }
 
 .toc-item:hover .toc-link {
-  color: #42b883;
+  color: var(--color-accent);
 }
 
 .toc-item.active {
-  border-left-color: #42b883;
-  background-color: rgba(66, 184, 131, 0.08);
+  border-left-color: var(--color-accent);
+  background-color: rgba(66, 184, 131, 0.08); /* Keep this or use very low opacity accent */
 }
 
 .toc-item.active .toc-link {
-  color: #42b883;
+  color: var(--color-accent);
   font-weight: 500;
 }
 </style>

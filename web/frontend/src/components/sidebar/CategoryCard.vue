@@ -76,18 +76,18 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  background: #f9f9f9;
+  background: var(--color-background-mute);
   border-radius: 6px;
   text-decoration: none;
-  color: #666;
+  color: var(--color-text);
   transition: all 0.3s;
   border: 1px solid transparent;
 }
 
 .category-item:hover {
-  background: white;
-  border-color: #42b883;
-  color: #42b883;
+  background: var(--color-background-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
   box-shadow: 0 2px 8px rgba(66, 184, 131, 0.1);
 }
 

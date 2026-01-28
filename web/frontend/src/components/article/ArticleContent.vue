@@ -169,6 +169,12 @@ const renderedContent = computed(() => {
   // 自定义代码块渲染
   renderer.code = ({ text, lang }: { text: string, lang?: string }) => {
     const language = lang || 'plaintext'
+    
+    // Mermaid 特殊处理
+    if (language === 'mermaid') {
+      return `<div class="mermaid-chart">${text}</div>`
+    }
+
     const validLang = hljs.getLanguage(language) ? language : 'plaintext'
     const highlighted = hljs.highlight(text, { language: validLang }).value
     
@@ -220,8 +226,8 @@ const renderedContent = computed(() => {
   // 首先使用marked解析Markdown
   let html: string = marked.parse(contentWithIds, { renderer }) as string
   
-  // 处理mermaid图表
-  html = renderMermaid(html)
+  // 处理mermaid图表 (Modified: renderer.code now handles mermaid divs)
+  // html = renderMermaid(html)
   
   // 然后处理数学公式
   html = renderMath(html)
@@ -239,29 +245,12 @@ const addIdsToHeadings = (content: string) => {
   })
 }
 
-// 渲染mermaid图表
-const renderMermaid = (html: string) => {
-  // 查找mermaid代码块
-  const mermaidRegex = /<pre><code class="([^"]*)mermaid([^"]*)">([\s\S]*?)<\/code><\/pre>/g;
-  
-  let match;
-  let newHtml = html;
-  let mermaidCounter = 0;
-  
-  while ((match = mermaidRegex.exec(html)) !== null) {
-    const fullMatch = match[0];
-    const mermaidCode = match[3];
-    const mermaidId = `mermaid-${mermaidCounter++}`;
-    
-    // 替换为占位符div
-    newHtml = newHtml.replace(
-      fullMatch,
-      `<div class="mermaid-chart" id="${mermaidId}">${mermaidCode}</div>`
-    );
-  }
-  
-  return newHtml;
-}
+// 渲染mermaid图表 - Deprecated since we handle it in renderer.code
+// const renderMermaid = (html: string) => { ... }
+
+// (Wait, I should define renderer.code properly instead of post-regex)
+
+
 
 // 渲染数学公式
 const renderMath = (html: string) => {
@@ -455,11 +444,12 @@ onUpdated(() => {
 
 .article-description blockquote {
   font-size: 16px;
-  color: #666;
-  border-left: 4px solid #ccc;
+  color: var(--color-text-secondary);
+  border-left: 4px solid var(--color-border);
   padding: 10px 20px;
   margin: 0 0 30px 0;
-  background: #f8f9fa;
+  background: var(--color-background-mute);
+  border-radius: 6px;
 }
 
 .content {
@@ -472,14 +462,14 @@ onUpdated(() => {
 .content :deep(h1) {
   font-size: 24px;
   margin: 24px 0 16px;
-  color: #333;
+  color: var(--color-heading);
   counter-reset: h2;
 }
 
 .content :deep(h1)::before {
   counter-increment: h1;
   content: counter(h1) ". ";
-  color: #666;
+  color: var(--color-text-secondary);
   font-weight: normal;
   margin-right: 8px;
 }
@@ -487,14 +477,14 @@ onUpdated(() => {
 .content :deep(h2) {
   font-size: 22px;
   margin: 22px 0 14px;
-  color: #333;
+  color: var(--color-heading);
   counter-reset: h3;
 }
 
 .content :deep(h2)::before {
   counter-increment: h2;
   content: counter(h1) "." counter(h2) " ";
-  color: #666;
+  color: var(--color-text-secondary);
   font-weight: normal;
   margin-right: 8px;
 }
@@ -502,27 +492,27 @@ onUpdated(() => {
 .content :deep(h3) {
   font-size: 20px;
   margin: 20px 0 12px;
-  color: #333;
+  color: var(--color-heading);
 }
 
 .content :deep(h3)::before {
   counter-increment: h3;
   content: counter(h1) "." counter(h2) "." counter(h3) " ";
-  color: #666;
+  color: var(--color-text-secondary);
   font-weight: normal;
   margin-right: 8px;
 }
 
 .content :deep(p) {
   margin: 16px 0;
-  color: #333;
+  color: var(--color-text);
 }
 
 .content :deep(ul),
 .content :deep(ol) {
   padding-left: 30px;
   margin: 16px 0;
-  color: #333;
+  color: var(--color-text);
 }
 
 .content :deep(li) {
@@ -531,13 +521,13 @@ onUpdated(() => {
 
 /* 行内代码 */
 .content :deep(code) {
-  background: #f0f0f0;
-  color: #333;
+  background: var(--color-background-mute);
+  color: var(--color-text);
   padding: 2px 6px;
   border-radius: 3px;
   font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
   font-size: 14px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--color-border);
 }
 
 /* 代码块容器 */
@@ -545,7 +535,7 @@ onUpdated(() => {
   margin: 20px 0;
   border-radius: 8px;
   overflow: hidden;
-  background: #282c34;
+  background: #282c34; /* Keep dark for code blocks usually */
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
@@ -649,11 +639,11 @@ onUpdated(() => {
 
 /* 引用块 (灰白黑风格) */
 .content :deep(blockquote) {
-  border-left: 4px solid #ccc;
+  border-left: 4px solid var(--color-border);
   padding: 10px 20px;
   margin: 20px 0;
-  background: #f8f9fa;
-  color: #666;
+  background: var(--color-background-mute);
+  color: var(--color-text-secondary);
   border-radius: 0 4px 4px 0;
 }
 
@@ -664,27 +654,27 @@ onUpdated(() => {
   margin: 20px 0;
   cursor: zoom-in;
   transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px var(--color-shadow);
 }
 
 .content :deep(img:hover) {
   opacity: 0.95;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 24px var(--color-shadow);
 }
 
 /* 链接 (灰白黑风格) */
 .content :deep(a) {
-  color: #333;
+  color: var(--color-text);
   text-decoration: none;
-  border-bottom: 1px solid #999;
+  border-bottom: 1px solid var(--color-text-secondary);
   transition: all 0.3s;
   font-weight: 500;
 }
 
 .content :deep(a:hover) {
-  color: #000;
-  border-bottom-color: #000;
-  background: rgba(0,0,0,0.05);
+  color: var(--color-heading);
+  border-bottom-color: var(--color-heading);
+  background: var(--color-background-mute);
 }
 
 /* 表格 (灰白黑风格) */
@@ -699,15 +689,15 @@ onUpdated(() => {
 
 .content :deep(th),
 .content :deep(td) {
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--color-border);
   padding: 12px 15px;
   text-align: left;
-  color: #333;
+  color: var(--color-text);
 }
 
 .content :deep(th) {
-  background: #f5f5f5;
-  color: #000;
+  background: var(--color-background-mute);
+  color: var(--color-heading);
   font-weight: 600;
 }
 
@@ -765,7 +755,7 @@ onUpdated(() => {
 
 .content :deep(.math-code) {
   font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-  background: #f5f5f5;
+  background: var(--color-background-mute);
   padding: 2px 6px;
   border-radius: 3px;
   color: #d63384;
@@ -773,15 +763,62 @@ onUpdated(() => {
 }
 
 .content :deep(.math-block.show-code) {
-  background: #f8f9fa;
+  background: var(--color-background-soft);
   padding: 10px;
   border-radius: 4px;
-  border: 1px solid #eee;
+  border: 1px solid var(--color-border);
   white-space: pre-wrap;
   font-family: monospace;
-  color: #333;
+  color: var(--color-text);
   display: block;
   text-align: left;
+}
+
+.article-main-content {
+  background: var(--color-background-soft);
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px var(--color-shadow);
+  color: var(--color-text);
+  line-height: 1.8;
+  font-size: 16px;
+  position: relative;
+  min-height: 200px; /* 防止内容过少时太扁 */
+}
+
+/* Share Tip Button */
+.share-tip-btn {
+  position: fixed;
+  background: var(--color-heading);
+  color: var(--color-background-soft);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 1000;
+  transform: translate(-50%, -100%);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  transition: all 0.2s;
+  /* Add arrow */
+}
+
+.share-tip-btn::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px 6px 0;
+  border-style: solid;
+  border-color: var(--color-heading) transparent transparent transparent;
+}
+
+.share-tip-btn:hover {
+  transform: translate(-50%, -110%);
 }
 
 /* PDF 样式 */
@@ -800,8 +837,8 @@ onUpdated(() => {
 .pdf-error {
   padding: 40px;
   text-align: center;
-  background: #f8f9fa;
-  color: #666;
+  background: var(--color-background-soft);
+  color: var(--color-text-secondary);
   border-radius: 8px;
 }
 
@@ -812,7 +849,7 @@ onUpdated(() => {
   width: 100%;
   margin: 20px auto; /* 上下20px，左右自动(居中) */
   padding: 16px 20px; /* 增加内边距 */
-  background-color: #f6f6f6; /* 知乎卡片背景色 */
+  background-color: var(--color-background-mute); /* 知乎卡片背景色 */
   border-radius: 8px;
   text-decoration: none;
   transition: background-color 0.2s;
@@ -820,7 +857,7 @@ onUpdated(() => {
 }
 
 .content :deep(.link-card:hover) {
-  background-color: #f0f0f0; /* 悬停颜色稍深 */
+  background-color: var(--color-border-hover); /* 悬停颜色稍深 */
 }
 
 .content :deep(.link-card-content) {

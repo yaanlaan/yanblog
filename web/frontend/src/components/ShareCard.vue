@@ -7,6 +7,10 @@
       </div>
       
       <div class="modal-body">
+        <div class="selection-tip">
+          💡 提示：在文章中选中文字即可生成包含引用的精美卡片
+        </div>
+
         <!-- 预览区域 (将被转为图片) -->
         <div class="card-preview-container">
           <div 
@@ -175,20 +179,20 @@ const generateImage = async () => {
 }
 
 .share-modal {
-  background: white;
+  background: var(--color-background-soft);
   border-radius: 12px;
   width: 90%;
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 30px var(--color-shadow);
   display: flex;
   flex-direction: column;
 }
 
 .modal-header {
   padding: 15px 20px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -197,7 +201,7 @@ const generateImage = async () => {
 .modal-header h3 {
   margin: 0;
   font-size: 18px;
-  color: #333;
+  color: var(--color-heading);
 }
 
 .close-btn {
@@ -205,7 +209,7 @@ const generateImage = async () => {
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #999;
+  color: var(--color-text-secondary);
 }
 
 .modal-body {
@@ -216,22 +220,34 @@ const generateImage = async () => {
   gap: 20px;
 }
 
+.selection-tip {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  background: var(--color-background-mute);
+  padding: 8px 12px;
+  border-radius: 6px;
+  width: 100%;
+  text-align: center;
+  border: 1px dashed var(--color-border);
+}
+
 /* 卡片样式 - 也是生成图片的源 */
 .card-preview-container {
   width: 100%;
   max-width: 375px; /* 模拟手机宽度 */
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 15px var(--color-shadow);
 }
 
 .share-card {
   width: 100%;
   min-height: 480px;
-  background: white;
+  background: white; /* 实际生成图片的卡片，保持白色或其他主题色 */
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
+  color: #333; /* 默认文字颜色 */
 }
 
 .card-content {
@@ -378,7 +394,7 @@ const generateImage = async () => {
 
 .label {
   font-size: 14px;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .theme-btn {

@@ -97,13 +97,13 @@ onMounted(() => {
 
 <style scoped>
 .weather-card {
-  /* Gradient from dark teal to light teal/green */
-  background: linear-gradient(180deg, #326579 0%, #68c6a8 100%) !important;
+  /* Standard card background */
+  background: var(--color-background-soft);
   border-radius: 8px; /* Slightly smaller radius as per image */
-  color: white;
+  color: var(--color-text);
   padding: 25px;
-  box-shadow: 0 4px 15px rgba(50, 101, 121, 0.2) !important;
-  border: none !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Standard shadow */
+  border: 1px solid var(--color-border) !important;
   overflow: hidden;
   position: relative;
   min-height: 240px;
@@ -121,10 +121,12 @@ onMounted(() => {
   margin-bottom: 30px;
   opacity: 0.95;
   font-weight: 400;
+  color: var(--color-heading);
 }
 
 .location-row .iconfont {
   font-size: 20px;
+  color: var(--color-accent);
 }
 
 .main-weather {
@@ -139,6 +141,7 @@ onMounted(() => {
   font-weight: 400;
   line-height: 1;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: var(--color-heading);
 }
 
 .weather-text {
@@ -146,6 +149,7 @@ onMounted(() => {
   /* Serif font for the Chinese character "霾" */
   font-family: "Songti SC", "SimSun", "STSong", "Times New Roman", serif;
   font-weight: 400;
+  color: var(--color-text);
 }
 
 .weather-details-list {
@@ -161,12 +165,14 @@ onMounted(() => {
   font-size: 16px;
   opacity: 0.9;
   font-weight: 300;
+  color: var(--color-text);
 }
 
 .detail-row .iconfont {
   font-size: 18px;
   width: 20px;
   text-align: center;
+  color: var(--color-text-light);
 }
 
 /* Loading & Error States */
@@ -177,11 +183,12 @@ onMounted(() => {
   justify-content: center;
   height: 100%;
   min-height: 200px;
+  color: var(--color-text-light);
 }
 
 .retry-btn {
-  background: rgba(255,255,255,0.2);
-  border: 1px solid rgba(255,255,255,0.4);
+  background: var(--color-accent);
+  border: 1px solid var(--color-accent);
   color: white;
   padding: 6px 18px;
   border-radius: 20px;
@@ -191,15 +198,15 @@ onMounted(() => {
 }
 
 .retry-btn:hover {
-  background: rgba(255,255,255,0.3);
+  background: var(--color-accent-hover);
 }
 
 .spinner {
   width: 30px;
   height: 30px;
-  border: 3px solid rgba(255,255,255,0.3);
+  border: 3px solid var(--color-border);
   border-radius: 50%;
-  border-top-color: white;
+  border-top-color: var(--color-accent);
   animation: spin 1s ease-in-out infinite;
   margin-bottom: 10px;
 }

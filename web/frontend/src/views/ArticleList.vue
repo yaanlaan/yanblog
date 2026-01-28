@@ -258,7 +258,7 @@ watch(() => route.query, () => {
 
 .page-header h1 {
   font-size: 24px;
-  color: #333;
+  color: var(--color-heading);
   margin-bottom: 20px;
 }
 </style>

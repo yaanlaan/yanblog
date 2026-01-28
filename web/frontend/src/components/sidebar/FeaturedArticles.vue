@@ -175,7 +175,7 @@ defineExpose({
 
 .article-link {
   text-decoration: none;
-  color: #333;
+  color: var(--color-text);
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -185,7 +185,7 @@ defineExpose({
 }
 
 .article-link:hover {
-  color: #42b883;
+  color: var(--color-accent);
 }
 
 .title-icon {
@@ -211,7 +211,7 @@ defineExpose({
   left: 0;
   width: 0;
   height: 2px;
-  background-color: #42b883;
+  background-color: var(--color-accent);
   transition: width 0.3s ease;
   content: "";
 }
@@ -223,7 +223,7 @@ defineExpose({
 .retry-button {
   margin-top: 10px;
   padding: 5px 15px;
-  background-color: #1890ff;
+  background-color: var(--color-accent);
   color: white;
   border: none;
   border-radius: 4px;
@@ -233,7 +233,7 @@ defineExpose({
 .empty-state, .error-message {
   text-align: center;
   padding: 20px 0;
-  color: #888;
+  color: var(--color-text-secondary);
 }
 
 /* Skeleton Loading */
@@ -243,7 +243,7 @@ defineExpose({
 
 .skeleton-header {
   height: 20px;
-  background-color: #eee;
+  background-color: var(--color-background-mute);
   margin-bottom: 15px;
   border-radius: 4px;
   width: 60%;
@@ -251,7 +251,7 @@ defineExpose({
 
 .skeleton-line {
   height: 16px;
-  background-color: #eee;
+  background-color: var(--color-background-mute);
   margin-bottom: 10px;
   border-radius: 4px;
 }

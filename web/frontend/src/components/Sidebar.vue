@@ -35,29 +35,29 @@ defineExpose({
 <style scoped>
 /* ==================== 通用卡片样式 ==================== */
 .sidebar-card {
-  background: white;
+  background: var(--color-background-soft);
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px var(--color-shadow);
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-border);
 }
 
 .sidebar-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 15px 30px var(--color-shadow);
 }
 
 .card-header {
   padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-  background: white;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
 }
 
 .card-header h3 {
   margin: 0;
   font-size: 18px;
-  color: #333;
+  color: var(--color-heading);
 }
 
 .card-content {

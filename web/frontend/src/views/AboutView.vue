@@ -128,21 +128,21 @@ const showQRCode = (type: string) => {
 }
 
 .about-content {
-  background: white;
+  background: var(--color-background-soft);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--color-shadow);
   padding: 40px;
 }
 
 .about-content h1 {
   font-size: 32px;
   margin-bottom: 20px;
-  color: #333;
+  color: var(--color-heading);
 }
 
 /* Markdown 样式 */
 .markdown-body {
-  color: #333;
+  color: var(--color-text);
   line-height: 1.6;
 }
 
@@ -151,27 +151,27 @@ const showQRCode = (type: string) => {
   font-weight: bold;
   margin: 0 0 30px;
   padding-bottom: 15px;
-  border-bottom: 2px solid #eee;
-  color: #333;
+  border-bottom: 2px solid var(--color-border);
+  color: var(--color-heading);
 }
 
 .markdown-body :deep(h2) {
   font-size: 24px;
   margin: 30px 0 15px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
-  color: #333;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-heading);
 }
 
 .markdown-body :deep(h3) {
   font-size: 20px;
   margin: 20px 0 10px;
-  color: #444;
+  color: var(--color-heading);
 }
 
 .markdown-body :deep(p) {
   margin-bottom: 16px;
-  color: #666;
+  color: var(--color-text);
 }
 
 .markdown-body :deep(ul) {
@@ -181,11 +181,11 @@ const showQRCode = (type: string) => {
 
 .markdown-body :deep(li) {
   margin-bottom: 8px;
-  color: #666;
+  color: var(--color-text);
 }
 
 .markdown-body :deep(a) {
-  color: #42b883;
+  color: var(--color-accent);
   text-decoration: none;
 }
 
@@ -196,13 +196,13 @@ const showQRCode = (type: string) => {
 .about-content h2 {
   font-size: 24px;
   margin: 30px 0 15px;
-  color: #333;
+  color: var(--color-heading);
 }
 
 .about-content p {
   font-size: 16px;
   line-height: 1.6;
-  color: #666;
+  color: var(--color-text);
   margin-bottom: 15px;
 }
 
@@ -213,7 +213,7 @@ const showQRCode = (type: string) => {
 
 .about-content li {
   margin-bottom: 10px;
-  color: #666;
+  color: var(--color-text);
 }
 
 .sidebar {
@@ -225,23 +225,23 @@ const showQRCode = (type: string) => {
 }
 
 .sidebar-card {
-  background: white;
+  background: var(--color-background-soft);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--color-shadow);
   overflow: hidden;
   transition: all 0.3s ease;
 }
 
 .card-header {
   padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-  background: #f8f9fa;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-background-mute);
 }
 
 .card-header h3 {
   margin: 0;
   font-size: 18px;
-  color: #333;
+  color: var(--color-heading);
 }
 
 .card-content {
@@ -264,7 +264,7 @@ const showQRCode = (type: string) => {
   height: 100px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #f0f0f0;
+  border: 3px solid var(--color-border);
 }
 
 .status-indicator {
@@ -272,7 +272,7 @@ const showQRCode = (type: string) => {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 2px solid white;
+  border: 2px solid var(--color-background-soft);
   bottom: 5px;
   right: 5px;
 }
@@ -297,12 +297,12 @@ const showQRCode = (type: string) => {
   margin: 10px 0 5px;
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-heading);
 }
 
 .signature {
   font-size: 14px;
-  color: #666;
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
@@ -317,14 +317,14 @@ const showQRCode = (type: string) => {
   display: flex;
   align-items: center;
   padding: 12px 15px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--color-border);
   cursor: pointer;
   transition: all 0.3s ease;
   border-radius: 4px;
 }
 
 .contact-item:hover {
-  background-color: #f5f7fa;
+  background-color: var(--color-background-mute);
   transform: translateX(5px);
 }
 
@@ -337,12 +337,12 @@ const showQRCode = (type: string) => {
   margin-right: 10px;
   width: 24px;
   text-align: center;
-  color: #42b883;
+  color: var(--color-accent);
 }
 
 .contact-item span {
   font-size: 14px;
-  color: #333;
+  color: var(--color-text);
 }
 
 /* 音乐播放器卡片样式 */
@@ -358,12 +358,12 @@ const showQRCode = (type: string) => {
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 5px;
-  color: #333;
+  color: var(--color-heading);
 }
 
 .artist {
   font-size: 14px;
-  color: #666;
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
@@ -382,7 +382,7 @@ const showQRCode = (type: string) => {
 }
 
 .qr-content {
-  background: white;
+  background: var(--color-background-soft);
   padding: 30px;
   border-radius: 8px;
   text-align: center;
@@ -392,7 +392,7 @@ const showQRCode = (type: string) => {
 
 .qr-content h3 {
   margin-top: 0;
-  color: #333;
+  color: var(--color-heading);
 }
 
 .qr-content img {
@@ -404,11 +404,11 @@ const showQRCode = (type: string) => {
 
 .qr-content p {
   margin: 10px 0;
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .close-btn {
-  background: #42b883;
+  background: var(--color-accent);
   color: white;
   border: none;
   padding: 8px 20px;
@@ -418,7 +418,7 @@ const showQRCode = (type: string) => {
 }
 
 .close-btn:hover {
-  background: #3aa876;
+  opacity: 0.9;
 }
 
 @media (max-width: 992px) {
@@ -458,5 +458,9 @@ const showQRCode = (type: string) => {
   .sidebar-card {
     flex: 1 1 100%;
   }
+}
+
+:global([data-theme="dark"]) .contact-item .iconfont {
+  color: var(--color-accent) !important;
 }
 </style>

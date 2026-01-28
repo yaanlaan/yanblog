@@ -134,10 +134,13 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 30px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 15px;
+  background: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  padding: 15px;
+  border-radius: 8px;
   flex-wrap: wrap;
   gap: 15px;
+  box-shadow: 0 2px 8px var(--color-shadow);
 }
 
 .category-tabs {
@@ -151,7 +154,7 @@ onUnmounted(() => {
   background: none;
   border: none;
   font-size: 15px;
-  color: #666;
+  color: var(--color-text-secondary);
   cursor: pointer;
   padding: 8px 12px;
   border-radius: 6px;
@@ -164,12 +167,12 @@ onUnmounted(() => {
 }
 
 .tab-item:hover {
-  color: #42b883;
-  background-color: rgba(66, 184, 131, 0.05);
+  color: var(--color-accent);
+  background-color: rgba(66, 184, 131, 0.05); /* Usually accent color with opacity is fine */
 }
 
 .tab-item.active {
-  color: #42b883;
+  color: var(--color-accent);
   background-color: rgba(66, 184, 131, 0.1);
   font-weight: 600;
 }
@@ -186,7 +189,7 @@ onUnmounted(() => {
 
 .view-toggles {
   display: flex;
-  background: #f5f5f5;
+  background: var(--color-background-soft);
   padding: 3px;
   border-radius: 8px;
   gap: 2px;
@@ -197,7 +200,7 @@ onUnmounted(() => {
   background: none;
   padding: 6px;
   border-radius: 6px;
-  color: #999;
+  color: var(--color-text-light);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -206,14 +209,14 @@ onUnmounted(() => {
 }
 
 .view-btn:hover {
-  color: #666;
-  background: rgba(0,0,0,0.05);
+  color: var(--color-text);
+  background: var(--color-background-mute);
 }
 
 .view-btn.active {
-  background: white;
-  color: #42b883;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  background: var(--color-background-mute);
+  color: var(--color-accent);
+  box-shadow: 0 2px 5px var(--color-shadow);
 }
 
 .search-wrapper {
@@ -230,23 +233,24 @@ onUnmounted(() => {
 .search-icon {
   position: absolute;
   left: 12px;
-  color: #999;
+  color: var(--color-text-light);
   pointer-events: none;
 }
 
 .search-box input {
   padding: 8px 12px 8px 36px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--color-border);
+  background: var(--color-background-soft);
   border-radius: 20px;
   font-size: 14px;
   width: 200px;
   transition: all 0.3s;
   outline: none;
-  color: #333;
+  color: var(--color-text);
 }
 
 .search-box input:focus {
-  border-color: #42b883;
+  border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgba(66, 184, 131, 0.1);
   width: 240px;
 }

@@ -74,6 +74,14 @@
         </div>
 
         <div class="navbar-right">
+          <!-- 主题切换按钮 -->
+          <button class="theme-toggle-btn" @click="themeStore.toggleTheme" :title="themeStore.theme === 'dark' ? '切换亮色' : '切换暗色'">
+            <!-- Sun Icon -->
+            <svg v-if="themeStore.theme === 'light'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <!-- Moon Icon -->
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          </button>
+
           <div class="search-container">
             <input 
               type="text" 
@@ -122,10 +130,12 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSiteInfoStore } from '@/stores/siteInfo'
+import { useThemeStore } from '@/stores/theme'
 import { storeToRefs } from 'pinia'
 
 const siteInfoStore = useSiteInfoStore()
 const { siteInfo } = storeToRefs(siteInfoStore)
+const themeStore = useThemeStore()
 
 // 导航栏可见性状态
 const isNavVisible = ref(true)
@@ -176,8 +186,8 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .navbar {
-  background-color: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--color-background-soft);
+  box-shadow: 0 2px 4px var(--color-shadow);
   position: fixed;
   top: 0;
   left: 0;
@@ -287,7 +297,7 @@ onBeforeUnmount(() => {
 .blog-name {
   font-size: 1.1em; /* 稍微减小字体 */
   font-weight: bold;
-  color: #333;
+  color: var(--color-heading);
 }
 
 .navbar-center {
@@ -318,7 +328,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  color: #2c3e50;
+  color: var(--color-text);
   padding: 6px 12px; /* 减小 padding */
   border-radius: 8px;
   transition: all 0.3s ease;
@@ -327,14 +337,14 @@ onBeforeUnmount(() => {
 }
 
 .nav-link:hover {
-  color: #42b883;
+  color: var(--color-accent);
   transform: translateY(-1px); /* 减小位移 */
-  background-color: rgba(66, 184, 131, 0.1);
+  background-color: var(--color-border-hover);
 }
 
 .nav-link.active {
-  color: #42b883;
-  background-color: rgba(66, 184, 131, 0.1);
+  color: var(--color-accent);
+  background-color: var(--color-border-hover);
 }
 
 .nav-link i {
@@ -352,23 +362,24 @@ onBeforeUnmount(() => {
   top: 100%;
   left: 50%;
   transform: translateX(-50%) translateY(10px);
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--color-background-soft);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 12px;
   padding: 6px;
   min-width: 140px;
   box-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06),
-    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+    0 4px 6px -1px var(--color-shadow),
+    0 2px 4px -1px var(--color-shadow),
+    0 0 0 1px var(--color-border) inset;
+  border: 1px solid var(--color-border);
   opacity: 0;
   visibility: hidden;
   transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   z-index: 1000;
   margin-top: 5px;
 }
+
 
 .dropdown-container:hover .dropdown-menu {
   opacity: 1;
@@ -385,14 +396,14 @@ onBeforeUnmount(() => {
   transform: translateX(-50%);
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-bottom: 6px solid rgba(255, 255, 255, 0.85);
+  border-bottom: 6px solid var(--color-background-soft);
 }
 
 .dropdown-item {
   display: flex;
   align-items: center;
   padding: 8px 12px;
-  color: #333;
+  color: var(--color-text);
   text-decoration: none;
   border-radius: 8px;
   transition: all 0.2s ease;
@@ -402,7 +413,7 @@ onBeforeUnmount(() => {
 }
 
 .dropdown-item:hover {
-  background-color: #007AFF; /* Mac Blue */
+  background-color: var(--color-accent); /* Mac Blue */
   color: white;
 }
 
@@ -427,10 +438,28 @@ onBeforeUnmount(() => {
   gap: 20px;
 }
 
+.theme-toggle-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text);
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle-btn:hover {
+  background-color: var(--color-border-hover);
+  color: var(--color-accent);
+}
+
 .search-container {
   display: flex;
   align-items: center;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 25px;
   overflow: hidden;
   width: 250px;
@@ -440,8 +469,8 @@ onBeforeUnmount(() => {
 
 .search-container:focus-within {
   width: 300px;
-  box-shadow: 0 0 0 2px #42b883;
-  border-color: #42b883;
+  box-shadow: 0 0 0 2px var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 .search-box {
@@ -452,6 +481,12 @@ onBeforeUnmount(() => {
   outline: none;
   background: transparent;
   font-size: 14px;
+  color: var(--color-text);
+}
+
+.search-box::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.8;
 }
 
 .search-icon {
@@ -460,18 +495,18 @@ onBeforeUnmount(() => {
   background-color: transparent;
   border: none;
   outline: none;
-  color: #666;
+  color: var(--color-text-secondary);
   transition: all 0.3s ease;
   border-radius: 0 25px 25px 0;
 }
 
 .search-container:focus-within .search-icon {
-  color: #42b883;
-  background-color: rgba(66, 184, 131, 0.1);
+  color: var(--color-accent);
+  background-color: var(--color-border-hover);
 }
 
 .login-btn {
-  background-color: #42b883;
+  background-color: var(--color-accent);
   color: white;
   text-decoration: none;
   width: 36px;
@@ -513,9 +548,9 @@ onBeforeUnmount(() => {
   width: 40px;
   height: 40px;
   z-index: 999;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-background-soft);
   border-radius: 50%;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px var(--color-shadow);
   padding: 2px;
   opacity: 0;
   transform: translateX(20px);

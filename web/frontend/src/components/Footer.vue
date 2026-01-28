@@ -46,9 +46,9 @@
 
 .copyright-container {
   width: 100%;
-  background-color: rgba(255, 255, 255, 0.6);
+  background-color: var(--color-background-soft);
   backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(66, 184, 131, 0.2);
+  border-top: 1px solid var(--color-border);
   padding: 30px 0;
   margin-top: 50px;
 }

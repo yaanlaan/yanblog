@@ -115,20 +115,20 @@ const highlightText = (text: string) => {
 
 <style scoped>
 .article-card {
-  background: #fff;
+  background: var(--color-background-soft);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 12px var(--color-shadow);
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
   height: 100%;
-  border: 1px solid rgba(0,0,0,0.05);
+  border: 1px solid var(--color-border);
 }
 
 .article-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); /* Slightly stronger shadow on hover is okay, or use var if available */
 }
 
 .card-cover {
@@ -164,7 +164,7 @@ const highlightText = (text: string) => {
 }
 
 :deep(.article-link) {
-  color: #2c3e50;
+  color: var(--color-heading);
   text-decoration: none;
   transition: color 0.2s;
   font-size: 20px !important;
@@ -175,7 +175,7 @@ const highlightText = (text: string) => {
 }
 
 :deep(.article-link:hover) {
-  color: #42b883;
+  color: var(--color-accent);
 }
 
 .card-meta-row {
@@ -186,7 +186,7 @@ const highlightText = (text: string) => {
   margin-bottom: 20px;
   flex-grow: 1;
   font-size: 12px;
-  color: #999;
+  color: var(--color-text-light);
 }
 
 .meta-item {
@@ -215,7 +215,7 @@ const highlightText = (text: string) => {
 }
 
 .card-footer {
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--color-border);
   padding-top: 15px;
   display: flex;
   justify-content: center;
@@ -223,7 +223,7 @@ const highlightText = (text: string) => {
 
 .date-text {
   font-size: 12px;
-  color: #999;
+  color: var(--color-text-secondary);
   font-family: monospace;
   display: flex;
   align-items: center;
@@ -258,7 +258,7 @@ const highlightText = (text: string) => {
 }
 
 .card-desc {
-  color: #666;
+  color: var(--color-text-secondary);
   font-size: 14px;
   line-height: 1.6;
   margin-bottom: 15px;

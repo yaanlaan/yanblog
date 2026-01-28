@@ -133,11 +133,11 @@ const splitTags = (tags: string) => {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #2c3e50;
+  color: var(--color-heading);
 }
 
 .title-icon {
-  color: #42b883; /* 主题色图标 */
+  color: var(--color-accent); /* 主题色图标 */
   flex-shrink: 0;
 }
 
@@ -154,7 +154,7 @@ const splitTags = (tags: string) => {
 }
 
 .article-title a:hover {
-  color: #42b883;
+  color: var(--color-accent);
 }
 
 /* Meta信息行 (标签等) */
@@ -165,7 +165,7 @@ const splitTags = (tags: string) => {
   gap: 15px;
   margin-bottom: 12px;
   font-size: 12px;
-  color: #999;
+  color: var(--color-text-light);
 }
 
 .meta-item {
@@ -177,7 +177,7 @@ const splitTags = (tags: string) => {
 }
 
 .meta-item:hover {
-  color: #42b883;
+  color: var(--color-accent);
 }
 
 .meta-item svg {
@@ -200,7 +200,7 @@ const splitTags = (tags: string) => {
 }
 
 .article-summary p {
-  color: #666;
+  color: var(--color-text);
   font-size: 14px;
   line-height: 1.6;
   margin: 0;
@@ -238,13 +238,13 @@ const splitTags = (tags: string) => {
     flex-direction: column;
     height: auto;
     padding: 20px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-border);
   }
   
   /* 移动端取消对角线动画，改用简单背景色 */
   .article-item:hover {
     background-size: 0 0;
-    background-color: #f9f9f9;
+    background-color: var(--color-background-soft);
   }
 
   .article-cover {

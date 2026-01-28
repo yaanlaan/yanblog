@@ -110,8 +110,9 @@ onMounted(async () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(255, 255, 255, 0.85); /* 白色半透明遮罩 */
+  background-color: var(--color-background-overlay); /* 主题适配背景遮罩 */
   backdrop-filter: blur(20px); /* 磨砂模糊效果 */
+  transition: background-color 0.5s ease;
 }
 
 /* App layout styles */
@@ -119,6 +120,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background-color: transparent; /* 防止背景色遮挡 global-bg */
 }
 
 .header {
