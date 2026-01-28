@@ -37,11 +37,18 @@
           <!-- 文章内容 -->
           <div v-else>
             <ArticleHeader v-if="article" :article="article" />
+
+            <div class="article-actions" v-if="article">
+              <button class="action-btn share-btn" @click="openShareCard()">
+                 <i class="iconfont icon-share"></i> 生成分享海报
+              </button>
+            </div>
             
             <ArticleContent 
               v-if="article" 
               :article="article" 
               @image-click="handleImageClick"
+              @share-selection="openShareCard"
             />
             
             <!-- 上一篇/下一篇导航 -->
@@ -122,6 +129,15 @@
         </div>
       </div>
     </div>
+
+    <!-- 分享卡片 -->
+    <ShareCard 
+      :visible="shareVisible" 
+      :title="article?.title || ''" 
+      :content="shareContent"
+      :url="shareUrl"
+      @close="shareVisible = false"
+    />
   </div>
 </template>
 
@@ -134,6 +150,7 @@ import ArticleHeader from '@/components/article/ArticleHeader.vue'
 import ArticleContent from '@/components/article/ArticleContent.vue'
 import ArticleToc from '@/components/article/ArticleToc.vue'
 import GiscusComment from '@/components/comment/GiscusComment.vue'
+import ShareCard from '@/components/ShareCard.vue'
 
 // 默认图片
 const defaultImage = new URL('@/assets/img/无封面.jpg', import.meta.url).href
@@ -174,6 +191,24 @@ const imageAltList = ref<string[]>([])
 const currentImageIndex = ref(0)
 const currentImage = ref('')
 const imageScale = ref(1)
+
+// 分享卡片相关
+const shareVisible = ref(false)
+const shareContent = ref('')
+const shareUrl = ref('')
+
+const openShareCard = (content?: string) => {
+  shareUrl.value = window.location.href
+  if (content) {
+    shareContent.value = content
+  } else if (article.value?.desc) {
+    shareContent.value = article.value.desc
+  } else {
+    // 截取前100字
+    shareContent.value = article.value?.content.slice(0, 100).replace(/[#*`]/g, '') + '...' || ''
+  }
+  shareVisible.value = true
+}
 
 // 处理滚轮缩放
 const handleWheel = (e: WheelEvent) => {
@@ -774,5 +809,38 @@ onMounted(() => {
 .related-date {
   font-size: 12px;
   color: #999;
+}
+
+/* 文章操作栏 */
+.article-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+  padding: 0 10px;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #eee;
+  background: white;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.action-btn:hover {
+  background: #f0f2f5;
+  color: #1890ff;
+  border-color: #1890ff;
+}
+
+.action-btn i {
+  font-size: 16px;
 }
 </style>

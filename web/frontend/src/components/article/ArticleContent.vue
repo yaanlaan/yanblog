@@ -24,12 +24,22 @@
     </div>
 
     <!-- Markdwon 文章 -->
-    <div v-else class="content" v-html="renderedContent" ref="contentRef" @click="handleContentClick"></div>
+    <div v-else class="content" v-html="renderedContent" ref="contentRef" @click="handleContentClick" @mouseup="handleMouseUp"></div>
+    
+    <!-- 划词分享提示按钮 -->
+    <div 
+      v-if="showShareTip" 
+      class="share-tip-btn" 
+      :style="{ top: tipPosition.y + 'px', left: tipPosition.x + 'px' }"
+      @mousedown.prevent="handleShareClick"
+    >
+      <i class="iconfont icon-share"></i> 分享
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUpdated } from 'vue'
+import { computed, ref, onMounted, onUpdated, onUnmounted } from 'vue'
 import { marked } from 'marked'
 import katex from 'katex'
 import hljs from 'highlight.js'
@@ -64,7 +74,80 @@ const contentRef = ref<HTMLElement | null>(null)
 // 定义事件
 const emit = defineEmits<{
   (e: 'imageClick', imageSrc: string, imageAlt: string, images: string[], alts: string[]): void
+  (e: 'shareSelection', text: string): void
 }>()
+
+// 划词分享相关
+const showShareTip = ref(false)
+const tipPosition = ref({ x: 0, y: 0 })
+const selectedText = ref('')
+
+const handleMouseUp = () => {
+  const selection = window.getSelection()
+  if (!selection || selection.isCollapsed) {
+    showShareTip.value = false
+    return
+  }
+
+  const text = selection.toString().trim()
+  if (text.length < 5) { // 太短不显示
+    showShareTip.value = false
+    return
+  }
+
+  selectedText.value = text
+  
+  // 计算位置
+  const range = selection.getRangeAt(0)
+  const rect = range.getBoundingClientRect()
+  
+  // 更新位置 (相对于视口，需要转为相对于页面或绝对定位)
+  // 这里我们使用 fixed 定位在 App 级别或者计算相对于 container 的位置
+  // 为了简单，我们让 share-tip-btn 使用 fixed 定位
+  // 或者计算 scroll
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+  const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft
+  
+  // 获取 contentRef 的偏移量，以便转换为相对于 content 的位置（如果是 absolute）
+  // 或者直接用 fixed (简单且效果好)
+  // 这里假设 share-tip-btn 是 fixed 的
+  
+  // 实际上 .article-main-content 通常是 static 或 relative。
+  // 我们在 handleMouseUp 里计算的是相对于浏览器视口的位置，加上 scroll 就是相对于文档。
+  // 但 tip 是在 .article-main-content 里的。
+  // 简单起见，我们把 CSS 设置为 fixed，直接用 rect.top/left
+  
+  // 将按钮放在选区上方居中
+  tipPosition.value = {
+    x: rect.left + rect.width / 2,
+    y: rect.top - 40 // 向上偏移
+  }
+  
+  showShareTip.value = true
+}
+
+const handleShareClick = () => {
+  emit('shareSelection', selectedText.value)
+  showShareTip.value = false
+  // 清除选区
+  window.getSelection()?.removeAllRanges()
+}
+
+// 监听滚动关闭提示
+const handleScroll = () => {
+  if (showShareTip.value) {
+    showShareTip.value = false
+  }
+}
+
+onMounted(() => {
+  renderPostProcess()
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 
 // 初始化mermaid
 mermaid.initialize({ 
@@ -89,6 +172,10 @@ const renderedContent = computed(() => {
     const validLang = hljs.getLanguage(language) ? language : 'plaintext'
     const highlighted = hljs.highlight(text, { language: validLang }).value
     
+    // 生成行号
+    const lines = text.replace(/\n$/, '').split('\n')
+    const lineNumbers = lines.map((_, i) => `<span>${i + 1}</span>`).join('')
+
     return `<div class="code-wrapper">
               <div class="code-header">
                 <div class="mac-buttons">
@@ -101,7 +188,10 @@ const renderedContent = computed(() => {
                   <span class="copy-text">复制</span>
                 </button>
               </div>
-              <pre><code class="hljs language-${validLang}">${highlighted}</code></pre>
+              <div class="code-body">
+                <div class="line-numbers">${lineNumbers}</div>
+                <pre><code class="hljs language-${validLang}">${highlighted}</code></pre>
+              </div>
             </div>`
   }
 
@@ -300,6 +390,11 @@ const handleContentClick = async (event: MouseEvent) => {
 // 在组件挂载和更新时进行后处理
 onMounted(() => {
   renderPostProcess()
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 
 onUpdated(() => {
@@ -308,6 +403,34 @@ onUpdated(() => {
 </script>
 
 <style scoped>
+.share-tip-btn {
+  position: fixed;
+  z-index: 1000;
+  background: #333;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  user-select: none;
+}
+
+.share-tip-btn::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #333;
+}
+
 .article-description blockquote {
   font-size: 16px;
   color: #666;
@@ -452,12 +575,43 @@ onUpdated(() => {
   color: #fff;
 }
 
-.content :deep(pre) {
+.content :deep(.code-body) {
+  display: flex;
   background: #282c34;
+  overflow: auto;
+  position: relative;
+}
+
+.content :deep(.line-numbers) {
+  padding: 16px 0 16px 10px;
+  text-align: right;
+  color: #495162;
+  border-right: 1px solid #353b45;
+  background: #282c34;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 40px;
+}
+
+.content :deep(.line-numbers span) {
+  padding-right: 10px;
+  line-height: 1.6;
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  height: 22.4px; /* 14px * 1.6 */
+}
+
+.content :deep(pre) {
+  background: transparent;
   padding: 16px;
   margin: 0;
-  overflow: auto;
+  overflow: visible;
   color: #abb2bf;
+  flex: 1;
 }
 
 .content :deep(pre code) {
@@ -465,6 +619,10 @@ onUpdated(() => {
   padding: 0;
   color: inherit;
   border: none;
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.6 !important;
+  display: block;
 }
 
 /* 引用块 (灰白黑风格) */
