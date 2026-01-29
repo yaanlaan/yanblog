@@ -1,7 +1,21 @@
 <template>
   <div class="sidebar-card profile-card">
     <div class="profile-header">
-      <img :src="siteInfo.author_avatar || '/assets/avatar.jpg'" alt="Avatar" class="avatar">
+      <div 
+        class="avatar-wrapper" 
+        @mouseenter="refreshHoverQuote"
+        @mouseleave="showBubble = false"
+      >
+        <img :src="siteInfo.author_avatar || '/assets/avatar.jpg'" alt="Avatar" class="avatar">
+        <!-- 状态指示点 -->
+        <div class="status-dot"></div>
+        <!-- 气泡对话框 -->
+        <Transition name="pop">
+          <div class="speech-bubble" v-if="showBubble">
+            {{ hoverQuote }}
+          </div>
+        </Transition>
+      </div>
     </div>
     <div class="profile-content">
       <h3 class="name">{{ siteInfo.author_name }}</h3>
@@ -54,6 +68,8 @@ const articleCount = ref(0)
 const categoryCount = ref(0)
 const currentQuote = ref('')
 const currentQuoteIndex = ref(0)
+const hoverQuote = ref('')
+const showBubble = ref(false)
 let quoteInterval: number | null = null
 
 const defaultQuotes = [
@@ -68,6 +84,14 @@ const activeQuotes = computed(() => {
     : defaultQuotes
 })
 
+const refreshHoverQuote = () => {
+  if (activeQuotes.value.length > 0) {
+    const randomIndex = Math.floor(Math.random() * activeQuotes.value.length)
+    hoverQuote.value = activeQuotes.value[randomIndex]
+    showBubble.value = true
+  }
+}
+
 onMounted(async () => {
   // 初始化名言
   currentQuote.value = activeQuotes.value[0]
@@ -77,6 +101,7 @@ onMounted(async () => {
     currentQuoteIndex.value = (currentQuoteIndex.value + 1) % activeQuotes.value.length
     currentQuote.value = activeQuotes.value[currentQuoteIndex.value]
   }, 4000) as unknown as number
+
 
   try {
     const artRes = await articleApi.getArticles({ pagesize: 1, pagenum: 1 })
@@ -115,21 +140,78 @@ onUnmounted(() => {
   margin-bottom: 40px;
 }
 
-.avatar {
+.avatar-wrapper {
   width: 80px;
   height: 80px;
-  border-radius: 50%;
-  border: 4px solid var(--color-background-soft);
   position: absolute;
   bottom: -40px;
   left: 50%;
   transform: translateX(-50%);
-  object-fit: cover;
-  transition: transform 0.5s ease;
+  z-index: 10;
+  cursor: pointer;
 }
 
-.avatar:hover {
-  transform: translateX(-50%) rotate(360deg);
+.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 4px solid var(--color-background-soft);
+  object-fit: cover;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background-color: var(--color-background-soft);
+  position: relative;
+  z-index: 1;
+}
+
+.avatar-wrapper:hover .avatar {
+  transform: scale(0.9);
+}
+
+.status-dot {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 16px;
+  height: 16px;
+  background-color: #2ecc71; /* Online green */
+  border: 3px solid var(--color-background-soft);
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
+}
+
+.speech-bubble {
+  position: absolute;
+  bottom: 110%; /* Above avatar */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-background-soft);
+  color: var(--color-text);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  width: max-content;
+  max-width: 220px;
+  box-shadow: 0 4px 12px var(--color-shadow);
+  border: 1px solid var(--color-border);
+  z-index: 20;
+  text-align: center;
+  pointer-events: none; /* Let clicks pass through if needed */
+}
+
+/* Bubble Arrow */
+.speech-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  background-color: var(--color-background-soft);
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  transform: translateX(-50%) rotate(45deg);
 }
 
 .profile-content {
@@ -234,5 +316,17 @@ onUnmounted(() => {
 .fade-slide-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+/* 气泡弹出动画 */
+.pop-enter-active,
+.pop-leave-active {
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.pop-enter-from,
+.pop-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 10px) scale(0.8);
 }
 </style>
