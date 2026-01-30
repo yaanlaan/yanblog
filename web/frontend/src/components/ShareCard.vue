@@ -42,7 +42,7 @@
                 <p class="site-desc">分享自 YanBlog</p>
               </div>
               <div class="qrcode-wrapper">
-                <img :src="qrcodeUrl" class="qrcode-img" />
+                <img v-if="qrcodeUrl" :src="qrcodeUrl" class="qrcode-img" />
                 <span class="scan-tip">扫码阅读全文</span>
               </div>
             </div>
@@ -76,7 +76,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
-import QRCode from 'qrcode'
+import * as QRCode from 'qrcode'
 import html2canvas from 'html2canvas'
 
 const props = defineProps<{
@@ -108,15 +108,15 @@ const currentTheme = computed(() => {
 })
 
 // 生成二维码
-watch(() => props.visible, async (val) => {
-  if (val && props.url) {
+watch([() => props.visible, () => props.url], async ([visible, url]) => {
+  if (visible && url) {
     try {
-      qrcodeUrl.value = await QRCode.toDataURL(props.url, {
+      qrcodeUrl.value = await QRCode.toDataURL(url, {
         margin: 1,
-        width: 100,
+        width: 120, // 稍微清晰一点
         color: {
           dark: '#000000',
-          light: '#ffffff00' // 透明背景
+          light: '#ffffff' // 使用白底，避免透明底导致的问题
         }
       })
     } catch (err) {
@@ -360,15 +360,12 @@ const generateImage = async () => {
   width: 60px;
   height: 60px;
   display: block;
-  mix-blend-mode: multiply; /* 混合模式，去掉白底(虽然生成时已经是透明底) */
+  border-radius: 4px; /* Slight radius */
 }
 
 /* 暗色模式二维码特殊处理 */
 .share-card.dark .qrcode-img {
-  background: white; /* 必须有白底才能扫 */
-  padding: 2px;
-  border-radius: 4px;
-  mix-blend-mode: normal;
+  border: 2px solid white; /* Add border for visibility in dark mode */
 }
 
 .scan-tip {

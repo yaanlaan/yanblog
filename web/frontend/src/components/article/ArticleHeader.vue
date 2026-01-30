@@ -1,37 +1,74 @@
 <template>
   <div class="article-header">
     <h1 class="article-title">{{ article.title }}</h1>
+    
+    <div class="article-meta-row">
+      <div class="author-info">
+        <img :src="siteInfo.author_avatar || '/assets/avatar.jpg'" class="author-avatar" alt="author">
+        <div class="author-details">
+          <span class="author-name">{{ siteInfo.author_name || 'yaan' }}</span>
+          <span class="publish-date">{{ formatDate(article.createdAt) }}</span>
+        </div>
+      </div>
+      
+      <div class="meta-stats">
+         <span class="meta-item" title="字数">
+           <i class="iconfont icon-file-text"></i> {{ formatNumber(wordCount) }} 字
+         </span>
+         <span class="meta-item" title="阅读时间">
+            <i class="iconfont icon-clock-circle"></i> 约 {{ readingTime }} 分钟
+         </span>
+         <span class="meta-item" title="分类" v-if="article.categoryName">
+            <i class="iconfont icon-folder"></i> {{ article.categoryName }}
+         </span>
+      </div>
+    </div>
+
+    <!-- 操作按钮行 -->
+    <div class="article-actions-bar">
+      <div class="left-actions">
+        <button class="action-btn-pill like-btn" @click="$emit('like')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> 
+          {{ article.likes || 3 }}
+        </button>
+        <button class="action-btn-pill subscribe-btn" @click="$emit('subscribe')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+          订阅
+        </button>
+      </div>
+      
+      <div class="right-actions">
+         <button class="action-btn-pill comment-btn" title="评论" @click="$emit('comment')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            {{ article.commentCount || 0 }}
+         </button>
+         <button class="action-btn-pill share-btn" title="分享" @click="$emit('share')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+         </button>
+      </div>
+    </div>
+
     <div class="article-image" v-if="article.img || defaultImage">
       <img :src="article.img || defaultImage" :alt="article.title" />
-    </div>
-    <div class="article-meta">
-      <span class="category">
-        分类: {{ article.categoryName }}
-      </span>
-      <span class="date">
-        发布时间: {{ formatDate(article.createdAt) }}
-      </span>
-      <span class="date">
-        更新时间: {{ formatDate(article.updatedAt) }}
-      </span>
-      <span class="tags" v-if="article.tags">
-        标签: {{ article.tags }}
-      </span>
-      <span class="word-count">
-        字数: {{ formatNumber(wordCount) }}
-      </span>
-      <span class="reading-time">
-        预计阅读: {{ readingTime }} 分钟
-      </span>
-      <span class="views">
-        阅读: {{ article.views || 0 }}
-      </span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useSiteInfoStore } from '@/stores/siteInfo'
+
+const siteInfoStore = useSiteInfoStore()
+const siteInfo = computed(() => siteInfoStore.siteInfo)
+
+// 定义事件
+const emit = defineEmits<{
+  (e: 'share'): void
+  (e: 'comment'): void
+  (e: 'like'): void
+  (e: 'subscribe'): void
+}>()
+
 
 // 定义Props
 interface Article {
@@ -101,60 +138,173 @@ const formatNumber = (num: number) => {
 
 <style scoped>
 .article-header {
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 40px;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .article-title {
-  font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 20px;
+  font-size: 36px;
+  font-weight: 800;
+  margin-bottom: 25px;
   color: var(--color-heading);
-  line-height: 1.3;
+  line-height: 1.4;
+  letter-spacing: -0.5px;
 }
+
+.article-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end; /* Align to bottom so date aligns with stats */
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding-bottom: 25px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.author-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-background);
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+
+.author-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.author-name {
+  font-weight: 600;
+  color: var(--color-heading);
+  font-size: 15px;
+}
+
+.publish-date {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.meta-stats {
+  display: flex;
+  gap: 15px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.article-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.left-actions, .right-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.action-btn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 8px; /* Slightly squarer like screenshot */
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: 36px;
+  min-width: 60px;
+  justify-content: center;
+}
+
+.action-btn-pill:hover {
+  background: var(--color-background-soft);
+  border-color: var(--color-text-secondary);
+}
+
+.like-btn svg {
+  color: var(--color-text-secondary);
+}
+
+.like-btn:hover svg {
+  color: #ff6b6b;
+  fill: #ff6b6b; /* Optionally fill on hover */
+}
+
+.subscribe-btn svg {
+  color: var(--color-text-secondary);
+}
+
+/* Comment and Share buttons share the same pill style now */
+.comment-btn, .share-btn {
+  /* Inherits action-btn-pill */
+}
+
 
 .article-image {
   width: 100%;
-  height: 300px;
+  height: auto;
+  /* Removed max-height to display full image */
   overflow: hidden;
-  margin-bottom: 20px;
-  border-radius: 8px;
+  margin-bottom: 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
 }
 
 .article-image img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  /* Removed fixed height to maintain aspect ratio */
+  height: auto;
+  display: block;
+  object-fit: contain; /* Ensure full image is visible */
+  transition: transform 0.5s ease;
 }
 
-.article-meta {
-  display: flex;
-  gap: 20px;
-  font-size: 14px;
-  color: var(--color-text-secondary);
-}
-
-.article-meta .word-count,
-.article-meta .reading-time {
-  background-color: var(--color-background-mute);
-  padding: 2px 8px;
-  border-radius: 4px;
-  color: var(--color-accent);
+.article-image:hover img {
+  transform: scale(1.02);
 }
 
 @media (max-width: 768px) {
   .article-title {
-    font-size: 24px;
+    font-size: 26px;
   }
   
-  .article-meta {
+  .article-meta-row {
     flex-direction: column;
-    gap: 5px;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .meta-stats {
+    width: 100%;
+    justify-content: flex-start;
+    padding-left: 60px; /* Align with text not avatar */
+    margin-top: -10px;
   }
   
   .article-image {
-    height: 200px;
+    max-height: 300px;
   }
 }
 </style>

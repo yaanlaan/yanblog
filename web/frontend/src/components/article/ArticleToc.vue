@@ -1,8 +1,15 @@
 <template>
   <div class="article-toc" v-if="tocItems.length > 0">
-    <div class="toc-header" @click="$emit('close')" title="收起目录栏">
-      <h3 class="toc-title">目录</h3>
-      <span class="toggle-icon">◀</span>
+    <div class="toc-header" title="收起目录栏">
+      <div class="toc-title-wrapper">
+        <!-- List Icon SVG -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toc-icon"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+        <h3 class="toc-title">目录</h3>
+      </div>
+      <button class="toc-close-btn" @click.stop="$emit('close')" title="关闭">
+        <!-- Close Icon SVG -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
     </div>
     <ul class="toc-list" ref="tocListRef">
       <li 
@@ -150,33 +157,56 @@ onBeforeUnmount(() => {
 
 .toc-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* Space out title and button */
   align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--color-border);
-  cursor: pointer;
+  margin-bottom: 12px;
+  padding-bottom: 0;
+  border-bottom: none;
+  cursor: default;
   user-select: none;
 }
 
-.toc-header:hover .toggle-icon {
+.toc-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--color-accent);
 }
 
-.toc-title {
+.toc-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.toc-close-btn:hover {
+  background-color: var(--color-background-soft);
+  color: var(--color-text);
+}
+
+.toc-close-btn i {
   font-size: 16px;
-  font-weight: 600;
+}
+
+.toc-icon {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.toc-title {
+  font-size: 18px;
+  font-weight: bold;
   margin: 0;
   padding: 0;
   border: none;
   color: var(--color-heading);
-}
-
-.toggle-icon {
-  font-size: 14px;
-  color: var(--color-text-secondary);
-  transition: transform 0.3s;
-  display: inline-block;
 }
 
 .toc-list {
@@ -186,6 +216,18 @@ onBeforeUnmount(() => {
   overflow-y: auto;
   flex: 1;
   scrollbar-width: none; /* Firefox */
+  position: relative;
+}
+
+.toc-list::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--color-border);
+  z-index: 0;
 }
 
 .toc-list::-webkit-scrollbar {
@@ -193,26 +235,32 @@ onBeforeUnmount(() => {
 }
 
 .toc-item {
-  margin-bottom: 4px;
+  margin-bottom: 0;
   line-height: 1.5;
   cursor: pointer;
-  border-left: 3px solid transparent;
+  border-left: 2px solid transparent;
   transition: all 0.2s;
-  border-radius: 0 4px 4px 0;
+  border-radius: 0;
+  position: relative;
+  z-index: 1;
+  padding-left: 15px; /* Base padding */
+  margin-left: 0;
 }
 
 .toc-item-level-1 {
-  padding-left: 10px;
   font-weight: 600;
+  font-size: 15px;
+  margin-top: 8px;
 }
 
 .toc-item-level-2 {
-  padding-left: 25px;
-  font-size: 0.95em;
+  padding-left: 28px; /* Indent for level 2 */
+  font-size: 14px;
+  color: var(--color-text-secondary);
 }
 
 .toc-link {
-  color: var(--color-text);
+  color: var(--color-text-secondary);
   text-decoration: none;
   display: block;
   padding: 6px 0;
@@ -223,16 +271,16 @@ onBeforeUnmount(() => {
 }
 
 .toc-item:hover .toc-link {
-  color: var(--color-accent);
+  color: var(--color-heading);
 }
 
 .toc-item.active {
   border-left-color: var(--color-accent);
-  background-color: rgba(66, 184, 131, 0.08); /* Keep this or use very low opacity accent */
+  background-color: transparent; 
 }
 
 .toc-item.active .toc-link {
   color: var(--color-accent);
-  font-weight: 500;
+  font-weight: 600;
 }
 </style>

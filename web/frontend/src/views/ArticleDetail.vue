@@ -1,25 +1,30 @@
 <template>
   <div class="article-detail-page">
     <MainLayout>
-      <template #leftSidebar v-if="article && article.type !== 2 && isTocOpen">
-        <!-- 仅非 PDF 文章显示目录 -->
-        <ArticleToc 
-          :content="article.content" 
-          ref="tocRef"
-          @close="isTocOpen = false"
-        />
-      </template>
+      <!-- 移除原有的左侧边栏插槽，将目录改为固定定位 -->
+      <!-- <template #leftSidebar> ... </template> -->
 
       <template #main>
-        <!-- 目录展开按钮 (当目录收起时显示) -->
+        <!-- 悬浮目录 (仅在大屏显示) -->
+        <div class="fixed-toc-wrapper" v-if="article && article.type !== 2 && isTocOpen">
+           <ArticleToc 
+             :content="article.content" 
+             ref="tocRef"
+             @close="isTocOpen = false"
+           />
+        </div>
+
+        <!-- 目录展开悬浮按钮 (当目录收起时显示) -->
         <div 
           v-if="!isTocOpen && article && article.type !== 2" 
           class="toc-fab" 
           @click="isTocOpen = true"
           title="展开目录"
         >
-          <span class="fab-icon">☰</span>
+          <!-- List Icon SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fab-icon"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
         </div>
+
 
         <div class="page-header">
           <router-link to="/articles" class="back-link">
@@ -36,15 +41,18 @@
           
           <!-- 文章内容 -->
           <div v-else>
-            <ArticleHeader v-if="article" :article="article" />
+            <ArticleHeader 
+              v-if="article" 
+              :article="article" 
+              @share="handleHeaderShare"
+              @comment="scrollToComments"
+              @like="handleLike"
+              @subscribe="handleSubscribe"
+            />
 
-            <div class="article-actions" v-if="article">
-              <button class="action-btn share-btn" @click="openShareCard()">
-                 <i class="iconfont icon-share"></i> 生成分享海报
-              </button>
-            </div>
+            <!-- <div class="article-actions" v-if="article"> ... </div> -->
             
-            <ArticleContent 
+            <ArticleContent
               v-if="article" 
               :article="article" 
               @image-click="handleImageClick"
@@ -265,6 +273,39 @@ const getArticleDetail = async (id: number) => {
   } finally {
     loading.value = false
   }
+}
+
+const scrollToComments = () => {
+    const commentsEl = document.querySelector('.giscus') || document.querySelector('#comments')
+    if (commentsEl) {
+        commentsEl.scrollIntoView({ behavior: 'smooth' })
+    }
+}
+
+const handleLike = () => {
+    if (article.value) {
+        // @ts-ignore
+        article.value.likes = (article.value.likes || 0) + 1
+    }
+}
+
+const handleSubscribe = () => {
+    alert('订阅功能开发中')
+}
+
+const handleHeaderShare = () => {
+  // 确保 URL 存在，否则二维码不会生成
+  shareUrl.value = window.location.href
+
+  // 当点击头部分享按钮时，如果没有选中文本，则使用文章描述或摘要
+  // 总是重置为空，以便获取默认描述
+  shareContent.value = ''
+  
+  const desc = article.value?.desc
+  // 限制字数
+  shareContent.value = desc ? (desc.length > 80 ? desc.substring(0, 80) + '...' : desc) : (article.value?.title || '')
+  
+  shareVisible.value = true
 }
 
 // 格式化日期
@@ -708,98 +749,112 @@ onMounted(() => {
 
 .toc-fab {
   position: fixed;
-  bottom: 30px;
-  left: 30px;
-  width: 50px;
-  height: 50px;
-  background-color: var(--color-background-soft);
-  border-radius: 50%;
-  box-shadow: 0 4px 12px var(--color-shadow);
+  top: 100px; /* Align with TOC top */
+  left: 40px; /* Align with TOC left */
+  bottom: auto; /* Override previous bottom */
+  width: 40px;
+  height: 40px;
+  background-color: var(--color-background);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 99;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  color: var(--color-text);
+  transition: all 0.3s ease;
+  color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
 }
 
 .toc-fab:hover {
-  transform: translateY(-5px) scale(1.05);
-  background-color: var(--color-accent);
-  color: white;
-  box-shadow: 0 8px 24px var(--color-shadow);
+  transform: translateX(5px); /* Move slightly right to indicate expansion */
+  color: var(--color-accent);
   border-color: var(--color-accent);
+  box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.2);
 }
 
 .toc-fab .fab-icon {
   font-size: 20px;
-  font-weight: bold;
 }
 
 /* 相关文章样式 */
 .related-articles-section {
-  margin: 40px 0;
-  padding-top: 20px;
-  border-top: 1px solid var(--color-border);
+  margin: 60px 0;
+  padding-top: 30px;
+  border-top: 1px dashed var(--color-border);
 }
 
 .section-title {
-  font-size: 20px;
-  margin-bottom: 20px;
+  font-size: 22px;
+  margin-bottom: 25px;
   color: var(--color-heading);
-  font-weight: 600;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .related-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns */
+  gap: 24px;
 }
 
 .related-card {
-  display: block;
+  display: flex;
+  flex-direction: column;
   text-decoration: none;
-  background: var(--color-background-soft);
-  border-radius: 8px;
+  background: var(--color-background);
+  border-radius: 16px; /* Larger card radius */
   overflow: hidden;
-  box-shadow: 0 2px 8px var(--color-shadow);
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* Minimal shadow */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   height: 100%;
+  border: 1px solid var(--color-border);
+  padding: 10px; /* Add internal padding */
+  gap: 12px;
 }
 
 .related-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px var(--color-shadow);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+  border-color: var(--color-border-hover);
 }
 
 .related-cover {
-  height: 120px;
+  height: 160px; /* Taller cover */
   overflow: hidden;
+  position: relative;
+  border-radius: 10px; /* Round the image itself */
 }
 
 .related-cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.5s ease;
 }
 
 .related-card:hover .related-cover img {
-  transform: scale(1.1);
+  transform: scale(1.08); /* Smoother zoom */
 }
 
 .related-info {
-  padding: 12px;
+  padding: 12px 4px 0; /* Reduced padding to align with inset image */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .related-item-title {
-  margin: 0 0 8px;
-  font-size: 15px;
-  color: var(--color-text);
-  line-height: 1.4;
-  height: 42px; /* 2 lines */
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-heading);
+  line-height: 1.5;
+  height: 48px; /* 2 lines exactly */
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -809,6 +864,16 @@ onMounted(() => {
 .related-date {
   font-size: 12px;
   color: var(--color-text-secondary);
+  display: inline-block;
+  background: var(--color-background-soft);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .related-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* 文章操作栏 */
@@ -843,5 +908,37 @@ onMounted(() => {
 
 .action-btn i {
   font-size: 16px;
+}
+
+/* 固定目录样式 */
+.fixed-toc-wrapper {
+  position: fixed;
+  top: 100px;
+  left: 40px;
+  width: 260px;
+  bottom: 40px;
+  z-index: 10;
+  overflow-y: visible; /* Adjust inside component */
+}
+
+/* 调整文章内容容器 */
+.article-content {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  max-width: 1100px; /* Wider content */
+  margin: 0 auto;
+}
+
+/* 适配小屏幕：隐藏固定目录 */
+@media (max-width: 1450px) {
+  .fixed-toc-wrapper {
+    display: none;
+  }
+  
+  .toc-fab {
+    display: flex !important; /* Force show fab on smaller screens if they want toc */
+  }
 }
 </style>

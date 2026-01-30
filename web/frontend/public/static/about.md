@@ -69,3 +69,4 @@
 3.  **维护**: 直接修改挂载的配置文件或替换静态资源图片，刷新即可生效。
 
 ## 视频示例
+<iframe src="//player.bilibili.com/player.html?isOutside=true&aid=626357031&bvid=BV1yt4y1Q7SS&cid=210738676&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>

@@ -611,7 +611,7 @@ onBeforeUnmount(() => {
   text-align: center;
   font-size: 1.3em; /* 稍微减小字体 */
   font-weight: bold;
-  color: #333;
+  color: var(--color-heading);
   display: flex;
   justify-content: center;
   align-items: center;
