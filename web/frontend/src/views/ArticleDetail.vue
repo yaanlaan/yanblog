@@ -46,8 +46,6 @@
               :article="article" 
               @share="handleHeaderShare"
               @comment="scrollToComments"
-              @like="handleLike"
-              @subscribe="handleSubscribe"
             />
 
             <!-- <div class="article-actions" v-if="article"> ... </div> -->
@@ -150,7 +148,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { articleApi } from '@/services/api'
 import MainLayout from '@/components/layout/MainLayout.vue'
@@ -280,17 +278,6 @@ const scrollToComments = () => {
     if (commentsEl) {
         commentsEl.scrollIntoView({ behavior: 'smooth' })
     }
-}
-
-const handleLike = () => {
-    if (article.value) {
-        // @ts-ignore
-        article.value.likes = (article.value.likes || 0) + 1
-    }
-}
-
-const handleSubscribe = () => {
-    alert('订阅功能开发中')
 }
 
 const handleHeaderShare = () => {
@@ -471,7 +458,9 @@ onMounted(() => {
 })
 
 // 组件卸载时移除事件监听
-// 注意：在Vue 3的组合式API中，需要手动清理事件监听器
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <style scoped>

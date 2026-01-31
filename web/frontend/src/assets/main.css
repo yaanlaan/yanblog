@@ -24,18 +24,18 @@
 }
 
 /* 自定义滚动条样式 - WebKit浏览器 (Chrome, Safari, Edge) */
-body::-webkit-scrollbar-track {
-  -webkit-box-shadow: inset 0 0 6px rgba(116, 116, 116, 0);
-  background-color: rgb(214, 212, 212);
+::-webkit-scrollbar-track {
+  background-color: var(--color-background);
 }
 
-body::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: 14px;
-  background-color: rgb(255, 255, 255);
+  background-color: var(--color-background);
 }
 
-body::-webkit-scrollbar-thumb {
-  height: 5px;
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: var(--color-text-secondary); /* Fallback */
   background-image: -webkit-gradient(linear,
       left bottom,
       left top,
@@ -44,8 +44,15 @@ body::-webkit-scrollbar-thumb {
       color-stop(0.8, rgb(163, 216, 212)));
 }
 
+/* Dark mode adjustment for scrollbar thumb gradient */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+     opacity: 0.8;
+  }
+}
+
 /* 隐藏滚动条上下箭头 */
-body::-webkit-scrollbar-button {
+::-webkit-scrollbar-button {
   display: none;
 }
 

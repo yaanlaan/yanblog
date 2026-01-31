@@ -13,34 +13,29 @@
       
       <div class="meta-stats">
          <span class="meta-item" title="字数">
-           <i class="iconfont icon-file-text"></i> {{ formatNumber(wordCount) }} 字
+           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+           {{ formatNumber(wordCount) }} 字
          </span>
          <span class="meta-item" title="阅读时间">
-            <i class="iconfont icon-clock-circle"></i> 约 {{ readingTime }} 分钟
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            约 {{ readingTime }} 分钟
          </span>
-         <span class="meta-item" title="分类" v-if="article.categoryName">
-            <i class="iconfont icon-folder"></i> {{ article.categoryName }}
+         <span class="meta-item tag-item" title="分类" v-if="article.categoryName">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+            {{ article.categoryName }}
          </span>
       </div>
     </div>
 
     <!-- 操作按钮行 -->
     <div class="article-actions-bar">
-      <div class="left-actions">
-        <button class="action-btn-pill like-btn" @click="$emit('like')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> 
-          {{ article.likes || 3 }}
-        </button>
-        <button class="action-btn-pill subscribe-btn" @click="$emit('subscribe')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
-          订阅
-        </button>
-      </div>
+      <!-- 占位，保持右对齐 -->
+      <div></div>
       
       <div class="right-actions">
          <button class="action-btn-pill comment-btn" title="评论" @click="$emit('comment')">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-            {{ article.commentCount || 0 }}
+            评论
          </button>
          <button class="action-btn-pill share-btn" title="分享" @click="$emit('share')">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
@@ -197,15 +192,51 @@ const formatNumber = (num: number) => {
 
 .meta-stats {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   font-size: 13px;
   color: var(--color-text-secondary);
+  flex-wrap: wrap;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--color-background-soft); /* Light background */
+  border: 1px solid var(--color-border);
+  border-radius: 12px; /* Pill shape */
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+  cursor: default;
+}
+
+.meta-item:hover {
+  background: var(--color-background-mute);
+  border-color: var(--color-border-hover);
+}
+
+.meta-item svg {
+  color: var(--color-text-secondary);
+  opacity: 0.8;
+}
+
+/* Category specific style to make it pop */
+.tag-item {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background: transparent;
+}
+
+.tag-item:hover {
+  background: var(--color-accent);
+  color: white;
+}
+
+.tag-item svg {
+  color: currentColor;
+  opacity: 1;
 }
 
 .article-actions-bar {

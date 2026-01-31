@@ -48,6 +48,20 @@
                 <el-input v-model="configForm.logo_text" />
               </el-form-item>
 
+              <el-form-item label="允许访问域名">
+                  <el-select
+                    v-model="configForm.allowed_hosts"
+                    multiple
+                    filterable
+                    allow-create
+                    default-first-option
+                    :reserve-keyword="false"
+                    placeholder="输入域名并回车添加"
+                  >
+                  </el-select>
+                  <div class="form-tip">用于 Vite 开发环境的 allowedHosts 设置，修改后可能需要重启服务</div>
+              </el-form-item>
+
               <el-form-item label="Logo图标">
                 <image-uploader v-model="configForm.logo_image" />
               </el-form-item>
@@ -305,6 +319,10 @@ const loadConfig = async () => {
       configContent.value = res.data.data
       try {
         configForm.value = yaml.load(configContent.value) || {}
+        // 确保数组存在
+        if (!Array.isArray(configForm.value.allowed_hosts)) {
+          configForm.value.allowed_hosts = []
+        }
       } catch (e) {
         console.error('Initial YAML parse error', e)
         mode.value = 'yaml'

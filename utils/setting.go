@@ -69,3 +69,12 @@ func LoadConfig(file []byte) {
 	}
 	fmt.Printf("数据库配置加载成功: %+v\n", ServerConfig.Database)
 }
+
+// SaveConfig 保存配置到文件
+func SaveConfig() error {
+	data, err := yaml.Marshal(&ServerConfig)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile("config/config.yaml", data, 0644)
+}

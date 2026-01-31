@@ -17,3 +17,4 @@ weather:
   Provider: openweathermap
   ApiKey: 
   DefaultCity: Hefei
+FrontEndConfigPath: /app/frontend_config.yaml

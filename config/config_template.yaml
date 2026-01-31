@@ -1,6 +1,7 @@
 server:
   AppMode: debug
   HttpPort: :8080
+  
 # 如果需要可以自己修改，这是docker的默认配置
 database:
   Db: mysql
