@@ -20,6 +20,7 @@ export interface SiteInfo {
   logo_image: string
   favicon: string
   admin_url: string
+  dev_admin_port?: number // 新增: 开发模式端口配置
   page_title: {
     default: string
     blur: string
@@ -119,6 +120,7 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
     logo_image: '',
     favicon: '',
     admin_url: '',
+    dev_admin_port: 3011, // 默认值
     page_title: {
       default: '',
       blur: ''
@@ -183,6 +185,27 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
       if (response.data) {
         // 解析 YAML 内容
         const parsedConfig = yaml.load(response.data) as SiteInfo
+
+        // --- 动态适配后台管理地址 (Localhost/LAN 模式) ---
+        // 如果当前通过 localhost 或内网 IP 访问，自动将后台地址指向本机的 3011 端口
+        // 这样在本地开发调试时，点击"登录"会跳转到本地的后台，而不是线上后台
+        if (typeof window !== 'undefined') {
+          const hostname = window.location.hostname
+          const isLocal = hostname === 'localhost' || 
+                          hostname === '127.0.0.1' || 
+                          hostname.startsWith('192.168.') || 
+                          hostname.startsWith('10.') || 
+                          hostname.endsWith('.local')
+          
+          if (isLocal) {
+            // 使用配置文件中的端口，如果没有配置则回退到 3011
+            const port = parsedConfig.dev_admin_port || 3011
+            parsedConfig.admin_url = `http://${hostname}:${port}`
+            console.log('Detected local environment, overriding admin_url to:', parsedConfig.admin_url)
+          }
+        }
+        // ------------------------------------------------
+
         siteInfo.value = parsedConfig
       }
     } catch (error) {

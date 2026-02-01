@@ -23,28 +23,54 @@ func GetDB() *gorm.DB {
 // 参数: 无
 // 返回: 无
 func InitDB() {
-	// 连接数据库
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		utils.ServerConfig.Database.DbUser,
-		utils.ServerConfig.Database.DbPassWord,
-		utils.ServerConfig.Database.DbHost,
-		utils.ServerConfig.Database.DbPort,
-		utils.ServerConfig.Database.DbName,
-	)
-	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
-		// gorm日志模式：silent
-		Logger: logger.Default.LogMode(logger.Silent),
-		// 外键约束
-		DisableForeignKeyConstraintWhenMigrating: true,
-		// 禁用默认事务（提高运行速度）
-		SkipDefaultTransaction: true,
-		NamingStrategy: schema.NamingStrategy{
-			// 使用单数表名，启用该选项，此时，`User` 的表名应该是 `user`
-			SingularTable: true,
-		},
-	})
-	if err != nil {
-		panic("无法连接到数据库，请检查配置！: " + err.Error())
+	var dbErr error
+	var dsn string
+
+	// 重试逻辑
+	maxRetries := 30
+	for i := 0; i < maxRetries; i++ {
+		// 连接数据库
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+			utils.ServerConfig.Database.DbUser,
+			utils.ServerConfig.Database.DbPassWord,
+			utils.ServerConfig.Database.DbHost,
+			utils.ServerConfig.Database.DbPort,
+			utils.ServerConfig.Database.DbName,
+		)
+		db, dbErr = gorm.Open(mysql.Open(dsn), &gorm.Config{
+			// gorm日志模式：silent
+			Logger: logger.Default.LogMode(logger.Silent),
+			// 外键约束
+			DisableForeignKeyConstraintWhenMigrating: true,
+			// 禁用默认事务（提高运行速度）
+			SkipDefaultTransaction: true,
+			NamingStrategy: schema.NamingStrategy{
+				// 使用单数表名，启用该选项，此时，`User` 的表名应该是 `user`
+				SingularTable: true,
+			},
+		})
+
+		if dbErr == nil {
+			// 尝试 Ping 一下确保连接真的可用
+			sqlDB, err := db.DB()
+			if err == nil {
+				if err = sqlDB.Ping(); err == nil {
+					fmt.Println("数据库连接成功！")
+					break
+				} else {
+					dbErr = err
+				}
+			} else {
+				dbErr = err
+			}
+		}
+
+		fmt.Printf("等待数据库启动... (%d/%d) Error: %s\n", i+1, maxRetries, dbErr)
+		time.Sleep(2 * time.Second)
+	}
+
+	if dbErr != nil {
+		panic(fmt.Sprintf("无法连接到数据库，请检查配置！DSN: %s, Error: %s", dsn, dbErr.Error()))
 	}
 
 	// 获取通用数据库对象 sql.DB ，然后使用其提供的功能

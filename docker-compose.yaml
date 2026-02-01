@@ -14,7 +14,7 @@ services:
   frontend-admin:
     build: ./web/backend
     ports:
-      - "3001:80"
+      - "3011:80"
     depends_on:
       - backend
     networks:

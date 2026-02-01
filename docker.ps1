@@ -39,6 +39,25 @@ foreach ($Dir in $DirsToCreate) {
     }
 }
 
+# --- 新增: 同步前端静态资源到后台 (解决后台图片 404 问题) ---
+Print-Color "2.1 同步静态资源 (Frontend -> Backend)..."
+$BackendPublicStatic = "web/backend/public/static"
+if (!(Test-Path $BackendPublicStatic)) {
+    New-Item -ItemType Directory -Path $BackendPublicStatic -Force | Out-Null
+}
+try {
+    # 复制 static 下的所有内容
+    Copy-Item -Path "web/frontend/public/static/*" -Destination $BackendPublicStatic -Recurse -Force
+    # 复制 favicon
+    if (Test-Path "web/frontend/public/favicon.svg") {
+        Copy-Item -Path "web/frontend/public/favicon.svg" -Destination "web/backend/public/" -Force
+    }
+    Write-Host "   已同步静态资源到后台构建目录" -ForegroundColor DarkGray
+} catch {
+    Write-Warning "   资源同步遇到轻微问题: $_ (如果文件已存在可忽略)"
+}
+# -------------------------------------------------------
+
 # 复制最新的配置到 docker_field (用于 Backend 构建)
 $ConfigMap = @{
     "web/frontend/public/config.yaml" = "$DockerFieldPath/frontend/config.yaml"

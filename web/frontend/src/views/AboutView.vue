@@ -47,7 +47,7 @@
     <div v-if="showWechatQR" class="qr-modal" @click="showWechatQR = false">
       <div class="qr-content" @click.stop>
         <h3>微信二维码</h3>
-        <img :src="siteInfo.contacts?.wechat_qr || '/assets/default-qr.png'" alt="微信二维码" @error="handleQRError">
+        <img :src="siteInfo.contacts?.wechat_qr || defaultQrImg" alt="微信二维码" @error="handleQRError">
         <p>扫描二维码添加微信</p>
         <button class="close-btn" @click="showWechatQR = false">关闭</button>
       </div>
@@ -63,6 +63,8 @@ import MainLayout from '@/components/layout/MainLayout.vue'
 import ProfileCard from '@/components/sidebar/ProfileCard.vue'
 import { useSiteInfoStore } from '@/stores/siteInfo'
 import { storeToRefs } from 'pinia'
+import defaultAvatarImg from '@/assets/default-avatar.jpg'
+import defaultQrImg from '@/assets/default-qr.png'
 
 const siteInfoStore = useSiteInfoStore()
 const { siteInfo } = storeToRefs(siteInfoStore)
@@ -90,13 +92,13 @@ const contactCard = ref<HTMLElement | null>(null)
 // 处理头像加载错误
 const handleAvatarError = (e: Event) => {
   const target = e.target as HTMLImageElement
-  target.src = '@/assets/default-avatar.jpg'
+  target.src = defaultAvatarImg
 }
 
 // 处理二维码图片加载错误
 const handleQRError = (e: Event) => {
   const target = e.target as HTMLImageElement
-  target.src = '@/assets/default-qr.png'
+  target.src = defaultQrImg
 }
 
 // 打开链接

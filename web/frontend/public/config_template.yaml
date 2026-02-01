@@ -2,21 +2,23 @@ blog_name: 言盐盐的博客
 author_name: yaan
 allowed_hosts:
   - localhost
-author_avatar: /assets/avatar.jpg
+author_avatar: /static/avatar/avatar.jpg
 author_bio: 欢迎光临 (￣▽￣)~*
 hero:
   title: 草木山石<br>日月星辰
   subtitle: yaan's blog
   welcome: Welcome to<br>Yaan's Blog
-  welcome_image: /assets/img/1412.jpg
+  welcome_image: /static/img/1412.jpg
 quotes:
   - 月亮想着我的心事，一只猫吃了我的奶酪
   - 草木山石，日月星辰
   - 雾霭山岚，风光雨霁
 logo_text: 言盐盐的博客
-logo_image: /assets/yan_icon/yaan.png
+logo_image: /static/logo/yaan.png
 favicon: /favicon.svg
-admin_url: https://admin.yaanlaan.dpdns.org
+admin_url: 
+# 开发/内网模式下的后台端口 (配合自动跳转功能)
+dev_admin_port: 3001
 page_title:
   default: (O_O)言盐盐的博客
   blur: (- - )
