@@ -85,3 +85,6 @@ yanblog
 docker_field/mysql
 deploy
 node_modules/
+
+DEPLOYMENT_TROUBLESHOOTING.md
+FIX_SUMMARY.md

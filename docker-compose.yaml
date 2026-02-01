@@ -9,7 +9,8 @@ services:
       - uploads_data:/app/uploads
       
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - yanblog-network
     restart: always
@@ -25,6 +26,12 @@ services:
     networks:
       - yanblog-network
     restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
 
 networks:
   yanblog-network:

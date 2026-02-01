@@ -111,19 +111,39 @@
 
 确保你已经安装了 Docker 和 Docker Compose，然后在项目根目录下运行：
 
+**Linux/Mac:**
+```bash
+chmod +x docker.sh health-check.sh
+./docker.sh
+```
+
+**Windows:**
+```powershell
+.\docker.ps1
+```
+
+**手动部署:**
 ```bash
 docker-compose up --build -d
 ```
 
-### 3. 访问服务
+### 3. 健康检查（可选）
+
+```bash
+./health-check.sh
+```
+
+### 4. 访问服务
 
 启动成功后，你可以通过以下地址访问：
 
 - **博客前台**: [http://localhost:3002](http://localhost:3002)
-- **后台管理**: [http://localhost:3001](http://localhost:3001)
+- **后台管理**: [http://localhost:3011](http://localhost:3011)
 - **后端 API**: [http://localhost:8080](http://localhost:8080)
 
-### 4. 后续维护
+> **遇到问题？** 请查看 [部署故障排查指南](DEPLOYMENT_TROUBLESHOOTING.md)
+
+### 5. 后续维护
 
 - **修改前端配置**：直接编辑 `docker_field/frontend/config.yaml`，保存后刷新浏览器即可生效。
 - **修改关于页面**：直接编辑 `docker_field/frontend/static/about.md`，支持 Markdown 语法。保存后刷新浏览器即可看到更新，无需重启容器。

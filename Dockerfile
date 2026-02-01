@@ -26,7 +26,7 @@ RUN npm run build
 FROM nginx:alpine
 
 # Install basic dependencies
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata netcat-openbsd
 
 WORKDIR /app
 
@@ -42,6 +42,8 @@ RUN mkdir -p config uploads
 RUN mkdir -p /usr/share/nginx/html/web
 COPY --from=frontend-builder /app/dist /usr/share/nginx/html/web
 COPY --from=frontend-builder /app/public/static /usr/share/nginx/html/web/static
+COPY --from=frontend-builder /app/public/iconfont /usr/share/nginx/html/web/iconfont
+COPY --from=frontend-builder /app/public/favicon.ico /usr/share/nginx/html/web/favicon.ico
 
 # Ensure permissions are correct for Nginx
 RUN chmod -R 755 /usr/share/nginx/html
@@ -54,11 +56,17 @@ COPY --from=admin-builder /app/dist /usr/share/nginx/html/admin
 # Go code expects: "./web/frontend/public/static/about.md"
 # Real location: "/usr/share/nginx/html/web/static/about.md"
 RUN mkdir -p /app/web/frontend/public && \
-    ln -s /usr/share/nginx/html/web/static /app/web/frontend/public/static
+    ln -s /usr/share/nginx/html/web/static /app/web/frontend/public/static && \
+    ln -s /usr/share/nginx/html/web/iconfont /app/web/frontend/public/iconfont && \
+    ln -s /usr/share/nginx/html/web/favicon.ico /app/web/frontend/public/favicon.ico
 
 # 5. Bake in Configuration (Avoids Host Mount Issues)
 COPY config/config.yaml /app/config/config.yaml
 COPY web/frontend/public/config.yaml /app/config/frontend_config.yaml
+
+# 确保配置文件存在
+RUN test -f /app/config/config.yaml || (echo "Error: config.yaml not found!" && exit 1) && \
+    test -f /app/config/frontend_config.yaml || (echo "Error: frontend_config.yaml not found!" && exit 1)
 
 # 6. Setup Nginx Config
 COPY nginx.conf.unified /etc/nginx/conf.d/default.conf
