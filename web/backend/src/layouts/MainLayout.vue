@@ -33,6 +33,14 @@
           </template>
           <el-menu-item index="/category/list">分类列表</el-menu-item>
         </el-sub-menu>
+
+        <el-sub-menu index="/tag">
+          <template #title>
+            <el-icon><Collection /></el-icon>
+            <span>标签管理</span>
+          </template>
+          <el-menu-item index="/tag/list">标签列表</el-menu-item>
+        </el-sub-menu>
         
         <el-sub-menu index="/article">
           <template #title>
@@ -102,7 +110,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Odometer, User, Folder, Document, Picture, Setting } from '@element-plus/icons-vue'
+import { Odometer, User, Folder, Document, Picture, Setting, Collection } from '@element-plus/icons-vue'
 
 // 获取路由实例
 const route = useRoute()

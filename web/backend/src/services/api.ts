@@ -97,6 +97,10 @@ export const tagApi = {
   getTags: (params: { pagesize: number; pagenum: number }) => apiClient.get('/v1/tags', { params }),
   // 添加标签
   addTag: (data: { name: string }) => apiClient.post('/v1/tags/add', data),
+  // 更新标签
+  updateTag: (id: number, data: { name: string }) => apiClient.put(`/v1/tags/${id}`, data),
+  // 删除标签
+  deleteTag: (id: number) => apiClient.delete(`/v1/tags/${id}`)
 }
 
 // 文件管理API

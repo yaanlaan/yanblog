@@ -9,6 +9,7 @@ const Login = () => import('@/views/Login.vue')
 const Dashboard = () => import('@/views/dashboard/Dashboard.vue')
 const UserList = () => import('@/views/user/UserList.vue')
 const CategoryList = () => import('@/views/category/CategoryList.vue')
+const TagList = () => import('@/views/tag/TagList.vue')
 const ArticleList = () => import('@/views/article/ArticleList.vue')
 const ArticleEditor = () => import('@/views/article/ArticleEditor.vue')
 const MediaManager = () => import('@/views/media/MediaManager.vue')
@@ -76,6 +77,24 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: '分类列表',
           activeMenu: '/category'
+        }
+      },
+      {
+        path: '/tag',
+        name: 'Tag',
+        redirect: '/tag/list',
+        meta: {
+          title: '标签管理',
+          icon: 'Collection'
+        }
+      },
+      {
+        path: '/tag/list',
+        name: 'TagList',
+        component: TagList,
+        meta: {
+          title: '标签列表',
+          activeMenu: '/tag'
         }
       },
       {
