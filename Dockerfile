@@ -41,9 +41,9 @@ RUN mkdir -p config uploads
 # 2. Setup Frontend Files
 RUN mkdir -p /usr/share/nginx/html/web
 COPY --from=frontend-builder /app/dist /usr/share/nginx/html/web
-COPY --from=frontend-builder /app/public/static /usr/share/nginx/html/web/static
-COPY --from=frontend-builder /app/public/iconfont /usr/share/nginx/html/web/iconfont
-COPY --from=frontend-builder /app/public/favicon.ico /usr/share/nginx/html/web/favicon.ico
+# COPY --from=frontend-builder /app/public/static /usr/share/nginx/html/web/static
+# COPY --from=frontend-builder /app/public/iconfont /usr/share/nginx/html/web/iconfont
+# COPY --from=frontend-builder /app/public/favicon.ico /usr/share/nginx/html/web/favicon.ico
 
 # Ensure permissions are correct for Nginx
 RUN chmod -R 755 /usr/share/nginx/html
@@ -62,11 +62,22 @@ RUN mkdir -p /app/web/frontend/public && \
 
 # 5. Bake in Configuration (Avoids Host Mount Issues)
 COPY config/config.yaml /app/config/config.yaml
-COPY web/frontend/public/config.yaml /app/config/frontend_config.yaml
+# 直接覆盖前端静态目录中的配置，避免 Nginx alias 权限/路径问题
+COPY web/frontend/public/config.yaml /usr/share/nginx/html/web/config.yaml
+
+# 创建软链接：让后端(操作 /app/config/frontend_config.yaml) 实际上修改的是 Nginx 的文件
+# 这样就实现了后端修改，前端生效，且共享同一份配置
+RUN ln -sf /usr/share/nginx/html/web/config.yaml /app/config/frontend_config.yaml
 
 # 确保配置文件存在
 RUN test -f /app/config/config.yaml || (echo "Error: config.yaml not found!" && exit 1) && \
-    test -f /app/config/frontend_config.yaml || (echo "Error: frontend_config.yaml not found!" && exit 1)
+    test -L /app/config/frontend_config.yaml || (echo "Error: frontend_config.yaml symlink failed!" && exit 1)
+
+# 确保所有文件对 Nginx 用户(通常是 nginx:nginx)可读
+# 赋予所有目录 +x 权限，所有文件 +r 权限
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chmod -R 755 /usr/share/nginx/html && \
+    chmod -R 755 /app
 
 # 6. Setup Nginx Config
 COPY nginx.conf.unified /etc/nginx/conf.d/default.conf

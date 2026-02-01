@@ -13,18 +13,11 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    # Static Assets Override
-    # 确保 /static/ 指向正确的目录
-    location /static/ {
-        alias /usr/share/nginx/html/web/static/;
-    }
-
     # Config File (共享后端配置)
-    # 前端请求 /config.yaml 时，读取挂载到后端的 /app/config/frontend_config.yaml
-    # 注意: 这是前端公开配置，不是后端的数据库连接配置
+    # 前端请求 /config.yaml 时，直接读取 web 根目录下的文件
     location /config.yaml {
-        alias /app/config/frontend_config.yaml;
         add_header Cache-Control "no-store, no-cache, must-revalidate";
+        # alias 指令已移除，直接使用 root 下的 config.yaml
     }
 
     # API Proxy -> Localhost Backend
