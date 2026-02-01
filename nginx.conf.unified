@@ -1,0 +1,76 @@
+server {
+    listen 80;
+    server_name localhost;
+    client_max_body_size 50M;
+    include /etc/nginx/mime.types;
+
+    # --- Frontend (Public) ---
+    root /usr/share/nginx/html/web;
+    index index.html;
+
+    # Vue Router History Mode
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Static Assets Override
+    # 确保 /static/ 指向正确的目录
+    location /static/ {
+        alias /usr/share/nginx/html/web/static/;
+    }
+
+    # Config File (共享后端配置)
+    # 前端请求 /config.yaml 时，读取挂载到后端的 /app/config/frontend_config.yaml
+    # 注意: 这是前端公开配置，不是后端的数据库连接配置
+    location /config.yaml {
+        alias /app/config/frontend_config.yaml;
+        add_header Cache-Control "no-store, no-cache, must-revalidate";
+    }
+
+    # API Proxy -> Localhost Backend
+    location /api {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # Uploads (Persisted Volume)
+    location /uploads/ {
+        alias /app/uploads/;
+        autoindex off;
+    }
+}
+
+server {
+    listen 81;
+    server_name localhost;
+    client_max_body_size 50M;
+    include /etc/nginx/mime.types;
+
+    # --- Admin (Backend UI) ---
+    root /usr/share/nginx/html/admin;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # API Proxy for Admin
+    location /api {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+    
+    # Config File (Admin might need it too, though usually it uses API)
+    location /config.yaml {
+        alias /app/config/frontend_config.yaml;
+    }
+
+    # Uploads
+    location /uploads/ {
+        alias /app/uploads/;
+    }
+}

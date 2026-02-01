@@ -1,53 +1,66 @@
-# Build stage
-FROM golang:1.24-alpine AS builder
-
+# Stage 1: Build Go Backend
+FROM golang:1.24-alpine AS backend-builder
 WORKDIR /app
-
-# Copy go mod and sum files
 COPY go.mod go.sum ./
-
-# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod download
-
-# Copy the source from the current directory to the Working Directory inside the container
 COPY . .
-
-# Build the Go app
 RUN go build -o server .
 
-# Final stage
-FROM alpine:latest
+# Stage 2: Build Frontend (Public)
+FROM node:20-alpine AS frontend-builder
+WORKDIR /app
+COPY web/frontend/package*.json ./
+RUN npm install
+COPY web/frontend ./
+RUN npm run build
+
+# Stage 3: Build Admin (Backend UI)
+FROM node:20-alpine AS admin-builder
+WORKDIR /app
+COPY web/backend/package*.json ./
+RUN npm install
+COPY web/backend ./
+RUN npm run build
+
+# Stage 4: Final Unified Image
+FROM nginx:alpine
+
+# Install basic dependencies
+RUN apk add --no-cache ca-certificates tzdata
 
 WORKDIR /app
 
-# Install necessary runtime dependencies
-RUN apk --no-cache add ca-certificates
+# 1. Setup Backend
+COPY --from=backend-builder /app/server .
+COPY entrypoint.sh .
+# Fix line endings (CRLF -> LF) for Windows hosts
+RUN sed -i 's/\r$//' entrypoint.sh
+RUN chmod +x entrypoint.sh
+RUN mkdir -p config uploads
 
-# Copy the pre-built binary file from the previous stage
-COPY --from=builder /app/server .
+# 2. Setup Frontend Files
+RUN mkdir -p /usr/share/nginx/html/web
+COPY --from=frontend-builder /app/dist /usr/share/nginx/html/web
+COPY --from=frontend-builder /app/public/static /usr/share/nginx/html/web/static
 
-# Create config directory
-RUN mkdir -p config
-# Copy the config from the build context (which was modified by docker.sh if needed)
-COPY config/config.yaml ./config/config.yaml
+# 3. Setup Admin Files
+RUN mkdir -p /usr/share/nginx/html/admin
+COPY --from=admin-builder /app/dist /usr/share/nginx/html/admin
 
-# Create uploads directory
-RUN mkdir -p uploads
+# 4. Link Paths for Go Backend Compatibility
+# Go code expects: "./web/frontend/public/static/about.md"
+# Real location: "/usr/share/nginx/html/web/static/about.md"
+RUN mkdir -p /app/web/frontend/public && \
+    ln -s /usr/share/nginx/html/web/static /app/web/frontend/public/static
 
-# Create the directory structure for frontend static files and copy them
-# ensuring parent directories exist first
-RUN mkdir -p web/frontend/public/static
-COPY --from=builder /app/web/frontend/public/static/ ./web/frontend/public/static/
+# 5. Bake in Configuration (Avoids Host Mount Issues)
+COPY config/config.yaml /app/config/config.yaml
+COPY web/frontend/public/config.yaml /app/config/frontend_config.yaml
 
-# Frontend config handling
-RUN mkdir -p web/frontend/public
-# Copy the frontend config (which might have been modified by docker.sh)
-COPY web/frontend/public/config.yaml ./frontend_config.yaml
-# Create a symbolic link so both paths point to the same file
-RUN ln -sf /app/frontend_config.yaml /app/web/frontend/public/config.yaml
+# 6. Setup Nginx Config
+COPY nginx.conf.unified /etc/nginx/conf.d/default.conf
 
-# Expose port 8080 to the outside world
-EXPOSE 8080
+# Expose ports
+EXPOSE 80 81
 
-# Command to run the executable
-CMD ["./server"]
+CMD ["/app/entrypoint.sh"]

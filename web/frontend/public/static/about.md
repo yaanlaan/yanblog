@@ -60,13 +60,6 @@
 
 实时监控服务器状态，包括内存、CPU 使用率等，掌握系统运行情况。
 
-## 部署说明
-
-本项目推荐使用 Docker 进行部署。
-
-1.  **配置**: 修改 `docker_field` 目录下的配置文件。
-2.  **启动**: 运行 `docker-compose up -d`。
-3.  **维护**: 直接修改挂载的配置文件或替换静态资源图片，刷新即可生效。
 
 ## 视频示例
 <iframe src="//player.bilibili.com/player.html?isOutside=true&aid=626357031&bvid=BV1yt4y1Q7SS&cid=210738676&p=1&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>

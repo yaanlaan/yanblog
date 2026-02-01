@@ -8,11 +8,13 @@ Dockerfile
 .dockerignore
 
 # Build
+**/dist
 dist
 build
 bin
 
 # Dependencies
+**/node_modules
 node_modules
 vendor
 

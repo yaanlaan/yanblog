@@ -14,7 +14,7 @@ import (
 func GetFrontEndConfig(c *gin.Context) {
 	configPath := utils.ServerConfig.FrontEndConfigPath
 	if configPath == "" {
-		configPath = "web/frontend/public/config.yaml" // 默认回退路径
+		configPath = "config/frontend_config.yaml" // 默认回退路径 (Docker内)
 	}
 
 	content, err := ioutil.ReadFile(configPath)
@@ -59,7 +59,7 @@ func UpdateFrontEndConfig(c *gin.Context) {
 
 	configPath := utils.ServerConfig.FrontEndConfigPath
 	if configPath == "" {
-		configPath = "web/frontend/public/config.yaml"
+		configPath = "config/frontend_config.yaml"
 	}
 
 	// 写入文件
