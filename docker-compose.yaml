@@ -4,10 +4,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./docker_field/backend:/app/config
-      - ./docker_field/uploads:/app/uploads
-      # 挂载前端配置文件供后端修改
-      - ./docker_field/frontend/config.yaml:/app/frontend_config.yaml
+      - yanblog_upload_data:/app/uploads
     depends_on:
       - db
     networks:
@@ -28,9 +25,6 @@ services:
     build: ./web/frontend
     ports:
       - "3002:80"
-    volumes:
-      # 修正：只挂载配置文件，而不是整个根目录
-      - ./docker_field/frontend/config.yaml:/usr/share/nginx/html/config.yaml
     depends_on:
       - backend
     networks:
@@ -43,7 +37,7 @@ services:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: yanblog
     volumes:
-      - ./docker_field/mysql/data:/var/lib/mysql
+      - yanblog_db_data:/var/lib/mysql
     networks:
       - yanblog-network
     restart: always
@@ -51,3 +45,7 @@ services:
 networks:
   yanblog-network:
     driver: bridge
+
+volumes:
+  yanblog_db_data:
+  yanblog_upload_data:

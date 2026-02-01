@@ -1,8 +1,7 @@
 blog_name: 言盐盐的博客
 author_name: yaan
 allowed_hosts:
-  - yaanlaan.dpdns.org
-  - admin.yaanlaan.dpdns.org
+  - localhost
 author_avatar: /assets/avatar.jpg
 author_bio: 欢迎光临 (￣▽￣)~*
 hero:
@@ -108,13 +107,13 @@ music_player:
   show: ture
   url: //music.163.com/outchain/player?type=2&id=555503430&auto=0&height=66
 comment:
-  enable: true
+  enable: false
   type: giscus
   giscus:
-    repo: yaanlaan/giscus_workbench
-    repo_id: R_kgDOREwOKg
+    repo: 
+    repo_id: 
     category: Announcements
-    category_id: DIC_kwDOREwOKs4C1owU
+    category_id: 
     mapping: pathname
     reactions_enabled: '1'
     emit_metadata: '0'
