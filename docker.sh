@@ -94,6 +94,7 @@ print_color "   检测到后台管理端口: $ADMIN_PORT" "$GRAY"
 print_color "3. 准备构建环境..." "$CYAN"
 
 # --- 3.1 同步静态资源 ---
+# 这一步主要是为了后端能访问到图片，不影响前端
 print_color "   正在同步静态资源..." "$GRAY"
 BACKEND_STATIC="web/backend/public/static"
 mkdir -p "$BACKEND_STATIC"
@@ -101,6 +102,7 @@ mkdir -p "$BACKEND_STATIC"
 if [ -d "web/frontend/public/static" ]; then
     cp -rf web/frontend/public/static/* "$BACKEND_STATIC/"
 fi
+
 if [ -f "web/frontend/public/favicon.svg" ]; then
     cp -f web/frontend/public/favicon.svg web/backend/public/
 fi

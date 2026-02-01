@@ -34,6 +34,7 @@ services:
       - yanblog-network
     restart: always
 
+
   db:
     image: mysql:8.0
     environment:
