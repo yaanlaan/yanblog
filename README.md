@@ -171,19 +171,32 @@ docker-compose up --build -d
 
 ### 前端
 
-![首页](./readme_src/前端预览/1.png)
-![文章](./readme_src/前端预览/2.png)
-![分类](./readme_src/前端预览/3.jpeg)
-![归档](./readme_src/前端预览/4.jpeg)
-![关于](./readme_src/前端预览/5.png)
-![测试文章](./readme_src/前端预览/6.jpeg)
+<div align="center">
+  <h4>首页</h4>
+  <img src="readme_src/前端预览/light_home.png" width="45%" alt="Light Home"/>
+  <img src="readme_src/前端预览/dark_home.png" width="45%" alt="Dark Home"/>
+
+  <h4>文章列表</h4>
+  <img src="readme_src/前端预览/light_articlelist.png" width="45%" alt="Light Article List"/>
+  <img src="readme_src/前端预览/dark_articlelist.png" width="45%" alt="Dark Article List"/>
+
+  <h4>文章详情</h4>
+  <img src="readme_src/前端预览/light_article.png" width="45%" alt="Light Article"/>
+  <img src="readme_src/前端预览/dark_article.png" width="45%" alt="Dark Article"/>
+
+  <h4>文章归档</h4>
+  <img src="readme_src/前端预览/light_archive.png" width="45%" alt="Light Archive"/>
+  <img src="readme_src/前端预览/dark_archive.png" width="45%" alt="Dark Archive"/>
+
+  <h4>关于页面</h4>
+  <img src="readme_src/前端预览/light_about.png" width="45%" alt="Light About"/>
+  <img src="readme_src/前端预览/dark_about.png" width="45%" alt="Dark About"/>
+</div>
 
 ### 后端
 
-![仪表盘](./readme_src/后端预览/1.jpeg)
-![用户列表](./readme_src/后端预览/2.jpeg)
-![分类列表](./readme_src/后端预览/3.jpeg)
-![文章列表](./readme_src/后端预览/4.jpeg)
-![媒体库](./readme_src/后端预览/5.jpeg)
-![文章详情](./readme_src/后端预览/6.jpeg)
-![文章详情](./readme_src/后端预览/7.jpeg)
+<div align="center">
+  <h4>后台仪表盘</h4>
+  <img src="readme_src/后端预览/backend_panel.png" width="90%" alt="Backend Panel"/>
+</div>
+

@@ -180,16 +180,29 @@ const totalArticles = ref(0)
 const selectedTag = ref('')
 const isTagsExpanded = ref(false)
 
+// Helper: 格式化本地日期 YYYY-MM-DD
+const toDateKey = (date: Date) => {
+  const y = date.getFullYear()
+  const m = (date.getMonth() + 1).toString().padStart(2, '0')
+  const d = date.getDate().toString().padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 // 贡献图数据
 const contributionData = computed(() => {
   const map = new Map<string, number>()
   articles.value.forEach(art => {
-    const d = art.createdAt || art.CreatedAt
-    if (d) {
-      const day = d.split('T')[0] // 假设 ISO 格式 YYYY-MM-DD
-      map.set(day, (map.get(day) || 0) + 1)
+    // 兼容多种字段名
+    const dStr = art.createdAt || art.CreatedAt
+    if (dStr) {
+      const date = new Date(dStr)
+      if (!isNaN(date.getTime())) {
+         const key = toDateKey(date)
+         map.set(key, (map.get(key) || 0) + 1)
+      }
     }
   })
+  console.log('Contribution Map:', map)
   return map
 })
 
@@ -197,40 +210,38 @@ const contributionData = computed(() => {
 const calendarWeeks = computed(() => {
   const weeks: { date: string; count: number; level: number }[][] = []
   const end = new Date()
-  const start = new Date()
-  start.setFullYear(start.getFullYear() - 1)
   
-  // 调整到上一年的那个周日，确保第一列从周日开始
+  // 从一年前（约52周前）开始，确保能覆盖到今天
+  const start = new Date()
+  // start.setFullYear(start.getFullYear() - 1) // 这种方式可能会因为闰年或星期对齐导致少一周
+  start.setDate(start.getDate() - 52 * 7)
+  
+  // 调整到该周的周日 (Start of the week)
   while (start.getDay() !== 0) {
     start.setDate(start.getDate() - 1)
   }
 
-  let current = new Date(start)
+  const current = new Date(start)
   
-  // 生成53周的数据，填满一行
+  // 生成53周
   for (let w = 0; w < 53; w++) {
     const week: { date: string; count: number; level: number }[] = []
     for (let i = 0; i < 7; i++) {
-        const dateStr = current.toISOString().split('T')[0]
+        const dateStr = toDateKey(current)
         const count = contributionData.value.get(dateStr) || 0
         
         let level = 0
         if (count > 0) level = 1
-        if (count > 1) level = 2
-        if (count > 2) level = 3
-        if (count > 4) level = 4
+        if (count > 2) level = 2
+        if (count > 4) level = 3
+        if (count > 6) level = 4
         
-        // 只有当日期在end之前（或者就是end）才显示有效，否则是未来的日期
-        // GitHub如果这一行没满（今天周三），后面的格子是不显示的还是空的？
-        // 观察GitHub，最后一周如果不满7天，后面的格子是不渲染的或者不可见的。
-        // 这里我们可以保留格子但是level-0，或者判断日期
+        // 只有不晚于今天的日期才显示有效数据，未来日期虽占位但不应有数据(理论上)
+        // 但如果用户穿越发文呢？这里我们如实显示
         
-        if (current > end) {
-           // 未来的日子，不渲染或者特殊处理
-           // 这里还是push进去，但是可以通过样式控制或者就留白
-        }
-
         week.push({ date: dateStr, count, level })
+        
+        // 增加一天
         current.setDate(current.getDate() + 1)
     }
     weeks.push(week)
@@ -719,11 +730,17 @@ onMounted(() => {
 .day-cell.level-3 { background: #30a14e; border-color: rgba(27,31,35,0.06); }
 .day-cell.level-4 { background: #216e39; border-color: rgba(27,31,35,0.06); }
 
-/* Theme color override (Teal) */
-.day-cell.level-1 { background: #b1f1ee; }
-.day-cell.level-2 { background: #5eead4; }
-.day-cell.level-3 { background: #2dd4bf; }
-.day-cell.level-4 { background: #0f766e; }
+/* Theme color override (Teal) - Light Mode (越多越深) */
+.day-cell.level-1 { background: #b1f1ee !important; }
+.day-cell.level-2 { background: #5eead4 !important; }
+.day-cell.level-3 { background: #2dd4bf !important; }
+.day-cell.level-4 { background: #0f766e !important; }
+
+/* Dark Mode Theme Override (Teal) - Dark Mode (越多越亮) */
+[data-theme='dark'] .day-cell.level-1 { background: #134e4a !important; border-color: rgba(255,255,255,0.05); }
+[data-theme='dark'] .day-cell.level-2 { background: #115e59 !important; border-color: rgba(255,255,255,0.05); }
+[data-theme='dark'] .day-cell.level-3 { background: #2dd4bf !important; border-color: rgba(255,255,255,0.05); }
+[data-theme='dark'] .day-cell.level-4 { background: #5eead4 !important; border-color: rgba(255,255,255,0.05); }
 
 
 .calendar-footer {

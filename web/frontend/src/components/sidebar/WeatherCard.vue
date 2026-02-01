@@ -100,7 +100,7 @@ onMounted(() => {
   Global style block to handle dark mode overrides reliably.
 */
 html[data-theme="dark"] .sidebar-card.weather-card {
-  background: linear-gradient(135deg, #141e30 0%, #243b55 100%) !important;
+  background: linear-gradient(135deg, #345b6c 0%, #65bdad 100%) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
 }
