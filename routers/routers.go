@@ -29,6 +29,7 @@ func InitRouter() {
 	r.Static("/static", "./web/frontend/public/static")
 	r.Static("/iconfont", "./web/frontend/public/iconfont")
 	r.StaticFile("/favicon.ico", "./web/frontend/public/favicon.ico")
+	r.StaticFile("/config.yaml", "./web/frontend/public/config.yaml")
 
 	// 用户路由分组
 	auth := r.Group("api/v1")
