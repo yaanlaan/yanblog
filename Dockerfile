@@ -43,6 +43,9 @@ RUN mkdir -p /usr/share/nginx/html/web
 COPY --from=frontend-builder /app/dist /usr/share/nginx/html/web
 COPY --from=frontend-builder /app/public/static /usr/share/nginx/html/web/static
 
+# Ensure permissions are correct for Nginx
+RUN chmod -R 755 /usr/share/nginx/html
+
 # 3. Setup Admin Files
 RUN mkdir -p /usr/share/nginx/html/admin
 COPY --from=admin-builder /app/dist /usr/share/nginx/html/admin

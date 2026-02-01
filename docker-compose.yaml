@@ -5,21 +5,8 @@ services:
       - "3002:80"   # Public Frontend
       - "3011:81"   # Admin Backend
     volumes:
-      # Uploads Persistence
-      - yanblog_upload_data:/app/uploads
-      # Static assets persistence?
-      # If user wants to edit about.md (which is in web/frontend/public/static/about.md),
-      # effectively /usr/share/nginx/html/web/static/about.md.
-      # If we want it persistent, we should map a volume there too.
-      # But the user said "resource files go into upload" in the previous turn, and then reverted.
-      # But logically using uploads for dynamic content is best.
-      # For now, about.md updates will be written to /app/web/frontend/public/static/about.md by Go code?
-      # Wait, Go code writes to "web/frontend/public/static/about.md" (relative to WorkDir /app).
-      # The container WorkDir is /app.
-      # So Go writes to /app/web/frontend/public/static/about.md.
-      # Nginx serves /usr/share/nginx/html/web/static.
-      # THESE ARE DIFFERENT PATHS!
-      # We need to map or symlink them.
+      # Uploads Persistence (Host Mount)
+      - ./docker_field/uploads:/app/uploads
       
     depends_on:
       - db
@@ -33,7 +20,8 @@ services:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: yanblog
     volumes:
-      - yanblog_db_data:/var/lib/mysql
+      # Database Persistence (Host Mount)
+      - ./docker_field/mysql/data:/var/lib/mysql
     networks:
       - yanblog-network
     restart: always
@@ -43,5 +31,5 @@ networks:
     driver: bridge
 
 volumes:
-  yanblog_db_data:
-  yanblog_upload_data:
+  # Using host mounts instead of named volumes
+
