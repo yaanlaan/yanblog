@@ -30,6 +30,3 @@ networks:
   yanblog-network:
     driver: bridge
 
-volumes:
-  # Using host mounts instead of named volumes
-
