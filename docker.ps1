@@ -23,79 +23,129 @@ try {
     Write-Warning "清理过程遇到轻微错误（可忽略）"
 }
 
-# 3. 准备配置文件（供 Build 使用）
-# 虽然我们不再挂载文件，但在 Build 之前准备好文件确保它们被正确 COPY 进镜像
-Print-Color "2. 准备构建上下文 (配置文件)..."
+# 2. 从 docker-compose.yaml 读取配置 (提取端口)
+Print-Color "2. 读取 Docker 配置..."
+$ComposeLines = Get-Content "docker-compose.yaml"
+$CurrentService = ""
+$BackendPort = "8080" # 默认值
+$AdminPort = "3001"   # 默认值
+$PublicPort = "3002"  # 默认值
+$DbVolume = "yanblog_db_data" # 默认值
 
-# 确保目标目录存在（用于暂存配置）
-$DockerFieldPath = Join-Path (Get-Item .).FullName "docker_field"
-$DirsToCreate = @(
-    "$DockerFieldPath\frontend",
-    "$DockerFieldPath\backend"
-)
-foreach ($Dir in $DirsToCreate) {
-    if (!(Test-Path $Dir)) {
-        New-Item -ItemType Directory -Path $Dir -Force | Out-Null
+foreach ($line in $ComposeLines) {
+    $trimLine = $line.Trim()
+    
+    # 识别服务块
+    if ($trimLine -match "^backend:$") { $CurrentService = "backend" }
+    elseif ($trimLine -match "^frontend-admin:$") { $CurrentService = "frontend-admin" }
+    elseif ($trimLine -match "^frontend-public:$") { $CurrentService = "frontend-public" }
+    elseif ($trimLine -match "^db:$") { $CurrentService = "db" }
+    
+    # 提取端口映射 - 优化正则以支持更多格式 (如无引号、带空格等)
+    # 匹配格式: - "3001:80" 或 - 3001:80 或 - '3001:80'
+    if ($trimLine -match '-\s*["'']?(\d+):8080["'']?') {
+        if ($CurrentService -eq "backend") { $BackendPort = $matches[1] }
+    }
+    if ($trimLine -match '-\s*["'']?(\d+):80["'']?') {
+        if ($CurrentService -eq "frontend-admin") { $AdminPort = $matches[1] }
+        if ($CurrentService -eq "frontend-public") { $PublicPort = $matches[1] }
+    }
+    
+    # 提取 Volume 映射
+    if ($trimLine -match '- ([a-zA-Z0-9_\-]+):/var/lib/mysql') {
+        if ($CurrentService -eq "db") { $DbVolume = $matches[1] }
     }
 }
+Write-Host "   检测到后台管理端口: $AdminPort" -ForegroundColor DarkGray
 
-# --- 新增: 同步前端静态资源到后台 (解决后台图片 404 问题) ---
-Print-Color "2.1 同步静态资源 (Frontend -> Backend)..."
-$BackendPublicStatic = "web/backend/public/static"
-if (!(Test-Path $BackendPublicStatic)) {
-    New-Item -ItemType Directory -Path $BackendPublicStatic -Force | Out-Null
-}
+# 3. 准备构建环境 (资源同步 & 配置注入)
+Print-Color "3. 准备构建环境..."
+
+# 定义需要修改的文件和备份路径
+$FrontendConfigFile = "web/frontend/public/config.yaml"
+$FrontendConfigBak = "web/frontend/public/config.yaml.bak"
+
+# 标记是否需要还原
+$RestoreFrontendConfig = $false
+
 try {
-    # 复制 static 下的所有内容
-    Copy-Item -Path "web/frontend/public/static/*" -Destination $BackendPublicStatic -Recurse -Force
+    # --- 3.1 同步静态资源 (Frontend -> Backend) ---
+    # 解决后台管理系统引用前台图片资源 404 的问题
+    Print-Color "   正在同步静态资源..." "Gray"
+    $BackendPublicStatic = "web/backend/public/static"
+    
+    if (!(Test-Path $BackendPublicStatic)) { 
+        New-Item -ItemType Directory -Path $BackendPublicStatic -Force | Out-Null 
+    }
+    
+    # 复制 static 目录
+    if (Test-Path "web/frontend/public/static") {
+        Copy-Item -Path "web/frontend/public/static/*" -Destination $BackendPublicStatic -Recurse -Force
+    }
+    
     # 复制 favicon
-    if (Test-Path "web/frontend/public/favicon.svg") {
-        Copy-Item -Path "web/frontend/public/favicon.svg" -Destination "web/backend/public/" -Force
+    if (Test-Path "web/frontend/public/favicon.svg") { 
+        Copy-Item -Path "web/frontend/public/favicon.svg" -Destination "web/backend/public/" -Force 
     }
-    Write-Host "   已同步静态资源到后台构建目录" -ForegroundColor DarkGray
-} catch {
-    Write-Warning "   资源同步遇到轻微问题: $_ (如果文件已存在可忽略)"
-}
-# -------------------------------------------------------
 
-# 复制最新的配置到 docker_field (用于 Backend 构建)
-$ConfigMap = @{
-    "web/frontend/public/config.yaml" = "$DockerFieldPath/frontend/config.yaml"
-    "config/config.yaml"              = "$DockerFieldPath/backend/config.yaml"
-}
-
-foreach ($Src in $ConfigMap.Keys) {
-    $Dest = $ConfigMap[$Src]
-    if (Test-Path $Src) {
-        Copy-Item -Path $Src -Destination $Dest -Force
-        Write-Host "   配置已就绪: $Src" -ForegroundColor DarkGray
+    # --- 3.2 注入端口配置 (核心逻辑) ---
+    # 临时修改配置文件，将 docker-compose 中的端口写入，确保构建出的镜像包含正确端口
+    if (Test-Path $FrontendConfigFile) {
+        # A. 备份原始文件
+        Copy-Item -Path $FrontendConfigFile -Destination $FrontendConfigBak -Force
+        $RestoreFrontendConfig = $true
+        
+        # B. 读取并替换端口
+        $ConfContent = Get-Content $FrontendConfigFile -Raw -Encoding UTF8
+        
+        # 使用正则替换，同时支持 key: value 和 key:value
+        if ($ConfContent -match "(?m)^dev_admin_port:\s*\d+") {
+            $ConfContent = $ConfContent -replace "(?m)^dev_admin_port:\s*\d+", "dev_admin_port: $AdminPort"
+            $ConfContent | Set-Content $FrontendConfigFile -Encoding UTF8
+            
+            # 验证修改
+            $CheckLine = Get-Content $FrontendConfigFile | Select-String "dev_admin_port"
+            Write-Host "   [Build Prep] 已注入端口配置: $CheckLine" -ForegroundColor Cyan
+        } else {
+            Write-Warning "   未在配置文件中找到 'dev_admin_port' 字段，跳过注入。"
+            Write-Host "   DEBUG: 文件内容预览 (前500字符):" -ForegroundColor Gray
+            Write-Host $ConfContent.Substring(0, [Math]::Min($ConfContent.Length, 500))
+        }
     } else {
-        Print-Color "   [警告] 缺配置文件: $Src (请先运行 init.ps1)" "Yellow"
+        Write-Warning "   找不到前端配置文件: $FrontendConfigFile"
     }
-}
 
-# 4. 执行部署
-Print-Color "3. 构建并启动 Docker 服务..."
-Print-Color "   (使用 Named Volumes 存储数据，解决 Windows 文件占用问题)" "Gray"
-
-try {
-    # 重新构建 (-build) 确保最新的 config 被打入镜像
+    # 4. 执行部署
+    Print-Color "4. 构建并启动 Docker 服务..."
+    Print-Color "   (使用 Named Volumes 存储数据，解决 Windows 文件占用问题)" "Gray"
+    
+    # 重新构建 (-build) 确保修改后的 config 被打入镜像
     docker-compose up -d --build
-} catch {
+}
+catch {
     Print-Color "`n[严重错误] Docker 启动失败。" "Red"
     Write-Error $_
-    exit 1
+    # 不需要 exit，以便 finally 块执行清理
+}
+finally {
+    # 5. 清理和还原
+    if ($RestoreFrontendConfig -and (Test-Path $FrontendConfigBak)) {
+        # 还原配置文件，防止 git 将临时修改识别为变更
+        Copy-Item -Path $FrontendConfigBak -Destination $FrontendConfigFile -Force
+        Remove-Item $FrontendConfigBak -Force
+        Write-Host "   [Build Cleanup] 已还原前端配置文件至初始状态" -ForegroundColor DarkGray
+    }
 }
 
-# 5. 检查结果
+# 6. 检查结果
 if ($LASTEXITCODE -eq 0) {
     Print-Color "`n>>> 部署成功！" "Green"
     
     Print-Color "`n访问地址:" "White"
     Print-Color "-------------------------------------------"
-    Print-Color "   DB 数据:     存储在 Docker Volume 'yanblog_db_data' 中"
-    Print-Color "   API 后端:    http://localhost:8080"
-    Print-Color "   后台管理:    http://localhost:3001"
-    Print-Color "   前台页面:    http://localhost:3002"
+    Print-Color "   DB 数据:     存储在 Docker Volume '$DbVolume' 中"
+    Print-Color "   API 后端:    http://localhost:$BackendPort"
+    Print-Color "   后台管理:    http://localhost:$AdminPort"
+    Print-Color "   前台页面:    http://localhost:$PublicPort"
     Print-Color "-------------------------------------------"
 }
