@@ -5,8 +5,8 @@ services:
       - "3002:80"   # Public Frontend
       - "3011:81"   # Admin Backend
     volumes:
-      # Uploads Persistence (Host Mount)
-      - ./docker_field/uploads:/app/uploads
+      # Uploads Persistence (Docker Named Volume)
+      - uploads_data:/app/uploads
       
     depends_on:
       - db
@@ -20,8 +20,8 @@ services:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: yanblog
     volumes:
-      # Database Persistence (Host Mount)
-      - ./docker_field/mysql/data:/var/lib/mysql
+      # Database Persistence (Docker Named Volume)
+      - mysql_data:/var/lib/mysql
     networks:
       - yanblog-network
     restart: always
@@ -29,4 +29,10 @@ services:
 networks:
   yanblog-network:
     driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  uploads_data:
+    driver: local
 
