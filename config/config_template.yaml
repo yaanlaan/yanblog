@@ -1,20 +1,24 @@
 server:
   AppMode: debug
   HttpPort: :8080
-  
-# 如果需要可以自己修改，这是docker的默认配置
+  # 站点域名，用于生成 Sitemap (末尾不带 /)
+  SiteUrl: 
+
 database:
-  Db: mysql
+  Db: MYSQL
   DbHost: db
   DbPort: 3306
   DbUser: root
   DbPassWord: rootpassword
   DbName: yanblog
   
-# openssl rand -hex 32（使用这个命令生成密钥，修改为你自己的密钥）
-JwtKey: 1234567890
+# openssl rand -hex 32
+JwtKey: 
 
 weather:
   Provider: openweathermap
   ApiKey: 
-  DefaultCity: 
+  DefaultCity: Hefei
+
+# 前端配置文件路径
+FrontEndConfigPath: web/frontend/public/config.yaml

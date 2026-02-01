@@ -1,0 +1,124 @@
+blog_name: 言盐盐的博客
+author_name: yaan
+allowed_hosts:
+  - yaanlaan.dpdns.org
+  - admin.yaanlaan.dpdns.org
+author_avatar: /assets/avatar.jpg
+author_bio: 欢迎光临 (￣▽￣)~*
+hero:
+  title: 草木山石<br>日月星辰
+  subtitle: yaan's blog
+  welcome: Welcome to<br>Yaan's Blog
+  welcome_image: /assets/img/1412.jpg
+quotes:
+  - 月亮想着我的心事，一只猫吃了我的奶酪
+  - 草木山石，日月星辰
+  - 雾霭山岚，风光雨霁
+logo_text: 言盐盐的博客
+logo_image: /assets/yan_icon/yaan.png
+favicon: /favicon.svg
+admin_url: https://admin.yaanlaan.dpdns.org
+page_title:
+  default: (O_O)言盐盐的博客
+  blur: (- - )
+iconfont_url: /iconfont/iconfont.css
+shortcuts:
+  - name: 知乎
+    url: https://www.zhihu.com/
+    icon: icon-document
+    color: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)'
+  - name: Bilibili
+    url: https://www.bilibili.com/
+    icon: icon-ppt
+    color: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)'
+  - name: Github
+    url: https://github.com/
+    icon: icon-folder
+    color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+footer:
+  copyright: Copyright ©2022-2025 言盐盐 All Rights Reserved
+  email: yanxia2425@foxmail.com
+  icp:
+    show: true
+    text: 京ICP备xxxxxx号
+    link: https://beian.miit.gov.cn
+  powered_by: yanblog
+  powered_by_link: https://github.com/yaanlaan/yanblog.git
+  portfolio:
+    show: true
+    title: 作品集
+    icon: icon-book
+    items:
+      - name: yanblog
+        url: https://github.com/yaanlaan/yanblog.git
+        icon: icon-lianjie
+  related_links:
+    show: true
+    title: 相关链接
+    items:
+      - name: 本博客参考博客链接（知乎：恢锦）
+        url: https://kirigaya.cn
+        icon: icon-lianjie
+socials:
+  - name: Github
+    url: https://github.com/yaanlaan
+    icon: icon-github-fill
+    color: '#000000'
+    is_circle: true
+  - name: Bilibili
+    url: https://bilibili.com
+    icon: icon-bilibili-line
+    color: '#fb7299'
+    is_circle: true
+  - name: Email
+    url: mailto:yanxia2425@foxmail.com
+    icon: icon-email
+    color: '#0000ff'
+    is_circle: true
+  - name: 知乎
+    url: https://www.zhihu.com
+    icon: icon-zhihu-circle-fill
+    color: '#2c74ff'
+    is_circle: true
+contacts:
+  show: true
+  wechat_qr: /assets/wechat-qr.png
+  items:
+    - name: Email
+      url: mailto:yanxia2425@foxmail.com
+      icon: icon-email
+      color: '#0000ff'
+      is_circle: true
+    - name: Github
+      url: https://github.com/yaanlaan
+      icon: icon-github-fill
+      color: '#000000'
+      is_circle: true
+    - name: Bilibili
+      url: https://space.bilibili.com
+      icon: icon-bilibili-line
+      color: '#fb7299'
+      is_circle: true
+    - name: 知乎
+      url: https://www.zhihu.com
+      icon: icon-zhihu-circle-fill
+      color: '#2c74ff'
+      is_circle: true
+music_player:
+  show: ture
+  url: //music.163.com/outchain/player?type=2&id=555503430&auto=0&height=66
+comment:
+  enable: true
+  type: giscus
+  giscus:
+    repo: yaanlaan/giscus_workbench
+    repo_id: R_kgDOREwOKg
+    category: Announcements
+    category_id: DIC_kwDOREwOKs4C1owU
+    mapping: pathname
+    reactions_enabled: '1'
+    emit_metadata: '0'
+    input_position: top
+    theme: light
+    lang: zh-CN
+    loading: lazy

@@ -20,16 +20,29 @@ FROM alpine:latest
 
 WORKDIR /app
 
-# Install necessary runtime dependencies (if any)
-# RUN apk --no-cache add ca-certificates
+# Install necessary runtime dependencies
+RUN apk --no-cache add ca-certificates
 
 # Copy the pre-built binary file from the previous stage
 COPY --from=builder /app/server .
 
-# Copy config directory (assuming config.yaml is present or will be mounted)
-COPY --from=builder /app/config ./config
+# Create config directory and copy default config if it doesn't exist
+RUN mkdir -p config
+COPY --from=builder /app/config/config.yaml ./config/config.yaml
+
 # Create uploads directory
 RUN mkdir -p uploads
+
+# Create the directory structure for frontend static files and copy them
+RUN mkdir -p web/frontend/public
+COPY --from=builder /app/web/frontend/public/static/. ./web/frontend/public/static/
+
+# Create the frontend config path and make sure both paths point to the same file
+RUN mkdir -p web/frontend/public
+# Copy the initial config from the docker_field to the shared location
+COPY --from=builder /app/docker_field/frontend/config.yaml ./frontend_config.yaml
+# Create a symbolic link so both paths point to the same file
+RUN ln -sf /app/frontend_config.yaml /app/web/frontend/public/config.yaml
 
 # Expose port 8080 to the outside world
 EXPOSE 8080

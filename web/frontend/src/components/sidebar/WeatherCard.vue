@@ -95,15 +95,41 @@ onMounted(() => {
 })
 </script>
 
+<style>
+/* 
+  Global style block to handle dark mode overrides reliably.
+*/
+html[data-theme="dark"] .sidebar-card.weather-card {
+  background: linear-gradient(135deg, #141e30 0%, #243b55 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+html[data-theme="dark"] .sidebar-card.weather-card .location-row,
+html[data-theme="dark"] .sidebar-card.weather-card .temperature,
+html[data-theme="dark"] .sidebar-card.weather-card .weather-text {
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+html[data-theme="dark"] .sidebar-card.weather-card .detail-row {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+html[data-theme="dark"] .sidebar-card.weather-card .detail-row .iconfont {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+</style>
+
 <style scoped>
-.weather-card {
-  /* Standard card background */
-  background: var(--color-background-soft);
-  border-radius: 8px; /* Slightly smaller radius as per image */
-  color: var(--color-text);
+.sidebar-card.weather-card {
+  /* Standard card background (Light Mode) - Soft Blue Gradient */
+  background: linear-gradient(135deg, #e0f7fa 0%, #ffffff 100%);
+  border-radius: 8px;
+  color: var(--color-text); /* Ensure text is dark in light mode */
   padding: 25px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Standard shadow */
-  border: 1px solid var(--color-border) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-border);
   overflow: hidden;
   position: relative;
   min-height: 240px;
@@ -111,6 +137,7 @@ onMounted(() => {
   flex-direction: column;
   margin-bottom: 20px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  transition: all 0.3s ease;
 }
 
 .location-row {
