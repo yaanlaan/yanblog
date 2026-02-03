@@ -3,6 +3,7 @@
 [原项目链接](https://github.com/wejectchen/Ginblog.git)
 
 后端主要参考了 ginblog，由于原教程是 22 年的有一些东西不一样了，同时我也希望设计一些更丰富的功能。
+[我的博客](https://blog.yaanlaan.dpdns.org)
 
 ## 项目简介
 
