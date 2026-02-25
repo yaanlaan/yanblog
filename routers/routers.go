@@ -48,7 +48,9 @@ func InitRouter() {
 		auth.DELETE("category/:id", v1.DeleteCate)
 		// 文章模块的路由接口
 		auth.POST("article/add", v1.AddArticle)
+		auth.POST("article/zip", v1.UploadArticleZip) // 上传ZIP发布文章
 		auth.PUT("article/:id", v1.EditArt)
+
 		auth.DELETE("article/:id", v1.DeleteArt)
 		// 标签模块
 		auth.POST("tags/add", v1.AddTag)

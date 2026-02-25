@@ -4,7 +4,10 @@
       <template #header>
         <div class="card-header">
           <span>文章管理</span>
-          <el-button type="primary" @click="handleAdd">新增文章</el-button>
+          <div>
+            <el-button type="success" @click="zipDialogVisible = true">ZIP 发布</el-button>
+            <el-button type="primary" @click="handleAdd">新增文章</el-button>
+          </div>
         </div>
       </template>
       
@@ -102,6 +105,28 @@
         @current-change="handleCurrentChange"
         class="pagination"
       />
+      
+      <!-- ZIP上传对话框 -->
+      <el-dialog v-model="zipDialogVisible" title="批量发布文章 (ZIP)" width="30%">
+        <el-upload
+          class="upload-demo"
+          drag
+          action="#"
+          :http-request="handleZipUpload"
+          :before-upload="beforeZipUpload"
+          :show-file-list="false"
+        >
+          <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+          <div class="el-upload__text">
+            拖拽文件到这里 或 <em>点击上传</em>
+          </div>
+          <template #tip>
+            <div class="el-upload__tip">
+              请上传包含 .md 和 images/ 的压缩包
+            </div>
+          </template>
+        </el-upload>
+      </el-dialog>
     </el-card>
   </div>
 </template>
@@ -115,7 +140,7 @@ defineOptions({
 
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
-import { Picture } from '@element-plus/icons-vue'
+import { Picture, UploadFilled } from '@element-plus/icons-vue'
 import { articleApi, categoryApi } from '@/services/api'
 import ArticleSearchForm from '@/components/article/ArticleSearchForm.vue'
 import ArticleActions from '@/components/article/ArticleActions.vue'
@@ -409,6 +434,44 @@ const handleDelete = (article: Article) => {
   }).catch(() => {
     // 用户取消删除
   })
+}
+
+// ZIP上传对话框
+const zipDialogVisible = ref(false)
+
+// ZIP上传处理
+const handleZipUpload = async (options: any) => {
+  const { file, onSuccess, onError } = options
+  try {
+    const res = await articleApi.uploadZip(file)
+    if (res.data.status === 200) {
+      onSuccess(res.data)
+      ElMessage.success('上传发布成功')
+      zipDialogVisible.value = false
+      getArticleList() // 刷新列表
+    } else {
+      onError(new Error(res.data.message || '上传失败'))
+      ElMessage.error(res.data.message || '上传失败')
+    }
+  } catch (err) {
+    onError(err)
+    ElMessage.error('上传出错')
+  }
+}
+
+const beforeZipUpload = (file: File) => {
+  const isZip = file.type === 'application/zip' || file.name.endsWith('.zip')
+  const isLt50M = file.size / 1024 / 1024 < 50
+
+  if (!isZip) {
+    ElMessage.error('只能上传 ZIP 文件!')
+    return false
+  }
+  if (!isLt50M) {
+    ElMessage.error('文件大小不能超过 50MB!')
+    return false
+  }
+  return true
 }
 
 // 监听路由参数变化

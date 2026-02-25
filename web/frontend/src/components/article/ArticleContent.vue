@@ -201,26 +201,26 @@ const renderedContent = computed(() => {
             </div>`
   }
 
-  // 自定义链接渲染 (Link Card Support)
-  // Syntax: [card: Title | Description](URL)
+  // 自定义链接渲染 (Link Card Support) - 已简化为普通链接，避免布局问题
   renderer.link = ({ href, title, text }: { href: string, title?: string | null, text: string }) => {
-    if (text.startsWith('card:')) {
-      const content = text.replace(/^card:\s*/, '')
-      const parts = content.split('|')
-      const cardTitle = parts[0].trim()
-      const cardDesc = parts[1] ? parts[1].trim() : href.replace(/^https?:\/\//, '')
-      
-      return `
-        <a class="link-card" href="${href}" target="_blank" rel="noopener noreferrer">
-          <span class="link-card-content">
-            <span class="link-card-title">${cardTitle}</span>
-            <span class="link-card-desc">${cardDesc}</span>
-          </span>
-        </a>
-      `
-    }
+     // 返回普通链接，移除卡片逻辑以确保移动端稳定性
+     return `<a href="${href}" target="_blank" rel="noopener noreferrer" title="${title || ''}">${text}</a>`
+  }
+  
+  // 重写代码块渲染以简化结构，解决移动端滚动问题
+  renderer.code = ({ text, lang }: { text: string, lang?: string }) => {
+    const language = lang || 'plaintext'
     
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer" title="${title || ''}">${text}</a>`
+    // Mermaid 特殊处理
+    if (language === 'mermaid') {
+      return `<div class="mermaid-chart">${text}</div>`
+    }
+
+    // 简化版代码块，移除行号和复杂头部，仅保留基本的pre code结构
+    // 这样能确保与 About 页面的一致性，并解决 overflow 问题
+    return `<div class="code-wrapper simple-code">
+              <pre><code class="language-${language}">${text}</code></pre>
+            </div>`
   }
 
   // 首先使用marked解析Markdown
@@ -284,11 +284,25 @@ const renderMath = (html: string) => {
 // 渲染完成后的处理
 const renderPostProcess = async () => {
   if (contentRef.value) {
-    // 处理代码高亮
+    // 处理代码高亮 - 因为不再预先高亮，所以这里是必须的
     const codeBlocks = contentRef.value.querySelectorAll('pre code');
     codeBlocks.forEach((block) => {
       if (block instanceof HTMLElement) {
         hljs.highlightElement(block);
+      }
+    });
+
+    // 处理表格溢出
+    const tables = contentRef.value.querySelectorAll('table');
+    tables.forEach((table) => {
+      if (table.parentElement && !table.parentElement.classList.contains('table-wrapper')) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'table-wrapper';
+        wrapper.style.overflowX = 'auto';
+        wrapper.style.marginBottom = '20px';
+        wrapper.style.maxWidth = '100%';
+        table.parentElement.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
       }
     });
     
@@ -530,111 +544,31 @@ onUpdated(() => {
   border: 1px solid var(--color-border);
 }
 
-/* 代码块容器 */
-.content :deep(.code-wrapper) {
-  margin: 20px 0;
+/* 代码块容器 - 简化版 */
+.content :deep(.code-wrapper.simple-code) {
+  margin: 16px 0;
   border-radius: 8px;
-  overflow: hidden;
-  background: #282c34; /* Keep dark for code blocks usually */
+  overflow: auto; /* Allow horizontal scrolling */
+  background: #282c34;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-/* 代码块头部 (Mac 风格) */
-.content :deep(.code-header) {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  background: #21252b;
-  border-bottom: 1px solid #181a1f;
-}
-
-.content :deep(.mac-buttons) {
-  display: flex;
-  gap: 8px;
-}
-
-.content :deep(.mac-button) {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.content :deep(.mac-button.red) { background: #ff5f56; }
-.content :deep(.mac-button.yellow) { background: #ffbd2e; }
-.content :deep(.mac-button.green) { background: #27c93f; }
-
-.content :deep(.lang-name) {
-  color: #abb2bf;
-  font-size: 12px;
-  text-transform: uppercase;
-  font-family: sans-serif;
-}
-
-.content :deep(.copy-btn) {
-  background: transparent;
-  border: none;
-  color: #abb2bf;
-  cursor: pointer;
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.content :deep(.copy-btn:hover) {
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-}
-
-.content :deep(.code-body) {
-  display: flex;
-  background: #282c34;
-  overflow: auto;
-  position: relative;
-}
-
-.content :deep(.line-numbers) {
-  padding: 16px 0 16px 10px;
-  text-align: right;
-  color: #495162;
-  border-right: 1px solid #353b45;
-  background: #282c34;
-  user-select: none;
-  display: flex;
-  flex-direction: column;
-  position: sticky;
-  left: 0;
-  z-index: 1;
-  min-width: 40px;
-}
-
-.content :deep(.line-numbers span) {
-  padding-right: 10px;
-  line-height: 1.6;
-  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-  font-size: 14px;
-  height: 22.4px; /* 14px * 1.6 */
-}
-
-.content :deep(pre) {
-  background: transparent;
-  padding: 16px;
+.content :deep(.code-wrapper.simple-code pre) {
   margin: 0;
-  overflow: visible;
+  padding: 16px;
+  overflow: visible; /* Let wrapper handle scrolling */
+  background: transparent;
   color: #abb2bf;
-  flex: 1;
 }
 
-.content :deep(pre code) {
-  background: none;
-  padding: 0;
-  color: inherit;
-  border: none;
+.content :deep(.code-wrapper.simple-code code) {
   font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
   font-size: 14px;
-  line-height: 1.6 !important;
-  display: block;
+  line-height: 1.6;
+  background: transparent;
+  padding: 0;
+  border: none;
+  white-space: pre; /* Keep code formatting */
 }
 
 /* 引用块 (灰白黑风格) */
@@ -678,13 +612,28 @@ onUpdated(() => {
 }
 
 /* 表格 (灰白黑风格) */
+/* 
 .content :deep(table) {
   width: 100%;
   border-collapse: collapse;
-  margin: 20px 0;
+  margin: 0;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+} 
+Wrapper handles overflow now
+*/
+.content :deep(table) {
+  width: 100%; /* Table takes full width of wrapper */
+  border-collapse: collapse;
+  margin: 0; /* Remove margin from table itself as wrapper has it */
+  min-width: 600px; /* Force min-width so scrolling happens on small screens instead of squishing */
+}
+
+.content :deep(.table-wrapper) {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  overflow: hidden; /* Hide scrollbar if not needed, but overflow-x: auto is inline style */
 }
 
 .content :deep(th),
@@ -706,17 +655,27 @@ onUpdated(() => {
   margin: 20px 0;
   overflow-x: auto;
   overflow-y: hidden;
+  max-width: 100%; /* Ensure it doesn't exceed parent */
 }
 
+/* Allow inline math to break if necessary, or at least not force overflow */
 .content :deep(.katex) {
-  white-space: nowrap;
+  white-space: normal; /* Allow wrapping */
+  max-width: 100%;
+}
+
+.content :deep(.katex-html) {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
 }
 
 /* Mermaid 图表样式 */
 .content :deep(.mermaid-chart) {
   text-align: center;
   margin: 20px 0;
-  overflow-x: auto;
+  overflow-x: auto; /* Allow scrolling */
+  max-width: 100%;
 }
 
 .content :deep(.mermaid-chart svg) {
@@ -784,6 +743,16 @@ onUpdated(() => {
   font-size: 16px;
   position: relative;
   min-height: 200px; /* 防止内容过少时太扁 */
+  word-wrap: break-word; /* Ensure long words break */
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 768px) {
+  .article-main-content {
+    padding: 20px 16px; /* Reduce padding significantly on mobile */
+    font-size: 15px; /* Slightly smaller font on mobile */
+    border-radius: 8px; /* Slightly smaller radius */
+  }
 }
 
 /* Share Tip Button */
@@ -854,6 +823,7 @@ onUpdated(() => {
   text-decoration: none;
   transition: background-color 0.2s;
   border: none;
+  box-sizing: border-box; /* Ensure padding doesn't add to width */
 }
 
 .content :deep(.link-card:hover) {

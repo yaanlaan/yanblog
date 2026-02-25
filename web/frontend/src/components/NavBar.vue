@@ -18,7 +18,7 @@
               <span>{{ siteInfo.blog_name }}</span>
             </div>
 
-            <ul class="navbar-nav" v-else key="nav">
+            <ul class="navbar-nav desktop-nav" v-else key="nav">
 
               <li class="nav-item">
                 <router-link to="/" class="nav-link" :class="{ active: $route.name === 'home' }">
@@ -94,8 +94,84 @@
               <i class="iconfont icon-search"></i>
             </button>
           </div>
-
+          
+          <!-- Mobile Menu Button -->
+          <button class="mobile-menu-btn" @click="toggleMobileMenu" :class="{ active: isMobileMenuOpen }">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
         </div>
+      </div>
+    </div>
+    
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" :class="{ open: isMobileMenuOpen }" @click="toggleMobileMenu"></div>
+    
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu-drawer" :class="{ open: isMobileMenuOpen }">
+      <div class="mobile-search">
+         <input 
+            type="text" 
+            class="mobile-search-box" 
+            placeholder="搜索文章..." 
+            v-model="searchQuery"
+            @keyup.enter="handleMobileSearch"
+          >
+          <button class="mobile-search-icon" @click="handleMobileSearch">
+            <i class="iconfont icon-search"></i>
+          </button>
+      </div>
+      
+      <ul class="mobile-nav-list">
+        <li class="mobile-nav-item" @click="toggleMobileMenu">
+          <router-link to="/" class="mobile-nav-link" :class="{ active: $route.name === 'home' }">
+            <i class="iconfont icon-Homehomepagemenu"></i>
+            <span>首页</span>
+          </router-link>
+        </li>
+        <li class="mobile-nav-item" @click="toggleMobileMenu">
+          <router-link to="/articles" class="mobile-nav-link" :class="{ active: $route.name === 'articles' }">
+            <i class="iconfont icon-newspaper"></i>
+            <span>文章</span>
+          </router-link>
+        </li>
+        <li class="mobile-nav-item" @click="toggleMobileMenu">
+          <router-link to="/categories" class="mobile-nav-link" :class="{ active: $route.name === 'categories' }">
+            <i class="iconfont icon-categories"></i>
+            <span>分类</span>
+          </router-link>
+        </li>
+        <li class="mobile-nav-item" @click="toggleMobileMenu">
+          <router-link to="/archive" class="mobile-nav-link" :class="{ active: $route.name === 'archive' }">
+            <i class="iconfont icon-archive"></i>
+            <span>归档</span>
+          </router-link>
+        </li>
+        <li class="mobile-nav-item" @click="toggleMobileMenu">
+          <router-link to="/about" class="mobile-nav-link" :class="{ active: $route.name === 'about' }">
+            <i class="iconfont icon-about"></i>
+            <span>关于</span>
+          </router-link>
+        </li>
+      </ul>
+      
+      <div class="mobile-socials" v-if="siteInfo.socials && siteInfo.socials.length > 0">
+         <a 
+            v-for="(contact, index) in siteInfo.socials" 
+            :key="index" 
+            :href="contact.url" 
+            target="_blank" 
+            class="mobile-social-item"
+          >
+            <i class="iconfont" :class="contact.icon" :style="{ color: contact.color }"></i>
+          </a>
+      </div>
+      
+      <div class="mobile-menu-footer">
+          <a v-if="siteInfo.admin_url" :href="siteInfo.admin_url" target="_blank" class="mobile-admin-btn">
+            管理后台
+          </a>
       </div>
     </div>
 
@@ -143,8 +219,25 @@ const isScrolled = ref(false)
 const lastScrollY = ref(0)
 const searchQuery = ref('')
 const scrollProgress = ref(0)
+const isMobileMenuOpen = ref(false)
 
 const router = useRouter()
+
+// 切换移动端菜单
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+  if (isMobileMenuOpen.value) {
+    document.body.style.overflow = 'hidden' // 禁止背景滚动
+  } else {
+    document.body.style.overflow = ''
+  }
+}
+
+// 移动端搜索
+const handleMobileSearch = () => {
+    handleSearch()
+    toggleMobileMenu()
+}
 
 // 处理滚动事件
 const handleScroll = () => {
@@ -286,6 +379,222 @@ onBeforeUnmount(() => {
   }
 }
 
+.avatar {
+  width: 32px; /* 减小头像 */
+  height: 32px;
+  object-fit: cover;
+  border-radius: 10%;
+  margin-right: 8px;
+}
+
+.blog-name {
+  font-size: 1.1em; /* 稍微减小字体 */
+  font-weight: bold;
+  color: var(--color-heading);
+  white-space: nowrap;
+}
+
+/* Navbar Center (Desktop) */
+.navbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.desktop-nav {
+  display: flex;
+  list-style: none; /* 去除列表原点 */
+  margin: 0;
+  padding: 0;
+  gap: 20px;
+  align-items: center;
+  height: 100%;
+}
+
+/* ==================== Mobile Menu Styles ==================== */
+.mobile-menu-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 15px;
+  z-index: 1002;
+}
+
+.mobile-menu-btn span {
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-heading);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.mobile-menu-btn.active span:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.mobile-menu-btn.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.mobile-menu-btn.active span:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+.mobile-menu-overlay {
+  position: fixed;
+  top: 60px; /* 改为从导航栏下方开始 */
+  left: 0;
+  width: 100%;
+  height: calc(100% - 60px);
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 996; /* 确保在 Drawer (997) 之下 */
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+  backdrop-filter: blur(4px);
+}
+
+.mobile-menu-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mobile-menu-drawer {
+  position: fixed;
+  top: 60px; /* Navbar height */
+  left: 0;
+  width: 100%;
+  max-height: 0; /* 默认高度为0，隐藏 */
+  background: var(--color-background);
+  z-index: 997; /* 低于 Navbar (1000) 但高于 content */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 0 20px; /* 初始 padding 0，防止高度为0时显示 padding */
+  box-sizing: border-box;
+  overflow: hidden; /* 隐藏溢出内容 */
+}
+
+.mobile-menu-drawer.open {
+  max-height: calc(100vh - 60px); /* 展开最大高度 */
+  padding: 20px; /* 展开时添加 padding */
+  overflow-y: auto;
+}
+
+.mobile-search {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 15px;
+}
+
+.mobile-search-box {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px 0 0 8px;
+  background: var(--color-background-soft);
+  color: var(--color-text);
+  outline: none;
+}
+
+.mobile-search-icon {
+  padding: 0 15px;
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+}
+
+.mobile-nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.1rem;
+  color: var(--color-text);
+  text-decoration: none;
+  padding: 10px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.mobile-nav-link.active,
+.mobile-nav-link:hover {
+  background: var(--color-background-soft);
+  color: var(--color-accent);
+}
+
+.mobile-socials {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.mobile-social-item {
+  font-size: 1.5rem;
+  text-decoration: none;
+}
+
+.mobile-menu-footer {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.mobile-admin-btn {
+    display: inline-block;
+    padding: 8px 20px;
+    background-color: var(--color-background-mute);
+    border-radius: 20px;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+/* 响应式断点控制 */
+@media (max-width: 992px) {
+  .navbar-center, 
+  .admin-btn-fixed,
+  .search-container {
+    display: none !important;
+  }
+  
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  .blog-name {
+    font-size: 1em;
+  }
+}
+
+@media (min-width: 993px) {
+  .mobile-menu-drawer,
+  .mobile-menu-overlay {
+    display: none;
+  }
+}
 .avatar {
   width: 32px; /* 减小头像 */
   height: 32px;

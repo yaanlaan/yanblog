@@ -332,4 +332,43 @@ watch(() => displayedCategories.value, () => {
     height: 180px;
   }
 }
+@media (max-width: 768px) {
+    .container {
+        padding: 0 15px;
+    }
+  .category-grid {
+    grid-template-columns: 1fr; /* 单列 */
+    gap: 15px;
+  }
+  
+  .category-card {
+    height: 100px; /* 更紧凑 */
+    flex-direction: row; /* 横向排列 */
+    align-items: center;
+  }
+  
+  .category-image {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .category-info {
+    text-align: left;
+    padding-left: 15px;
+    padding-right: 15px;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  
+  .category-info h3 {
+    margin-bottom: 5px;
+  }
+  
+  .category-top-tag {
+    left: auto;
+    right: 0;
+    top: 0;
+    border-radius: 0 12px 0 12px;
+  }
+}
 </style>

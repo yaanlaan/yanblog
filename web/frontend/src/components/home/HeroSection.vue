@@ -294,14 +294,15 @@ const handleRandomVisit = async () => {
 }
 
 /* 响应式 */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   .hero-top-grid {
     grid-template-columns: 1fr;
     height: auto;
   }
   
   .hero-card {
-    height: 200px;
+    height: 240px; /* 增加移动端卡片高度，给内容更多空间 */
+    margin-bottom: 15px;
   }
   
   .hero-bottom-grid {
@@ -311,6 +312,7 @@ const handleRandomVisit = async () => {
   
   .nav-card {
     height: 80px;
+    margin-bottom: 10px;
   }
 }
 </style>

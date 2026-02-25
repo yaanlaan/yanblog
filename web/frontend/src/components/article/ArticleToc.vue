@@ -85,6 +85,11 @@ const scrollToHeading = (id: string) => {
     })
     
     activeId.value = id
+    
+    // Check if we are on mobile (screen width <= 1450px matching the CSS breakpoint)
+    if (window.innerWidth <= 1450) {
+      emit('close')
+    }
   }
 }
 

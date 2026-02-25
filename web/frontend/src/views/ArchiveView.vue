@@ -844,4 +844,44 @@ onMounted(() => {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+/* 响应式适配 */
+@media (max-width: 768px) {
+  .tag-list {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    flex-wrap: nowrap; /* 不换行，横向滚动 */
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch; /* 流畅滚动 */
+  }
+  
+  .tag-item {
+    flex-shrink: 0;
+  }
+
+  /* 隐藏收起更多按钮，因为变成横向滚动了 */
+  .tag-toggle {
+    display: none; 
+  }
+
+  .contribution-section {
+    flex-direction: column;
+    padding: 15px;
+  }
+  
+  .contrib-stats {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 20px;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 15px;
+    flex-direction: row;
+    justify-content: space-around;
+  }
+  
+  .stat-item {
+    margin-bottom: 0;
+  }
+}
 </style>

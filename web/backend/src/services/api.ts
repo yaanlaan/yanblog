@@ -177,6 +177,15 @@ export const articleApi = {
   }) => 
     apiClient.post('/v1/article/add', data),
   
+  // 上传ZIP发布文章
+  uploadZip: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return apiClient.post('/v1/article/zip', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  },
+
   // 更新文章
   updateArticle: (id: number, data: { 
     title: string; 

@@ -1,6 +1,6 @@
 <template>
   <div class="main-wrapper">
-    <div class="container">
+    <div class="container" :class="{ 'full-width': fullWidth }">
       <div class="content-wrapper">
         <div class="sidebar left-sidebar" v-if="$slots.leftSidebar">
           <slot name="leftSidebar"></slot>
@@ -20,6 +20,10 @@
 <script setup lang="ts">
 // 主布局组件
 import BackToTop from '@/components/BackToTop.vue'
+
+defineProps<{
+  fullWidth?: boolean
+}>()
 </script>
 
 <style scoped>
@@ -30,9 +34,20 @@ import BackToTop from '@/components/BackToTop.vue'
 
 .container {
   width: 100%;
-  max-width: 1200px; /* 调整为更窄的宽度以匹配设计图 */
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
+}
+
+.container.full-width {
+  max-width: 100%;
+  padding: 0 40px;
+}
+
+@media (max-width: 768px) {
+  .container, .container.full-width {
+    padding: 0 16px; /* Decrease padding on mobile */
+  }
 }
 
 .content-wrapper {

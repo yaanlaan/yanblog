@@ -1,12 +1,19 @@
 <template>
   <div class="article-detail-page">
-    <MainLayout>
+    <MainLayout :full-width="true">
       <!-- 移除原有的左侧边栏插槽，将目录改为固定定位 -->
       <!-- <template #leftSidebar> ... </template> -->
 
       <template #main>
+        <!-- 移动端目录遮罩层 -->
+        <div 
+          class="toc-overlay" 
+          v-if="isTocOpen && article && article.type !== 2" 
+          @click="isTocOpen = false"
+        ></div>
+
         <!-- 悬浮目录 (仅在大屏显示) -->
-        <div class="fixed-toc-wrapper" v-if="article && article.type !== 2 && isTocOpen">
+        <div class="fixed-toc-wrapper" v-if="article && article.type !== 2" :class="{ 'open': isTocOpen }">
            <ArticleToc 
              :content="article.content" 
              ref="tocRef"
@@ -188,7 +195,8 @@ const loading = ref(false)
 const previousArticle = ref<Article | null>(null)
 const nextArticle = ref<Article | null>(null)
 const relatedArticles = ref<Article[]>([])
-const isTocOpen = ref(true)
+// 默认在大屏时展开，小屏时收起
+const isTocOpen = ref(window.innerWidth > 1450)
 
 // 图片查看器相关
 const showImageViewer = ref(false)
@@ -392,6 +400,15 @@ const closeImageViewer = () => {
   document.body.style.overflow = ''
 }
 
+// 监听 isTocOpen 变化，控制 body 滚动（仅在移动端）
+watch(isTocOpen, (val) => {
+  if (window.innerWidth <= 1450) {
+    document.body.style.overflow = val ? 'hidden' : ''
+  } else {
+    document.body.style.overflow = ''
+  }
+})
+
 // 上一张图片
 const prevImage = () => {
   if (imageList.value.length <= 1) return
@@ -446,6 +463,31 @@ watch(
   }
 )
 
+
+// 监听窗口大小变化
+const prevWidth = ref(window.innerWidth)
+const handleResize = () => {
+  const currentWidth = window.innerWidth
+  // 从小屏变大屏：自动展开目录
+  if (prevWidth.value <= 1450 && currentWidth > 1450) {
+    isTocOpen.value = true
+  }
+  // 从大屏变小屏：自动收起目录，避免遮挡内容
+  if (prevWidth.value > 1450 && currentWidth <= 1450) {
+    isTocOpen.value = false
+  }
+  
+  // 确保大屏下允许滚动
+  if (currentWidth > 1450) {
+    document.body.style.overflow = ''
+  } else {
+    // 小屏下根据状态决定
+    document.body.style.overflow = isTocOpen.value ? 'hidden' : ''
+  }
+  
+  prevWidth.value = currentWidth
+}
+
 // 组件挂载时获取数据
 onMounted(() => {
   const articleId = Number(route.params.id)
@@ -453,13 +495,18 @@ onMounted(() => {
     getArticleDetail(articleId)
   }
   
-  // 添加键盘事件监听
+  // 添加事件监听
   window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('resize', handleResize)
+  
+  // 初始化目录状态
+  isTocOpen.value = window.innerWidth > 1450
 })
 
 // 组件卸载时移除事件监听
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
@@ -906,8 +953,37 @@ onUnmounted(() => {
   left: 40px;
   width: 260px;
   bottom: 40px;
-  z-index: 10;
+  z-index: 1000;
   overflow-y: visible; /* Adjust inside component */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+}
+
+/* 在大屏下隐藏时的样式 */
+@media (min-width: 1451px) {
+  .fixed-toc-wrapper:not(.open) {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-20px);
+  }
+}
+
+/* 遮罩层样式 */
+.toc-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* 调整文章内容容器 */
@@ -916,18 +992,95 @@ onUnmounted(() => {
   border-radius: 0;
   box-shadow: none;
   padding: 0;
-  max-width: 1100px; /* Wider content */
-  margin: 0 auto;
+  max-width: 1600px; /* Limit very wide screens */
+  margin-left: 340px; /* Space for TOC (40px + 260px + gap) */
+  margin-right: 40px;
+  width: auto; /* Allow width to flow naturally */
 }
 
-/* 适配小屏幕：隐藏固定目录 */
+@media (max-width: 1600px) {
+    .article-content {
+        margin-right: 40px; /* Keep consistent right margin */
+    }
+}
+
+/* 适配小屏幕：隐藏固定目录，但在打开时作为抽屉显示 */
 @media (max-width: 1450px) {
+  .article-content {
+    margin: 0;
+    width: 100%;
+    max-width: 100%; 
+    padding: 0;
+    overflow-x: hidden; 
+    /* removed max-width: 100vw to allow content to fill */
+  }
+
+  /* 遮罩层 */
+  .toc-overlay {
+    /* 仅在打开时显示，由 v-if 控制DOM是否存在，或者使用 CSS display */
+    display: block;
+  }
+
   .fixed-toc-wrapper {
-    display: none;
+    /* 不使用 display: none，而是改为抽屉样式 */
+    position: fixed;
+    top: 0;
+    right: 0; /* Align right */
+    left: auto;
+    width: 320px; /* Slightly wider */
+    height: 100%;
+    z-index: 2000; /* 确保高于 Navbar (1000-1002) */
+    background: transparent; /* Component handles background */
+    
+    /* Move shadow to wrapper so it's visible outside on the left */
+    box-shadow: -4px 0 15px rgba(0,0,0,0.1); 
+    
+    border: none;
+    padding: 0;
+    transform: translateX(100%); /* Default hidden off-screen */
+  }
+
+  /* 遮罩层 z-index 更新 */
+  .toc-overlay {
+    z-index: 1999;
+  }
+
+  .fixed-toc-wrapper.open {
+    transform: translateX(0); /* Slide in */
+  }
+  
+  /* 确保 toc-wrapper 内部撑满高度 */
+  .fixed-toc-wrapper :deep(.article-toc) {
+    height: 100%;
+    border-radius: 0;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    max-height: none;
   }
   
   .toc-fab {
     display: flex !important; /* Force show fab on smaller screens if they want toc */
+    left: auto;
+    right: 20px;
+    bottom: 80px; /* Position at bottom right */
+    top: auto;
+    z-index: 999;
+    background-color: var(--color-background);
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+}
+
+@media (max-width: 768px) {
+  .fixed-toc-wrapper {
+    width: 85%; /* 移动端更宽 */
+  }
+  
+  .related-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

@@ -1,8 +1,9 @@
 package model
 
 import (
-	"yanblog/utils/errmsg"
 	"strings"
+	"yanblog/utils/errmsg"
+
 	"gorm.io/gorm"
 )
 
@@ -44,12 +45,12 @@ func CheckCategoryWithID(id int, name string) (code int) {
 // 返回: 状态码
 func CreateCate(data *Category) int {
 	// 保持img字段为空或用户输入的值，不再设置默认值
-	
+
 	// 确保top字段有效
 	if data.Top < 0 {
 		data.Top = 0
 	}
-	
+
 	err := db.Create(&data).Error
 	if err != nil {
 		return errmsg.ERROR
@@ -84,7 +85,7 @@ func SearchCategory(keyword string, pageSize int, pageNum int) ([]Category, int6
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, 0
 	}
-	
+
 	return cate, total
 }
 
@@ -107,14 +108,14 @@ func GetCate(pageSize int, pageNum int) ([]Category, int64) {
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, 0
 	}
-	
+
 	// 为每个分类获取文章数量
 	for i := range cate {
 		var count int64
 		db.Model(&Article{}).Where("cid = ?", cate[i].ID).Count(&count)
 		cate[i].ArticleCount = int(count)
 	}
-	
+
 	return cate, total
 }
 
@@ -127,12 +128,12 @@ func GetCateInfo(id int) (Category, int) {
 	if err != nil {
 		return cate, errmsg.ERROR_CATE_NOT_EXIST
 	}
-	
+
 	// 获取该分类下的文章数量
 	var count int64
 	db.Model(&Article{}).Where("cid = ?", id).Count(&count)
 	cate.ArticleCount = int(count)
-	
+
 	return cate, errmsg.SUCCESS
 }
 
@@ -161,4 +162,26 @@ func DeleteCate(id int) int {
 		return errmsg.ERROR
 	}
 	return errmsg.SUCCESS
+}
+
+// GetOrCreateCategory 获取或创建分类
+// 参数: name - 分类名称
+// 返回: 分类ID
+func GetOrCreateCategory(name string) int {
+	var cate Category
+	err := db.Where("name = ?", name).First(&cate).Error
+	if err == nil && cate.ID > 0 {
+		return int(cate.ID)
+	}
+
+	// 不存在则创建
+	newCate := Category{
+		Name: name,
+	}
+	err = db.Create(&newCate).Error
+	if err != nil {
+		// Log error? For now just return default or 0
+		return 0
+	}
+	return int(newCate.ID)
 }
