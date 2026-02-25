@@ -113,17 +113,20 @@
 确保你已经安装了 Docker 和 Docker Compose，然后在项目根目录下运行：
 
 **Linux/Mac:**
+
 ```bash
 chmod +x docker.sh health-check.sh
 ./docker.sh
 ```
 
 **Windows:**
+
 ```powershell
 .\docker.ps1
 ```
 
 **手动部署:**
+
 ```bash
 docker-compose up --build -d
 ```
@@ -187,6 +190,25 @@ docker-compose up --build -d
 6. **性能优化**：gzip 压缩、静态资源缓存等
 7. **智能推荐**：基于标签的相关文章推荐
 8. **数据可视化**：后台仪表盘展示统计数据
+9. 压缩包上传文章
+   压缩包中一份markdown一份images文件夹，markdown格式如下
+
+   ```
+   ---
+   title: "我的新文章"
+   date: 2023-10-27
+   tags: [Go, Gin, Web]
+   category: "后端开发"
+   desc: "这是一篇关于 ZIP 上传功能的介绍"
+   cover: "images/cover.jpg"
+   ---
+
+   # 正文
+
+   这里是图片引用：
+   ![示例图片](images/img1.png)
+   ```
+10. 
 
 ## 预览
 
@@ -197,19 +219,19 @@ docker-compose up --build -d
   <img src="readme_src/前端预览/light_home.png" width="45%" alt="Light Home"/>
   <img src="readme_src/前端预览/dark_home.png" width="45%" alt="Dark Home"/>
 
-  <h4>文章列表</h4>
+<h4>文章列表</h4>
   <img src="readme_src/前端预览/light_articlelist.png" width="45%" alt="Light Article List"/>
   <img src="readme_src/前端预览/dark_articlelist.png" width="45%" alt="Dark Article List"/>
 
-  <h4>文章详情</h4>
+<h4>文章详情</h4>
   <img src="readme_src/前端预览/light_article.png" width="45%" alt="Light Article"/>
   <img src="readme_src/前端预览/dark_article.png" width="45%" alt="Dark Article"/>
 
-  <h4>文章归档</h4>
+<h4>文章归档</h4>
   <img src="readme_src/前端预览/light_archive.png" width="45%" alt="Light Archive"/>
   <img src="readme_src/前端预览/dark_archive.png" width="45%" alt="Dark Archive"/>
 
-  <h4>关于页面</h4>
+<h4>关于页面</h4>
   <img src="readme_src/前端预览/light_about.png" width="45%" alt="Light About"/>
   <img src="readme_src/前端预览/dark_about.png" width="45%" alt="Dark About"/>
 </div>
@@ -220,4 +242,3 @@ docker-compose up --build -d
   <h4>后台仪表盘</h4>
   <img src="readme_src/后端预览/backend_panel.png" width="90%" alt="Backend Panel"/>
 </div>
-
