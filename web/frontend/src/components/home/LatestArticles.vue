@@ -1,0 +1,170 @@
+<template>
+  <div class="latest-articles">
+    <h2 class="section-title">最新文章</h2>
+    
+    <!-- 加载状态 -->
+    <div v-if="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>加载中...</p>
+    </div>
+    
+    <!-- 文章列表 -->
+    <div v-else>
+      <div class="articles-list" v-if="articles.length > 0">
+        <template v-for="(article, index) in displayArticles" :key="article.id">
+          <ArticleCard :article="article" />
+          <div v-if="index < displayArticles.length - 1" class="article-divider"></div>
+        </template>
+        
+        <!-- seemore按钮 -->
+        <div class="see-more-container">
+          <button 
+            @click="loadMore"
+            class="see-more-button"
+          >
+            <i class="iconfont icon-seemore"></i>
+            <span>See More</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="empty-state" v-else>
+        <p>暂无文章</p>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { ElMessage } from 'element-plus'
+import ArticleCard from './ArticleCard.vue'
+
+// 定义Props
+interface Article {
+  id: number
+  title: string
+  categoryId: number
+  categoryName: string
+  desc: string
+  content: string
+  img: string
+  createdAt: string
+  updatedAt: string
+}
+
+interface Props {
+  articles: Article[]
+  loading: boolean
+}
+
+const props = defineProps<Props>()
+
+// 显示数量控制
+const displayCount = ref(5)
+
+// 计算属性，根据displayCount显示文章
+const displayArticles = computed(() => {
+  return props.articles.slice(0, displayCount.value)
+})
+
+// 加载更多文章
+const loadMore = () => {
+  if (displayCount.value >= props.articles.length) {
+    ElMessage.info('没有更多文章了')
+    return
+  }
+  displayCount.value += 5
+}
+</script>
+
+<style scoped>
+.iconfont {
+  font-size: 14px;
+}
+.section-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: var(--color-heading);
+  text-align: left;
+  padding-left: 10px;
+  border-left: 4px solid var(--color-accent);
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 150px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.articles-list {
+  display: flex;
+  flex-direction: column;
+  /* gap: 20px;  Removed gap to control spacing with divider */
+  margin-bottom: 30px;
+}
+
+.article-divider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 0 20px; /* Horizontal margin */
+  width: calc(100% - 40px); /* Adjust width based on margin */
+  align-self: center;
+}
+
+.see-more-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.see-more-button {
+  padding: 10px 30px;
+  background-color: #42b883;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  color: white;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 4px 15px rgba(66, 184, 131, 0.4);
+}
+
+.see-more-button:hover {
+  background-color: #3aa876;
+  box-shadow: 0 6px 20px rgba(66, 184, 131, 0.6);
+  transform: translateY(-2px);
+}
+
+.no-more-hint {
+  color: #999;
+  font-size: 14px;
+  padding: 10px 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 0;
+  color: #888;
+}
+</style>

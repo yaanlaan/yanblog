@@ -1,0 +1,34 @@
+# Git
+.git
+.gitignore
+
+# Docker
+docker-compose.yaml
+Dockerfile
+.dockerignore
+
+# Build
+**/dist
+dist
+build
+bin
+
+# Dependencies
+**/node_modules
+node_modules
+vendor
+
+# Logs
+logs
+*.log
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Data & Runtime
+docker_field/mysql
+docker_field/uploads
+

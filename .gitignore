@@ -1,0 +1,60 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Dependencies
+vendor/
+node_modules/
+
+# Go
+go.work
+
+# IDE
+.idea/
+.vscode/
+.trae/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# Logs
+log/
+*.log
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Build outputs
+bin/
+build/
+dist/
+
+# Runtime data
+uploads/
+*.db
+*.sqlite
+
+# Configuration with secrets (do NOT track)
+config/backend/config.yaml
+config/*.local
+config/secrets.yaml
+
+# Claude Code
+.claude/
+
+# Docker artifacts
+server
+yanblog

@@ -1,0 +1,1081 @@
+<template>
+  <div class="article-detail-page">
+    <MainLayout :full-width="true">
+      <!-- 移除原有的左侧边栏插槽，将目录改为固定定位 -->
+      <!-- <template #leftSidebar> ... </template> -->
+
+      <template #main>
+        <!-- 移动端目录遮罩层 -->
+        <div 
+          class="toc-overlay" 
+          v-if="isTocOpen && article && article.type !== 2" 
+          @click="isTocOpen = false"
+        ></div>
+
+        <!-- 悬浮目录 (仅在大屏显示) -->
+        <div class="fixed-toc-wrapper" v-if="article && article.type !== 2" :class="{ 'open': isTocOpen }">
+           <ArticleToc 
+             :content="article.content" 
+             ref="tocRef"
+             @close="isTocOpen = false"
+           />
+        </div>
+
+        <!-- 目录展开悬浮按钮 (当目录收起时显示) -->
+        <div 
+          v-if="!isTocOpen && article && article.type !== 2" 
+          class="toc-fab" 
+          @click="isTocOpen = true"
+          title="展开目录"
+        >
+          <!-- List Icon SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fab-icon"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+        </div>
+
+
+        <div class="page-header">
+          <router-link to="/articles" class="back-link">
+            « 返回文章列表
+          </router-link>
+        </div>
+        
+        <article class="article-content">
+          <!-- 加载状态 -->
+          <div v-if="loading" class="loading-state">
+            <div class="spinner"></div>
+            <p>加载中...</p>
+          </div>
+          
+          <!-- 文章内容 -->
+          <div v-else>
+            <ArticleHeader 
+              v-if="article" 
+              :article="article" 
+              @share="handleHeaderShare"
+              @comment="scrollToComments"
+            />
+
+            <!-- <div class="article-actions" v-if="article"> ... </div> -->
+            
+            <ArticleContent
+              v-if="article" 
+              :article="article" 
+              @image-click="handleImageClick"
+              @share-selection="openShareCard"
+            />
+            
+            <!-- 上一篇/下一篇导航 -->
+            <div class="article-navigation" v-if="article">
+              <div class="nav-item previous" v-if="previousArticle">
+                <router-link :to="`/article/${previousArticle.id}`" class="nav-link">
+                  <div class="nav-cover">
+                    <img :src="previousArticle.img || defaultImage" :alt="previousArticle.title" />
+                  </div>
+                  <span class="nav-label">上一篇</span>
+                  <span class="nav-title">{{ previousArticle.title }}</span>
+                </router-link>
+              </div>
+              <div class="nav-item next" v-if="nextArticle">
+                <router-link :to="`/article/${nextArticle.id}`" class="nav-link">
+                  <div class="nav-cover">
+                    <img :src="nextArticle.img || defaultImage" :alt="nextArticle.title" />
+                  </div>
+                  <span class="nav-label">下一篇</span>
+                  <span class="nav-title">{{ nextArticle.title }}</span>
+                </router-link>
+              </div>
+            </div>
+
+            <!-- 相关文章推荐 -->
+            <div class="related-articles-section" v-if="relatedArticles.length > 0">
+              <h3 class="section-title">✨ 相关推荐</h3>
+              <div class="related-grid">
+                <router-link 
+                  v-for="item in relatedArticles" 
+                  :key="item.id" 
+                  :to="`/article/${item.id}`" 
+                  class="related-card"
+                >
+                  <div class="related-cover">
+                    <img :src="item.img || defaultImage" :alt="item.title" loading="lazy" />
+                  </div>
+                  <div class="related-info">
+                    <h4 class="related-item-title">{{ item.title }}</h4>
+                    <span class="related-date">{{ formatDate(item.createdAt) }}</span>
+                  </div>
+                </router-link>
+              </div>
+            </div>
+
+            <!-- 评论区 -->
+            <GiscusComment />
+            
+            <div class="empty-state" v-if="!article">
+              <p>文章不存在或已被删除</p>
+            </div>
+          </div>
+        </article>
+      </template>
+    </MainLayout>
+    
+    <!-- 图片查看器 -->
+    <div v-if="showImageViewer" class="image-viewer" @click="closeImageViewer">
+      <div class="image-viewer-content" @click.stop>
+        <button class="close-btn" @click="closeImageViewer">×</button>
+        <button class="nav-btn prev-btn" @click="prevImage" v-if="imageList.length > 1">‹</button>
+        <button class="nav-btn next-btn" @click="nextImage" v-if="imageList.length > 1">›</button>
+        
+        <div class="image-container" @wheel.prevent="handleWheel">
+          <img 
+            :src="currentImage" 
+            :alt="`图片 ${currentImageIndex + 1}`"
+            class="viewer-image"
+            :style="{ transform: `scale(${imageScale})`, transition: 'transform 0.1s ease' }"
+            @load="onImageLoad"
+            @error="onImageError"
+          />
+        </div>
+        
+        <div class="image-info">
+          <span class="image-counter">{{ currentImageIndex + 1 }} / {{ imageList.length }}</span>
+          <span class="image-alt">{{ imageAltList[currentImageIndex] || `图片 ${currentImageIndex + 1}` }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 分享卡片 -->
+    <ShareCard 
+      :visible="shareVisible" 
+      :title="article?.title || ''" 
+      :content="shareContent"
+      :url="shareUrl"
+      @close="shareVisible = false"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { articleApi } from '@/services/api'
+import MainLayout from '@/components/layout/MainLayout.vue'
+import ArticleHeader from '@/components/article/ArticleHeader.vue'
+import ArticleContent from '@/components/article/ArticleContent.vue'
+import ArticleToc from '@/components/article/ArticleToc.vue'
+import GiscusComment from '@/components/comment/GiscusComment.vue'
+import ShareCard from '@/components/ShareCard.vue'
+
+// 默认图片
+const defaultImage = new URL('@/assets/img/无封面.jpg', import.meta.url).href
+
+// 类型定义
+interface Article {
+  id: number
+  title: string
+  categoryId: number
+  categoryName: string
+  desc: string
+  content: string
+  img: string
+  tags: string
+  views: number
+  type?: number
+  pdf_url?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// 路由信息
+const route = useRoute()
+const tocRef = ref<InstanceType<typeof ArticleToc> | null>(null)
+
+// 响应式数据
+const article = ref<Article | null>(null)
+const loading = ref(false)
+const previousArticle = ref<Article | null>(null)
+const nextArticle = ref<Article | null>(null)
+const relatedArticles = ref<Article[]>([])
+// 默认在大屏时展开，小屏时收起
+const isTocOpen = ref(window.innerWidth > 1450)
+
+// 图片查看器相关
+const showImageViewer = ref(false)
+const imageList = ref<string[]>([])
+const imageAltList = ref<string[]>([])
+const currentImageIndex = ref(0)
+const currentImage = ref('')
+const imageScale = ref(1)
+
+// 分享卡片相关
+const shareVisible = ref(false)
+const shareContent = ref('')
+const shareUrl = ref('')
+
+const openShareCard = (content?: string) => {
+  shareUrl.value = window.location.href
+  if (content) {
+    shareContent.value = content
+  } else if (article.value?.desc) {
+    shareContent.value = article.value.desc
+  } else {
+    // 截取前100字
+    shareContent.value = article.value?.content.slice(0, 100).replace(/[#*`]/g, '') + '...' || ''
+  }
+  shareVisible.value = true
+}
+
+// 处理滚轮缩放
+const handleWheel = (e: WheelEvent) => {
+  const delta = e.deltaY > 0 ? -0.1 : 0.1
+  const newScale = Math.max(0.1, Math.min(5, imageScale.value + delta))
+  imageScale.value = Number(newScale.toFixed(1))
+}
+
+// 获取文章详情
+const getArticleDetail = async (id: number) => {
+  loading.value = true
+  try {
+    const response = await articleApi.getArticle(id)
+    
+    if (response.data.status !== 200) {
+      console.error('获取文章详情失败:', response.data.message)
+      article.value = null
+      return
+    }
+
+    const data = response.data.data
+    
+    article.value = {
+      id: data.ID,
+      title: data.title,
+      categoryId: data.cid,
+      categoryName: data.Category?.name || '未分类',
+      desc: data.desc,
+      content: data.content,
+      img: data.img,
+      tags: data.tags || '',
+      views: data.views || 0,
+      type: data.type,
+      pdf_url: data.pdf_url,
+      createdAt: data.CreatedAt || data.created_at,
+      updatedAt: data.UpdatedAt || data.updated_at
+    }
+    
+    // 获取相邻文章
+    await getAdjacentArticles(id)
+
+    // 获取相关文章
+    await getRelatedArticles(id)
+    
+
+  } catch (error) {
+    console.error('获取文章详情失败:', error)
+    article.value = null
+  } finally {
+    loading.value = false
+  }
+}
+
+const scrollToComments = () => {
+    const commentsEl = document.querySelector('.giscus') || document.querySelector('#comments')
+    if (commentsEl) {
+        commentsEl.scrollIntoView({ behavior: 'smooth' })
+    }
+}
+
+const handleHeaderShare = () => {
+  // 确保 URL 存在，否则二维码不会生成
+  shareUrl.value = window.location.href
+
+  // 当点击头部分享按钮时，如果没有选中文本，则使用文章描述或摘要
+  // 总是重置为空，以便获取默认描述
+  shareContent.value = ''
+  
+  const desc = article.value?.desc
+  // 限制字数
+  shareContent.value = desc ? (desc.length > 80 ? desc.substring(0, 80) + '...' : desc) : (article.value?.title || '')
+  
+  shareVisible.value = true
+}
+
+// 格式化日期
+const formatDate = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleDateString('zh-CN')
+}
+
+// 获取相关文章
+const getRelatedArticles = async (id: number) => {
+  try {
+    const response = await articleApi.getRelatedArticles(id)
+    if (response.data.status === 200) {
+       relatedArticles.value = response.data.data.map((item: any) => ({
+        id: item.ID,
+        title: item.title,
+        img: item.img,
+        createdAt: item.CreatedAt || item.created_at,
+       }))
+    }
+  } catch (error) {
+    console.error('获取相关文章失败:', error)
+  }
+}
+
+// 获取相邻文章
+const getAdjacentArticles = async (currentId: number) => {
+  try {
+    // 由于后端没有提供专门的API，我们通过获取文章列表来模拟相邻文章功能
+    // 这里只是简单实现，实际项目中应该由后端提供专门的API
+    
+    // 获取所有文章列表
+    const response = await articleApi.getArticles({
+      pagesize: -1,
+      pagenum: -1
+    })
+    
+    if (response.data.status !== 200) {
+      return
+    }
+
+    const articles = response.data.data.map((item: any) => ({
+      id: item.ID,
+      title: item.title,
+      categoryId: item.cid,
+      categoryName: item.Category?.name || '未分类',
+      desc: item.desc,
+      content: item.content,
+      img: item.img,
+      createdAt: item.CreatedAt || item.created_at,
+      updatedAt: item.UpdatedAt || item.updated_at
+    }))
+    
+    // 按ID排序（实际项目中应该按创建时间排序）
+    articles.sort((a: Article, b: Article) => a.id - b.id)
+    
+    // 查找当前文章的索引
+    const currentIndex = articles.findIndex((article: Article) => article.id === currentId)
+    
+    // 设置上一篇和下一篇文章
+    if (currentIndex > 0) {
+      previousArticle.value = articles[currentIndex - 1]
+    } else {
+      previousArticle.value = null
+    }
+    
+    if (currentIndex < articles.length - 1) {
+      nextArticle.value = articles[currentIndex + 1]
+    } else {
+      nextArticle.value = null
+    }
+  } catch (error) {
+    console.error('获取相邻文章失败:', error)
+    previousArticle.value = null
+    nextArticle.value = null
+  }
+}
+
+// 处理图片点击事件
+const handleImageClick = (imageSrc: string, imageAlt: string, images: string[], alts: string[]) => {
+  imageList.value = images
+  imageAltList.value = alts
+  currentImageIndex.value = images.indexOf(imageSrc)
+  currentImage.value = imageSrc
+  showImageViewer.value = true
+  
+  // 禁止body滚动
+  document.body.style.overflow = 'hidden'
+}
+
+// 关闭图片查看器
+const closeImageViewer = () => {
+  showImageViewer.value = false
+  imageScale.value = 1
+  // 恢复body滚动
+  document.body.style.overflow = ''
+}
+
+// 监听 isTocOpen 变化，控制 body 滚动（仅在移动端）
+watch(isTocOpen, (val) => {
+  if (window.innerWidth <= 1450) {
+    document.body.style.overflow = val ? 'hidden' : ''
+  } else {
+    document.body.style.overflow = ''
+  }
+})
+
+// 上一张图片
+const prevImage = () => {
+  if (imageList.value.length <= 1) return
+  currentImageIndex.value = (currentImageIndex.value - 1 + imageList.value.length) % imageList.value.length
+  currentImage.value = imageList.value[currentImageIndex.value]
+  imageScale.value = 1
+}
+
+// 下一张图片
+const nextImage = () => {
+  if (imageList.value.length <= 1) return
+  currentImageIndex.value = (currentImageIndex.value + 1) % imageList.value.length
+  currentImage.value = imageList.value[currentImageIndex.value]
+  imageScale.value = 1
+}
+
+// 图片加载完成
+const onImageLoad = () => {
+  // 图片加载完成后的处理
+}
+
+// 图片加载错误
+const onImageError = (e: Event) => {
+  console.error('图片加载失败:', e)
+}
+
+// 监听键盘事件
+const handleKeydown = (e: KeyboardEvent) => {
+  if (!showImageViewer.value) return
+  
+  switch (e.key) {
+    case 'Escape':
+      closeImageViewer()
+      break
+    case 'ArrowLeft':
+      prevImage()
+      break
+    case 'ArrowRight':
+      nextImage()
+      break
+  }
+}
+
+// 监听路由变化
+watch(
+  () => route.params.id,
+  (newId) => {
+    const articleId = Number(newId)
+    if (articleId) {
+      getArticleDetail(articleId)
+    }
+  }
+)
+
+
+// 监听窗口大小变化
+const prevWidth = ref(window.innerWidth)
+const handleResize = () => {
+  const currentWidth = window.innerWidth
+  // 从小屏变大屏：自动展开目录
+  if (prevWidth.value <= 1450 && currentWidth > 1450) {
+    isTocOpen.value = true
+  }
+  // 从大屏变小屏：自动收起目录，避免遮挡内容
+  if (prevWidth.value > 1450 && currentWidth <= 1450) {
+    isTocOpen.value = false
+  }
+  
+  // 确保大屏下允许滚动
+  if (currentWidth > 1450) {
+    document.body.style.overflow = ''
+  } else {
+    // 小屏下根据状态决定
+    document.body.style.overflow = isTocOpen.value ? 'hidden' : ''
+  }
+  
+  prevWidth.value = currentWidth
+}
+
+// 组件挂载时获取数据
+onMounted(() => {
+  const articleId = Number(route.params.id)
+  if (articleId) {
+    getArticleDetail(articleId)
+  }
+  
+  // 添加事件监听
+  window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('resize', handleResize)
+  
+  // 初始化目录状态
+  isTocOpen.value = window.innerWidth > 1450
+})
+
+// 组件卸载时移除事件监听
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('resize', handleResize)
+})
+</script>
+
+<style scoped>
+.article-detail-page {
+  width: 100%;
+  min-height: calc(100vh - 200px);
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+.back-link {
+  color: #00a5a5ff;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.article-content {
+  background: var(--color-background-soft);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px var(--color-shadow);
+  padding: 30px;
+  min-height: 400px;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--color-background-mute);
+  border-top: 4px solid var(--color-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 0;
+  color: #888;
+}
+
+/* 上一篇/下一篇导航样式 */
+.article-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.nav-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-item.previous {
+  padding-right: 10px;
+}
+
+.nav-item.next {
+  padding-left: 10px;
+  text-align: right;
+}
+
+.nav-link {
+  display: block;
+  text-decoration: none;
+  color: var(--color-heading);
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  color: var(--color-accent);
+}
+
+.nav-label {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-bottom: 5px;
+}
+
+.nav-title {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 封面预览样式 */
+.nav-cover {
+  width: 100%;
+  height: 120px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  background-color: var(--color-background-mute);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 992px) {
+  .article-content {
+    padding: 20px;
+  }
+  
+  .article-navigation {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .nav-item.previous,
+  .nav-item.next {
+    padding: 0;
+    text-align: left;
+  }
+  
+  .nav-item.next {
+    text-align: left;
+  }
+  
+  .nav-cover {
+    height: 80px;
+  }
+  
+  .image-viewer-content {
+    max-width: 95%;
+  }
+  
+  .nav-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+  }
+  
+  .prev-btn {
+    left: 10px;
+  }
+  
+  .next-btn {
+    right: 10px;
+  }
+}
+
+/* 图片查看器样式 */
+.image-viewer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.image-viewer-content {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.close-btn {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.close-btn:hover {
+  color: #ccc;
+}
+
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.3s;
+}
+
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.prev-btn {
+  left: 20px;
+}
+
+.next-btn {
+  right: 20px;
+}
+
+.image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  max-height: 80vh;
+}
+
+.viewer-image {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+}
+
+.image-info {
+  color: white;
+  margin-top: 15px;
+  text-align: center;
+}
+
+.image-counter {
+  margin-right: 20px;
+  font-size: 14px;
+}
+
+.image-alt {
+  font-size: 16px;
+}
+
+.toc-fab {
+  position: fixed;
+  top: 100px; /* Align with TOC top */
+  left: 40px; /* Align with TOC left */
+  bottom: auto; /* Override previous bottom */
+  width: 40px;
+  height: 40px;
+  background-color: var(--color-background);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 99;
+  transition: all 0.3s ease;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.toc-fab:hover {
+  transform: translateX(5px); /* Move slightly right to indicate expansion */
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.2);
+}
+
+.toc-fab .fab-icon {
+  font-size: 20px;
+}
+
+/* 相关文章样式 */
+.related-articles-section {
+  margin: 60px 0;
+  padding-top: 30px;
+  border-top: 1px dashed var(--color-border);
+}
+
+.section-title {
+  font-size: 22px;
+  margin-bottom: 25px;
+  color: var(--color-heading);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns */
+  gap: 24px;
+}
+
+.related-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  background: var(--color-background);
+  border-radius: 16px; /* Larger card radius */
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* Minimal shadow */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100%;
+  border: 1px solid var(--color-border);
+  padding: 10px; /* Add internal padding */
+  gap: 12px;
+}
+
+.related-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+  border-color: var(--color-border-hover);
+}
+
+.related-cover {
+  height: 160px; /* Taller cover */
+  overflow: hidden;
+  position: relative;
+  border-radius: 10px; /* Round the image itself */
+}
+
+.related-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.related-card:hover .related-cover img {
+  transform: scale(1.08); /* Smoother zoom */
+}
+
+.related-info {
+  padding: 12px 4px 0; /* Reduced padding to align with inset image */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.related-item-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-heading);
+  line-height: 1.5;
+  height: 48px; /* 2 lines exactly */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.related-date {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  display: inline-block;
+  background: var(--color-background-soft);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .related-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 文章操作栏 */
+.article-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+  padding: 0 10px;
+  margin-top: 20px;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background-soft);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px var(--color-shadow);
+}
+
+.action-btn:hover {
+  background: var(--color-background-mute);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.action-btn i {
+  font-size: 16px;
+}
+
+/* 固定目录样式 */
+.fixed-toc-wrapper {
+  position: fixed;
+  top: 100px;
+  left: 40px;
+  width: 260px;
+  bottom: 40px;
+  z-index: 1000;
+  overflow-y: visible; /* Adjust inside component */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+}
+
+/* 在大屏下隐藏时的样式 */
+@media (min-width: 1451px) {
+  .fixed-toc-wrapper:not(.open) {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-20px);
+  }
+}
+
+/* 遮罩层样式 */
+.toc-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 调整文章内容容器 */
+.article-content {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  max-width: 1600px; /* Limit very wide screens */
+  margin-left: 340px; /* Space for TOC (40px + 260px + gap) */
+  margin-right: 40px;
+  width: auto; /* Allow width to flow naturally */
+}
+
+@media (max-width: 1600px) {
+    .article-content {
+        margin-right: 40px; /* Keep consistent right margin */
+    }
+}
+
+/* 适配小屏幕：隐藏固定目录，但在打开时作为抽屉显示 */
+@media (max-width: 1450px) {
+  .article-content {
+    margin: 0;
+    width: 100%;
+    max-width: 100%; 
+    padding: 0;
+    overflow-x: hidden; 
+    /* removed max-width: 100vw to allow content to fill */
+  }
+
+  /* 遮罩层 */
+  .toc-overlay {
+    /* 仅在打开时显示，由 v-if 控制DOM是否存在，或者使用 CSS display */
+    display: block;
+  }
+
+  .fixed-toc-wrapper {
+    /* 不使用 display: none，而是改为抽屉样式 */
+    position: fixed;
+    top: 0;
+    right: 0; /* Align right */
+    left: auto;
+    width: 320px; /* Slightly wider */
+    height: 100%;
+    z-index: 2000; /* 确保高于 Navbar (1000-1002) */
+    background: transparent; /* Component handles background */
+    
+    /* Move shadow to wrapper so it's visible outside on the left */
+    box-shadow: -4px 0 15px rgba(0,0,0,0.1); 
+    
+    border: none;
+    padding: 0;
+    transform: translateX(100%); /* Default hidden off-screen */
+  }
+
+  /* 遮罩层 z-index 更新 */
+  .toc-overlay {
+    z-index: 1999;
+  }
+
+  .fixed-toc-wrapper.open {
+    transform: translateX(0); /* Slide in */
+  }
+  
+  /* 确保 toc-wrapper 内部撑满高度 */
+  .fixed-toc-wrapper :deep(.article-toc) {
+    height: 100%;
+    border-radius: 0;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    max-height: none;
+  }
+  
+  .toc-fab {
+    display: flex !important; /* Force show fab on smaller screens if they want toc */
+    left: auto;
+    right: 20px;
+    bottom: 80px; /* Position at bottom right */
+    top: auto;
+    z-index: 999;
+    background-color: var(--color-background);
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+}
+
+@media (max-width: 768px) {
+  .fixed-toc-wrapper {
+    width: 85%; /* 移动端更宽 */
+  }
+  
+  .related-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

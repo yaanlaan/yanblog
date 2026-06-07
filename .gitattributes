@@ -1,0 +1,9 @@
+# 强制 shell 脚本使用 LF 换行符 (Linux/Mac 格式)
+*.sh text eol=lf
+*.bash text eol=lf
+
+# 强制 PowerShell 脚本使用 CRLF (虽然 PWSH 兼容 LF，但 CRLF 是标准)
+*.ps1 text eol=crlf
+
+# 其他文本文件根据系统自动转换 (Windows下 checkout 为 CRLF, 提交为 LF)
+* text=auto

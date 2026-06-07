@@ -1,0 +1,102 @@
+package middlewares
+
+import (
+	"fmt"
+	"math"
+	"os"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	retalog "github.com/lestrrat-go/file-rotatelogs"
+	"github.com/rifflock/lfshook"
+	"github.com/sirupsen/logrus"
+)
+
+// Logger 日志记录中间件
+// 记录HTTP请求信息，包括请求时间、响应状态、客户端信息等
+// 支持日志轮转和按级别分类存储
+func Logger() gin.HandlerFunc {
+	filePath := "log/log"
+
+	// 确保 log 目录存在
+	if err := os.MkdirAll("log", 0755); err != nil {
+		fmt.Println("err: 无法创建日志目录:", err)
+	}
+
+	scr, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0755)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	logger := logrus.New()
+
+	logger.Out = scr
+
+	logger.SetLevel(logrus.DebugLevel)
+
+	logWriter, err := retalog.New(
+		filePath+"%Y%m%d.log",
+		retalog.WithMaxAge(7*24*time.Hour),
+		retalog.WithRotationTime(24*time.Hour),
+	)
+	if err != nil {
+		fmt.Println("警告：日志轮转初始化失败，使用默认日志输出:", err)
+		logger.Out = os.Stdout
+		return func(c *gin.Context) { c.Next() }
+	}
+
+	// 定义不同日志级别的输出映射
+	writeMap := lfshook.WriterMap{
+		logrus.InfoLevel:  logWriter,
+		logrus.FatalLevel: logWriter,
+		logrus.DebugLevel: logWriter,
+		logrus.WarnLevel:  logWriter,
+		logrus.ErrorLevel: logWriter,
+		logrus.PanicLevel: logWriter,
+	}
+	Hook := lfshook.NewHook(writeMap, &logrus.TextFormatter{
+		TimestampFormat: "2006-01-02 15:04:05",
+	})
+
+	logger.AddHook(Hook)
+
+	return func(c *gin.Context) {
+		startTime := time.Now()
+		c.Next()
+		stopTime := time.Since(startTime)
+		spendTime := fmt.Sprintf("%d ms", int(math.Ceil(float64(stopTime.Nanoseconds())/1000000.0)))
+		hostName, err := os.Hostname()
+		if err != nil {
+			hostName = "unknown"
+		}
+		statusCode := c.Writer.Status()
+		clientIp := c.ClientIP()
+		userAgent := c.Request.UserAgent()
+		dataSize := c.Writer.Size()
+		if dataSize < 0 {
+			dataSize = 0
+		}
+		method := c.Request.Method
+		path := c.Request.RequestURI
+
+		entry := logger.WithFields(logrus.Fields{
+			"HostName":  hostName,
+			"status":    statusCode,
+			"SpendTime": spendTime,
+			"Ip":        clientIp,
+			"Method":    method,
+			"Path":      path,
+			"DataSize":  dataSize,
+			"Agent":     userAgent,
+		})
+		if len(c.Errors) > 0 {
+			entry.Error(c.Errors.ByType(gin.ErrorTypePrivate).String())
+		}
+		if statusCode >= 500 {
+			entry.Error()
+		} else if statusCode >= 400 {
+			entry.Warn()
+		} else {
+			entry.Info()
+		}
+	}
+}

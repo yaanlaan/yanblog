@@ -1,0 +1,290 @@
+@import './base.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* 自动响应式 iframe 视频 */
+.markdown-body iframe,
+.content iframe {
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 16 / 9;
+  margin: 20px auto;
+  display: block;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  /* 确保无黑边 */
+  height: auto; 
+}
+
+/* 自定义滚动条样式 - WebKit浏览器 (Chrome, Safari, Edge) */
+::-webkit-scrollbar-track {
+  background-color: var(--color-background);
+}
+
+::-webkit-scrollbar {
+  width: 14px;
+  background-color: var(--color-background);
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: var(--color-text-secondary); /* Fallback */
+  background-image: -webkit-gradient(linear,
+      left bottom,
+      left top,
+      color-stop(0.2, rgb(1, 153, 128)),
+      color-stop(0.4, rgb(55, 212, 191)),
+      color-stop(0.8, rgb(163, 216, 212)));
+}
+
+/* Dark mode adjustment for scrollbar thumb gradient */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+     opacity: 0.8;
+  }
+}
+
+/* 隐藏滚动条上下箭头 */
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* 自定义滚动条样式 - Firefox浏览器 */
+/* * {
+  scrollbar-width: 20px;
+  scrollbar-color: rgb(34, 179, 247) rgb(212, 209, 209);
+} */
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text);
+  background-color: var(--color-background);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .container {
+    width: 90%;
+    padding: 0 15px;
+  }
+}
+
+a,
+.green {
+  text-decoration: none;
+  color: var(--color-accent);
+  transition: 0.4s;
+  padding: 3px;
+}
+
+@media (hover: hover) {
+  /* a{
+    border-radius: 10px;
+  }
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  } */
+}
+
+/* 容器样式 */
+.container {
+  width: 70%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ============================================
+   Mac 风格代码块（全局 — 文章页 + 关于页共用）
+   ============================================ */
+
+.mac-code-block {
+  margin: 20px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  background: #1e1e1e;
+  border: 1px solid #3c3c3c;
+}
+
+.mac-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: #252526;
+  border-bottom: 1px solid #3c3c3c;
+}
+
+.mac-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.mac-dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.dot-red    { background: #ff5f56; }
+.dot-yellow { background: #ffbd2e; }
+.dot-green  { background: #27c93f; }
+
+.mac-lang {
+  font-size: 12px;
+  color: #858585;
+  font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+  text-transform: lowercase;
+  letter-spacing: 0.5px;
+}
+
+.mac-code-body {
+  display: flex;
+  overflow-x: auto;
+  background: #1e1e1e;
+}
+
+.mac-line-numbers {
+  padding: 20px 6px;
+  background: #252526;
+  text-align: right;
+  user-select: none;
+  min-width: 38px;
+  border-right: 1px solid #3c3c3c;
+}
+
+.mac-line-numbers span {
+  display: block;
+  line-height: 1.7;
+  font-size: 12px;
+  color: #6b6b6b;
+  font-family: 'Fira Code', Consolas, Monaco, monospace;
+  opacity: 0.6;
+}
+
+.mac-code-content {
+  flex: 1;
+  position: relative;
+  overflow-x: auto;
+  min-width: 0;
+}
+
+.mac-code-content pre {
+  margin: 0;
+  padding: 20px 12px;
+  background: transparent;
+  overflow-x: auto;
+}
+
+.mac-code-content code {
+  font-family: 'Fira Code', 'SF Mono', Consolas, Monaco, monospace;
+  font-size: 14px;
+  line-height: 1.7;
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  white-space: pre;
+  color: #abb2bf;
+}
+
+/* 复制按钮 */
+.mac-copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: #858585;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  opacity: 0;
+  visibility: hidden;
+  backdrop-filter: blur(8px);
+  font-weight: 500;
+}
+
+.mac-code-block:hover .mac-copy-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mac-copy-btn:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.2);
+  color: #a0a0a0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.mac-copy-btn.copied {
+  background: #27c93f;
+  border-color: #27c93f;
+  color: #fff;
+}
+
+.mac-copy-btn .copy-icon,
+.mac-copy-btn .copied-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.mac-copy-btn.copied .copy-icon { display: none; }
+.mac-copy-btn:not(.copied) .copied-icon { display: none; }
+
+/* 滚动条 */
+.mac-code-body::-webkit-scrollbar { height: 8px; }
+.mac-code-body::-webkit-scrollbar-track { background: #1e1e1e; }
+.mac-code-body::-webkit-scrollbar-thumb { background: #4a4a4a; border-radius: 4px; }
+.mac-code-body::-webkit-scrollbar-thumb:hover { background: #5a5a5a; }
+
+/* 暗色模式下适配 */
+[data-theme="dark"] .mac-code-block {
+  background: #0d1117;
+  border-color: #30363d;
+}
+[data-theme="dark"] .mac-header,
+[data-theme="dark"] .mac-line-numbers { background: #161b22; }
+[data-theme="dark"] .mac-code-body { background: #0d1117; }
+[data-theme="dark"] .mac-line-numbers { border-right-color: #30363d; }
+[data-theme="dark"] .mac-header { border-bottom-color: #30363d; }
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .mac-header { padding: 8px 10px; }
+  .mac-lang { font-size: 11px; }
+  .mac-dots span { width: 10px; height: 10px; }
+  .mac-line-numbers { min-width: 32px; padding: 14px 4px; }
+  .mac-line-numbers span { font-size: 11px; }
+  .mac-code-content pre { padding: 14px 10px; }
+  .mac-code-content code { font-size: 12px; line-height: 1.6; }
+  .mac-copy-btn { padding: 4px 8px; font-size: 11px; }
+}
