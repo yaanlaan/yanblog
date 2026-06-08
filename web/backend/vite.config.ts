@@ -33,6 +33,7 @@ try {
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/admin/',
   plugins: [
     vue(),
     vueJsx(),
