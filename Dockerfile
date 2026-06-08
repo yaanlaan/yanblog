@@ -79,6 +79,7 @@ CMD ["/bin/sh", "-c", "\
     cp /app/web/frontend/public/config.yaml /app/config/frontend/config.yaml; \
     echo '[entry] Frontend config initialized from demo'; \
   fi && \
+  mkdir -p /app/data && \
   echo '[entry] Starting nginx...' && \
   nginx && \
   echo '[entry] Starting Go backend...' && \

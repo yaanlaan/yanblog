@@ -5,7 +5,7 @@ allowed_hosts:
 author_avatar: /uploads/defaults/avatar.jpg
 author_bio: 欢迎光临 (￣▽￣)~*
 default_images:
-  cover: /uploads/defaults/hero.jpg
+  cover: ""
   avatar: /uploads/defaults/avatar.jpg
 hero:
   title: 草木山石<br>日月星辰
