@@ -13,11 +13,10 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    # Config File (共享后端配置)
-    # 前端请求 /config.yaml 时，直接读取 web 根目录下的文件
+    # Config File — 读取 Go 后端维护的前端配置
     location /config.yaml {
+        alias /app/config/frontend/config.yaml;
         add_header Cache-Control "no-store, no-cache, must-revalidate";
-        # alias 指令已移除，直接使用 root 下的 config.yaml
     }
 
     # API Proxy -> Localhost Backend

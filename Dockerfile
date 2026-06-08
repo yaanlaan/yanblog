@@ -34,11 +34,9 @@ WORKDIR /app
 COPY --from=backend-builder /app/server .
 RUN mkdir -p /app/config /app/data /app/uploads
 
-# Copy config template (host mount overrides at runtime)
+# Copy backend config template (used on first run if no host config exists)
 COPY config/config_template.yaml /app/config/config.yaml.template
-# Copy frontend config (Go expects config/frontend/config.yaml)
-RUN mkdir -p /app/config/frontend
-COPY config/frontend/config.yaml /app/config/frontend/config.yaml
+# Frontend config is initialized at runtime from demo if missing
 
 # --- Frontend ---
 RUN mkdir -p /usr/share/nginx/html/web
@@ -55,8 +53,8 @@ COPY web/frontend/public/static /app/web/frontend/public/static
 COPY web/frontend/public/iconfont /app/web/frontend/public/iconfont
 COPY web/frontend/public/favicon.ico /app/web/frontend/public/favicon.ico
 COPY web/frontend/public/favicon.svg /app/web/frontend/public/favicon.svg
-# Frontend config (for Go to serve at /config.yaml)
-COPY config/frontend/config.yaml /app/web/frontend/public/config.yaml
+# Demo config (used as template on first run if no user config exists)
+COPY web/frontend/public/config.yaml /app/web/frontend/public/config.yaml
 
 # --- Permissions ---
 RUN chmod -R 755 /usr/share/nginx/html && chmod -R 755 /app
@@ -66,20 +64,18 @@ COPY nginx.conf.unified /etc/nginx/conf.d/default.conf
 
 EXPOSE 80 81
 
-# Startup: use host config if mounted, otherwise fall back to template
-# Nginx runs in background, Go server runs in foreground (so logs/errors are visible)
+# Startup: initialize config on first run, then start services
+# Config is mounted from host at /app/config — changes persist across restarts
 CMD ["/bin/sh", "-c", "\
-  if [ -f /app/host-config/backend/config.yaml ]; then \
-    cp /app/host-config/backend/config.yaml /app/config/config.yaml; \
-    echo '[entry] Using host backend config'; \
-  else \
+  echo '[entry] Checking config...' && \
+  if [ ! -f /app/config/backend/config.yaml ] && [ ! -f /app/config/config.yaml ]; then \
     cp /app/config/config.yaml.template /app/config/config.yaml; \
-    echo '[entry] Using default config (template)'; \
+    echo '[entry] Backend config initialized from template'; \
   fi && \
-  if [ -f /app/host-config/frontend/config.yaml ]; then \
-    cp /app/host-config/frontend/config.yaml /app/config/frontend/config.yaml; \
-    cp /app/host-config/frontend/config.yaml /app/web/frontend/public/config.yaml; \
-    echo '[entry] Using host frontend config'; \
+  if [ ! -f /app/config/frontend/config.yaml ]; then \
+    mkdir -p /app/config/frontend; \
+    cp /app/web/frontend/public/config.yaml /app/config/frontend/config.yaml; \
+    echo '[entry] Frontend config initialized from demo'; \
   fi && \
   echo '[entry] Starting nginx...' && \
   nginx && \
