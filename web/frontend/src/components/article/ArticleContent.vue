@@ -129,7 +129,7 @@ const handleScroll = () => {
 
 // Mermaid 主题随暗色模式切换
 const getMermaidTheme = (): string => {
-  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'base'
 }
 
 const initMermaidTheme = () => {
