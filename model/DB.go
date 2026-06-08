@@ -67,6 +67,13 @@ func InitDB() {
 			fmt.Println("===========================================")
 		}
 	}
+
+	// 首次运行时创建演示文章
+	var articleCount int64
+	db.Model(&Article{}).Count(&articleCount)
+	if articleCount == 0 {
+		createDemoArticle()
+	}
 }
 
 func initMySQL() (*gorm.DB, error) {
@@ -197,4 +204,37 @@ func migrateTags() {
 		}
 	}
 	fmt.Println("Tag migration completed.")
+}
+
+// createDemoArticle 首次运行时创建一篇演示文章
+func createDemoArticle() {
+	cate := Category{Name: "使用指南"}
+	db.FirstOrCreate(&cate, Category{Name: "使用指南"})
+
+	tagNames := []string{"Markdown", "KaTeX", "Mermaid", "Demo"}
+	var tags []Tag
+	for _, name := range tagNames {
+		var tag Tag
+		db.FirstOrCreate(&tag, Tag{Name: name})
+		tags = append(tags, tag)
+	}
+
+	demo := Article{
+		Title:     "YanBlog 功能演示",
+		Cid:       int(cate.ID),
+		Desc:      "演示所有 Markdown 特性：代码高亮、数学公式、流程图、表格、链接卡片等。",
+		Content:   getDemoContent(),
+		Tags:      "Markdown,KaTeX,Mermaid,Demo",
+		TagModels: tags,
+	}
+
+	if err := db.Create(&demo).Error; err != nil {
+		fmt.Println("创建演示文章失败:", err)
+	} else {
+		fmt.Println("已创建演示文章: YanBlog 功能演示")
+	}
+}
+
+func getDemoContent() string {
+	return "## 文本样式\n\n支持 **粗体**、*斜体*、`行内代码`、~~删除线~~。\n\n## 列表\n\n- 第一项\n- 第二项\n  - 嵌套子项\n- 第三项\n\n1. 步骤一\n2. 步骤二\n3. 步骤三\n\n## 引用\n\n> 这是一段引用文字。\n> 可以有多行。\n\n## 链接卡片\n\n单独一行的链接会自动渲染为卡片样式：\n\nhttps://github.com\n\n## 表格\n\n| 功能 | 描述 | 状态 |\n|------|------|------|\n| 代码块 | Mac 风格 + 高亮 + 行号 | 已支持 |\n| 公式 | KaTeX 行内和块级 | 已支持 |\n| 图表 | Mermaid 流程图 | 已支持 |\n\n## 代码块\n\n```go\npackage main\n\nimport \"fmt\"\n\nfunc main() {\n    fmt.Println(\"Hello, YanBlog!\")\n}\n```\n\n```javascript\nfor (let i = 1; i <= 100; i++) {\n  if (i % 15 === 0) console.log(\"FizzBuzz\")\n  else if (i % 3 === 0) console.log(\"Fizz\")\n  else if (i % 5 === 0) console.log(\"Buzz\")\n  else console.log(i)\n}\n```\n\n## 数学公式（KaTeX）\n\n行内：$E = mc^2$，$a^2 + b^2 = c^2$\n\n块级：\n\n$$\n\\int_{a}^{b} f(x) \\,dx = F(b) - F(a)\n$$\n\n$$\n\\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6}\n$$\n\n## 流程图（Mermaid）\n\n```mermaid\ngraph TD\n    A[开始] --> B{是否登录?}\n    B -->|是| C[进入后台]\n    B -->|否| D[跳转登录页]\n    C --> E[管理文章]\n    D --> H[输入账号密码]\n    H --> B\n```\n\n```mermaid\nsequenceDiagram\n    U->>F: 点击发布\n    F->>B: POST /api/v1/article/add\n    B->>D: INSERT\n    D-->>B: OK\n    B-->>F: {status:200}\n    F-->>U: 发布成功\n```\n\n---\n\n以上就是 YanBlog 支持的所有 Markdown 语法特性。"
 }
