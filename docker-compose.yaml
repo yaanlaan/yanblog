@@ -2,42 +2,13 @@ services:
   yanblog:
     build: .
     ports:
-      - "3002:80"   # Frontend
-      - "3011:81"   # Admin
+      - "3002:80"   # 前台
+      - "3011:81"   # 后台
     volumes:
       - uploads_data:/app/uploads
-      # Mount host config directory (optional — falls back to templates)
       - ./config:/app/host-config:ro
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - yanblog-network
     restart: always
-
-  db:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: yanblog
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - yanblog-network
-    restart: always
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 30s
-
-networks:
-  yanblog-network:
-    driver: bridge
 
 volumes:
-  mysql_data:
-    driver: local
   uploads_data:
     driver: local

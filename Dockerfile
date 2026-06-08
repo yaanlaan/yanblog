@@ -65,20 +65,22 @@ COPY nginx.conf.unified /etc/nginx/conf.d/default.conf
 EXPOSE 80 81
 
 # Startup: use host config if mounted, otherwise fall back to template
+# Nginx runs in background, Go server runs in foreground (so logs/errors are visible)
 CMD ["/bin/sh", "-c", "\
   if [ -f /app/host-config/backend/config.yaml ]; then \
     cp /app/host-config/backend/config.yaml /app/config/config.yaml; \
-    echo 'Using host backend config'; \
+    echo '[entry] Using host backend config'; \
   else \
     cp /app/config/config.yaml.template /app/config/config.yaml; \
-    echo 'Using default backend config (template)'; \
+    echo '[entry] Using default config (template)'; \
   fi && \
   if [ -f /app/host-config/frontend/config.yaml ]; then \
     cp /app/host-config/frontend/config.yaml /app/config/frontend_config.yaml; \
     cp /app/host-config/frontend/config.yaml /app/web/frontend/public/config.yaml; \
-    echo 'Using host frontend config'; \
+    echo '[entry] Using host frontend config'; \
   fi && \
-  /app/server & \
-  sleep 2 && \
-  nginx -g 'daemon off;' \
+  echo '[entry] Starting nginx...' && \
+  nginx && \
+  echo '[entry] Starting Go backend...' && \
+  exec /app/server \
 "]

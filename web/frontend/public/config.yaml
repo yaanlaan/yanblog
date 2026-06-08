@@ -17,7 +17,7 @@ logo_text: 言盐盐的博客
 logo_image: /static/logo/yaan.png
 favicon: /favicon.svg
 admin_url: 
-dev_admin_port: 3001
+dev_admin_port: 3011
 page_title:
   default: (O_O)言盐盐的博客
   blur: (- - )
