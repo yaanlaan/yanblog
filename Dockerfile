@@ -26,7 +26,8 @@ RUN npm run build
 # Stage 4: Final Unified Image
 FROM nginx:alpine
 
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata && \
+    sed -i 's/user  nginx;/user root;/' /etc/nginx/nginx.conf
 
 WORKDIR /app
 
