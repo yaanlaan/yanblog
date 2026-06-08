@@ -2,13 +2,17 @@ blog_name: 言盐盐的博客
 author_name: yaan
 allowed_hosts:
   - localhost
-author_avatar: /static/avatar/avatar.jpg
+author_avatar: /uploads/defaults/avatar.jpg
 author_bio: 欢迎光临 (￣▽￣)~*
+default_images:
+  cover: /uploads/defaults/hero.jpg
+  avatar: /uploads/defaults/avatar.jpg
+  qr_code: /uploads/defaults/hero.jpg
 hero:
   title: 草木山石<br>日月星辰
   subtitle: yaan's blog
   welcome: Welcome to<br>Yaan's Blog
-  welcome_image: /static/img/1412.jpg
+  welcome_image: /uploads/defaults/hero.jpg
 quotes:
   - 月亮想着我的心事，一只猫吃了我的奶酪
   - 草木山石，日月星辰

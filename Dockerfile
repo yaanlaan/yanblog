@@ -33,6 +33,8 @@ WORKDIR /app
 # --- Backend ---
 COPY --from=backend-builder /app/server .
 RUN mkdir -p /app/config /app/data /app/uploads
+# Default images for recovery
+COPY uploads/defaults /app/uploads/defaults
 
 # Copy backend config template (used on first run if no host config exists)
 COPY config/config_template.yaml /app/config/config.yaml.template

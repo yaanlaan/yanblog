@@ -43,7 +43,8 @@ build/
 dist/
 
 # Runtime data
-uploads/
+uploads/*
+!uploads/defaults/
 data/
 *.db
 *.sqlite
