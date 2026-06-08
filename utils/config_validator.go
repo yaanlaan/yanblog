@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"strings"
@@ -23,10 +25,11 @@ func ValidateConfig() error {
 		errors = append(errors, "数据库名称 (database.DbName) 不能为空")
 	}
 
-	// 验证 JWT 密钥
+	// 验证 JWT 密钥：空密钥仅警告，自动生成临时密钥
 	jwtKey := ServerConfig.JwtKey
 	if jwtKey == "" {
-		errors = append(errors, "JWT 密钥 (JwtKey) 未设置，请运行 'openssl rand -hex 32' 生成并填入配置")
+		warnings = append(warnings, "⚠️  JWT 密钥未设置，已自动生成临时密钥。请尽快设置永久密钥！")
+		ServerConfig.JwtKey = generateTempKey()
 	} else if len(jwtKey) < 32 {
 		warnings = append(warnings, fmt.Sprintf("⚠️  JWT 密钥长度不足（当前 %d 位），建议使用 64 位随机密钥", len(jwtKey)))
 	}
@@ -77,6 +80,13 @@ func PrintStartupInfo() {
 	}
 
 	fmt.Println("===========================================")
+}
+
+// generateTempKey 生成临时 JWT 密钥
+func generateTempKey() string {
+	b := make([]byte, 32)
+	rand.Read(b)
+	return hex.EncodeToString(b)
 }
 
 // CheckFileExists 检查文件是否存在
