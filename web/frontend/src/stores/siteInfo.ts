@@ -228,9 +228,7 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
                     hostname.endsWith('.local')
     
     if (isLocal) {
-      const port = config.dev_admin_port || 3011
-      config.admin_url = `http://${hostname}:${port}`
-      // console.log('Detected local environment, overriding admin_url to:', config.admin_url)
+      config.admin_url = `http://${hostname}:3001`
     }
   }
 

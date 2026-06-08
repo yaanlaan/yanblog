@@ -19,7 +19,7 @@ quotes:
 logo_text: 言盐盐的博客
 logo_image: /static/logo/yaan.png
 favicon: /favicon.svg
-admin_url: 
+admin_url: /admin
 dev_admin_port: 3011
 page_title:
   default: (O_O)言盐盐的博客

@@ -2,8 +2,7 @@ services:
   yanblog:
     build: .
     ports:
-      - "3002:80"   # 前台
-      - "3011:81"   # 后台
+      - "3002:80"   # 前台 + 后台(/admin) 统一入口
     volumes:
       # 上传文件：宿主机可直接管理/备份
       - ./uploads:/app/uploads
