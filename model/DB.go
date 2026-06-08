@@ -224,6 +224,7 @@ func createDemoArticle() {
 		Cid:       int(cate.ID),
 		Desc:      "演示所有 Markdown 特性：代码高亮、数学公式、流程图、表格、链接卡片等。",
 		Content:   getDemoContent(),
+		Img:       "/uploads/defaults/hero.jpg",
 		Tags:      "Markdown,KaTeX,Mermaid,Demo",
 		TagModels: tags,
 	}
