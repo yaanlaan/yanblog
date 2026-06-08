@@ -699,7 +699,7 @@ onUpdated(() => {
   max-width: 100%;
   height: auto;
   border-radius: 10px;
-  margin: 20px 0;
+  margin: 20px auto;
   cursor: zoom-in;
   transition: all 0.3s;
   box-shadow: 0 4px 16px var(--color-shadow);

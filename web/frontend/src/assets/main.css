@@ -299,6 +299,8 @@ a,
   max-width: 100%;
   height: auto;
   border-radius: 8px;
+  display: block;
+  margin: 20px auto;
 }
 
 /* 封面/缩略图统一约束 */
