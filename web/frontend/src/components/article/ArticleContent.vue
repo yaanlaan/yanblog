@@ -129,14 +129,8 @@ const handleScroll = () => {
 
 mermaid.initialize({
   startOnLoad: false,
-  theme: 'base',
-  securityLevel: 'loose',
-  themeVariables: {
-    primaryColor: '#42b883',
-    primaryTextColor: 'var(--mermaid-text, #333)',
-    lineColor: 'var(--mermaid-line, #666)',
-    fontSize: '14px'
-  }
+  theme: 'neutral',
+  securityLevel: 'loose'
 })
 
 // 独立链接渲染为卡片：将 <p><a href="...">text</a></p> 转为 link-card

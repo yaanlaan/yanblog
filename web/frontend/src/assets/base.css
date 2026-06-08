@@ -61,11 +61,6 @@
   --color-code-scrollbar-track: #f5f5f5;
   --color-code-scrollbar-thumb: #cccccc;
   --color-code-scrollbar-thumb-hover: #bbbbbb;
-
-  /* Mermaid 图表主题变量（亮色） */
-  --mermaid-text: #333333;
-  --mermaid-line: #666666;
-  --mermaid-bg: #ffffff;
 }
 
 [data-theme="dark"] {
