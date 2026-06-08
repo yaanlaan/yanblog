@@ -238,8 +238,12 @@ const renderPostProcess = async () => {
     for (let i = 0; i < mermaidBlocks.length; i++) {
       const block = mermaidBlocks[i];
       if (block instanceof HTMLElement) {
+        // 首次渲染前保存原始源码
+        if (!block.getAttribute('data-source')) {
+          block.setAttribute('data-source', block.textContent || '');
+        }
         try {
-          const code = block.textContent || '';
+          const code = block.getAttribute('data-source') || block.textContent || '';
           const { svg } = await mermaid.render(block.id + '-svg', code);
           block.innerHTML = svg;
           block.setAttribute('data-rendered', 'true');
