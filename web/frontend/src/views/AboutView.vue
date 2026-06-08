@@ -63,10 +63,11 @@ import MainLayout from '@/components/layout/MainLayout.vue'
 import ProfileCard from '@/components/sidebar/ProfileCard.vue'
 import { useSiteInfoStore } from '@/stores/siteInfo'
 import { storeToRefs } from 'pinia'
-import defaultAvatarImg from '@/assets/default-avatar.jpg'
-import defaultQrImg from '@/assets/default-qr.png'
+import { useDefaultAvatar, useDefaultQrCode } from '@/utils/defaults'
 
 const siteInfoStore = useSiteInfoStore()
+const defaultAvatarImg = useDefaultAvatar()
+const defaultQrImg = useDefaultQrCode()
 const { siteInfo } = storeToRefs(siteInfoStore)
 
 // 渲染 Markdown 内容
@@ -92,13 +93,13 @@ const contactCard = ref<HTMLElement | null>(null)
 // 处理头像加载错误
 const handleAvatarError = (e: Event) => {
   const target = e.target as HTMLImageElement
-  target.src = defaultAvatarImg
+  target.src = defaultAvatarImg.value
 }
 
 // 处理二维码图片加载错误
 const handleQRError = (e: Event) => {
   const target = e.target as HTMLImageElement
-  target.src = defaultQrImg
+  target.src = defaultQrImg.value
 }
 
 // 打开链接

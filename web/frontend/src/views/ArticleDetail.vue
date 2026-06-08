@@ -158,6 +158,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { articleApi } from '@/services/api'
+import { useDefaultCover } from '@/utils/defaults'
 import MainLayout from '@/components/layout/MainLayout.vue'
 import ArticleHeader from '@/components/article/ArticleHeader.vue'
 import ArticleContent from '@/components/article/ArticleContent.vue'
@@ -165,8 +166,8 @@ import ArticleToc from '@/components/article/ArticleToc.vue'
 import GiscusComment from '@/components/comment/GiscusComment.vue'
 import ShareCard from '@/components/ShareCard.vue'
 
-// 默认图片
-const defaultImage = new URL('@/assets/img/无封面.jpg', import.meta.url).href
+// 默认封面（优先使用后台配置，缺失时回退内置图）
+const defaultImage = useDefaultCover()
 
 // 类型定义
 interface Article {

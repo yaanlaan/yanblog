@@ -4,6 +4,10 @@ allowed_hosts:
   - localhost
 author_avatar: /static/avatar/avatar.jpg
 author_bio: 欢迎光临 (￣▽￣)~*
+default_images:
+  cover: /static/img/1412.jpg
+  avatar: /static/avatar/avatar.jpg
+  qr_code: /assets/wechat-qr.png
 hero:
   title: 草木山石<br>日月星辰
   subtitle: yaan's blog

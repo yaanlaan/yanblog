@@ -8,6 +8,11 @@ export interface SiteInfo {
   author_name: string
   author_avatar: string
   author_bio: string
+  default_images: {
+    cover: string
+    avatar: string
+    qr_code: string
+  }
   hero: {
     title: string
     subtitle: string
@@ -109,6 +114,11 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
     author_name: 'Yaan',
     author_avatar: '',
     author_bio: '',
+    default_images: {
+      cover: '',
+      avatar: '',
+      qr_code: ''
+    },
     hero: {
       title: '',
       subtitle: '',

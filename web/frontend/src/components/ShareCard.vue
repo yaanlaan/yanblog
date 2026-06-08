@@ -27,7 +27,7 @@
               <div class="author-info">
                 <div class="left">
                     <!-- 假设默认头像，实际可替换 -->
-                  <img src="@/assets/default-avatar.jpg" alt="avatar" class="avatar" onerror="this.src='/favicon.ico'" />
+                  <img :src="defaultAvatar" alt="avatar" class="avatar" @error="(e: Event) => (e.target as HTMLImageElement).src = '/favicon.ico'" />
                   <span class="nickname">YanBlog</span>
                 </div>
                 <div class="right logo">
@@ -78,6 +78,9 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import * as QRCode from 'qrcode'
 import html2canvas from 'html2canvas'
+import { useDefaultAvatar } from '@/utils/defaults'
+
+const defaultAvatar = useDefaultAvatar()
 
 const props = defineProps<{
   visible: boolean

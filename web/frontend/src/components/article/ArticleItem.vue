@@ -55,8 +55,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useSiteInfoStore } from '@/stores/siteInfo'
+import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ElTooltip } from 'element-plus'
+import { useDefaultCover } from '@/utils/defaults'
 
 // 定义Props
 interface Article {
@@ -85,8 +89,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const route = useRoute()
 
-// 默认图片
-const defaultImage = new URL('../../assets/img/无封面.jpg', import.meta.url).href
+// 默认封面（优先使用后台配置，缺失时回退内置图）
+const defaultImage = useDefaultCover()
 
 // 格式化日期
 const formatDate = (dateString: string) => {

@@ -52,6 +52,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useSiteInfoStore } from '@/stores/siteInfo'
+import { useDefaultCover } from '@/utils/defaults'
 
 const siteInfoStore = useSiteInfoStore()
 const siteInfo = computed(() => siteInfoStore.siteInfo)
@@ -87,7 +88,7 @@ interface Props {
 const props = defineProps<Props>()
 
 // 默认图片
-const defaultImage = new URL('../../assets/img/无封面.jpg', import.meta.url).href
+const defaultImage = useDefaultCover()
 
 // 格式化日期
 const formatDate = (dateString: string) => {

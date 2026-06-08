@@ -382,6 +382,22 @@
             <div v-else class="empty-tip">配置文件中缺少 music_player 字段，请先在源码模式添加。</div>
           </el-tab-pane>
 
+          <!-- 默认图片 -->
+          <el-tab-pane label="默认图片" name="defaultImages">
+            <el-form label-width="120px" class="config-form">
+              <div class="form-tip" style="margin-bottom:16px">文章无封面、头像加载失败、二维码缺失时的回退图片</div>
+              <el-form-item label="默认封面">
+                <image-uploader v-model="configForm.default_images.cover" />
+              </el-form-item>
+              <el-form-item label="默认头像">
+                <image-uploader v-model="configForm.default_images.avatar" />
+              </el-form-item>
+              <el-form-item label="默认二维码">
+                <image-uploader v-model="configForm.default_images.qr_code" />
+              </el-form-item>
+            </el-form>
+          </el-tab-pane>
+
           <!-- 开发设置 -->
           <el-tab-pane label="开发设置" name="dev">
             <el-form label-width="140px" class="config-form">
@@ -502,6 +518,9 @@ const loadConfig = async () => {
         // 确保数组存在
         if (!Array.isArray(configForm.value.allowed_hosts)) {
           configForm.value.allowed_hosts = []
+        if (!configForm.value.default_images) {
+          configForm.value.default_images = { cover: '', avatar: '', qr_code: '' }
+        }
         }
       } catch (e) {
         console.error('Initial YAML parse error', e)

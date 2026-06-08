@@ -41,6 +41,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useSiteInfoStore } from '@/stores/siteInfo'
+import { storeToRefs } from 'pinia'
+import { useDefaultCover } from '@/utils/defaults'
 // 定义Props
 interface Article {
   id: number
@@ -63,7 +67,7 @@ interface Props {
 defineProps<Props>()
 
 // 默认图片
-const defaultImage = new URL('../../assets/img/无封面.jpg', import.meta.url).href
+const defaultImage = useDefaultCover()
 
 // 格式化日期
 const formatDate = (dateString: string) => {

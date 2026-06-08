@@ -52,6 +52,7 @@
 import { ref, reactive, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { categoryApi } from '@/services/api'
+import { useDefaultCover } from '@/utils/defaults'
 // import { ElPagination } from 'element-plus'
 
 // 定义分类类型
@@ -80,13 +81,13 @@ const displayCount = ref(12)
 const loadingTrigger = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
 
-// 默认图片
-const defaultImage = new URL('@/assets/img/无封面.jpg', import.meta.url).href
+// 默认封面（优先使用后台配置，缺失时回退内置图）
+const defaultImage = useDefaultCover()
 
 // 处理图片加载错误
 const handleImageError = (e: Event) => {
   const target = e.target as HTMLImageElement
-  target.src = defaultImage
+  target.src = defaultImage.value
 }
 
 // 获取所有分类列表
