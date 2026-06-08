@@ -19,6 +19,7 @@
                 双栏显示
               </el-button>
             </template>
+            <el-button type="info" plain @click="showHelp = true">Markdown 帮助</el-button>
             <el-button @click="goBack">返回</el-button>
           </div>
         </div>
@@ -125,6 +126,67 @@
         </el-col>
       </el-row>
     </el-card>
+
+    <!-- Markdown 帮助对话框 -->
+    <el-dialog v-model="showHelp" title="Markdown 语法帮助" width="700px" :close-on-click-modal="true">
+      <div class="markdown-help">
+        <h3>基础语法</h3>
+        <table>
+          <tr><th>语法</th><th>效果</th></tr>
+          <tr><td><code># H1</code> <code>## H2</code> <code>### H3</code></td><td>标题 1-6 级</td></tr>
+          <tr><td><code>**粗体**</code> <code>*斜体*</code></td><td><strong>粗体</strong> <em>斜体</em></td></tr>
+          <tr><td><code>[链接](url)</code></td><td>超链接</td></tr>
+          <tr><td><code>![图片](url)</code></td><td>插入图片</td></tr>
+          <tr><td><code>- 列表项</code> <code>1. 有序</code></td><td>无序/有序列表</td></tr>
+          <tr><td><code>&gt; 引用</code></td><td>块引用</td></tr>
+          <tr><td><code>---</code></td><td>分割线</td></tr>
+        </table>
+
+        <h3>代码块（Mac 风格）</h3>
+        <p>使用三个反引号包裹，支持语法高亮、行号、一键复制：</p>
+        <pre><code>```go
+package main
+func main() { ... }
+```</code></pre>
+        <p>支持语言：<code>go</code> <code>javascript</code> <code>typescript</code> <code>python</code> <code>vue</code> <code>html</code> <code>css</code> <code>sql</code> <code>bash</code> <code>yaml</code> <code>json</code> 等</p>
+
+        <h3>数学公式（KaTeX）</h3>
+        <table>
+          <tr><th>语法</th><th>说明</th></tr>
+          <tr><td><code>$E=mc^2$</code></td><td>行内公式</td></tr>
+          <tr><td><code>$$\int_a^b f(x)dx$$</code></td><td>块级公式</td></tr>
+        </table>
+        <p>点击公式可切换显示 LaTeX 源码。支持：分数、根号、积分、矩阵、希腊字母等。</p>
+
+        <h3>流程图（Mermaid）</h3>
+        <pre><code>```mermaid
+graph TD
+    A[开始] --> B{判断}
+    B -->|是| C[执行]
+    B -->|否| D[结束]
+```</code></pre>
+        <p>支持：flowchart、sequenceDiagram、classDiagram、stateDiagram、gantt、pie 等</p>
+
+        <h3>表格</h3>
+        <pre><code>| 列1 | 列2 | 列3 |
+|-----|-----|-----|
+| A   | B   | C   |</code></pre>
+
+        <h3>ZIP 批量发布</h3>
+        <p>将 .md 文件和 images 文件夹打包为 .zip，直接上传即可发布。Markdown 文件头部支持 YAML Front Matter：</p>
+        <pre><code>---
+title: "文章标题"
+date: 2024-01-01
+tags: [标签1, 标签2]
+category: "分类名"
+desc: "文章摘要"
+cover: "images/封面.jpg"
+---
+# 正文内容
+
+![图片](images/example.png)</code></pre>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -176,6 +238,9 @@ const showMarkdownEditor = ref(false)
 
 // 是否仅显示预览
 const previewOnly = ref(false)
+
+// 帮助对话框
+const showHelp = ref(false)
 
 // 提交状态
 const submitLoading = ref(false)
@@ -563,5 +628,42 @@ onActivated(() => {
   border: 1px solid #e4e7ed;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
+
+.markdown-help h3 {
+  margin: 16px 0 8px;
+  color: #303133;
+  font-size: 16px;
+  border-bottom: 1px solid #ebeef5;
+  padding-bottom: 4px;
+}
+.markdown-help h3:first-child { margin-top: 0; }
+.markdown-help table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 16px;
+}
+.markdown-help th, .markdown-help td {
+  border: 1px solid #ebeef5;
+  padding: 6px 10px;
+  text-align: left;
+  font-size: 13px;
+}
+.markdown-help th { background: #f5f7fa; }
+.markdown-help code {
+  background: #f5f7fa;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 13px;
+  color: #e96900;
+}
+.markdown-help pre {
+  background: #f5f7fa;
+  padding: 10px 14px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 13px;
+  margin: 8px 0 16px;
+}
+.markdown-help p { font-size: 13px; color: #606266; margin: 4px 0; }
 
 </style>
