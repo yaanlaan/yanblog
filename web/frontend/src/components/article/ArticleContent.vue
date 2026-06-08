@@ -129,8 +129,14 @@ const handleScroll = () => {
 
 mermaid.initialize({
   startOnLoad: false,
-  theme: 'default',
-  securityLevel: 'loose'
+  theme: 'base',
+  securityLevel: 'loose',
+  themeVariables: {
+    primaryColor: '#42b883',
+    primaryTextColor: 'var(--mermaid-text, #333)',
+    lineColor: 'var(--mermaid-line, #666)',
+    fontSize: '14px'
+  }
 })
 
 // 独立链接渲染为卡片：将 <p><a href="...">text</a></p> 转为 link-card
@@ -773,11 +779,25 @@ onUpdated(() => {
   margin: 25px 0;
   overflow-x: auto;
   max-width: 100%;
+  background: var(--mermaid-bg, transparent);
+  border-radius: 8px;
+  padding: 12px;
 }
 
 .content :deep(.mermaid-chart svg) {
   max-width: 100%;
   height: auto;
+}
+
+/* Mermaid 图表文字在暗色模式下可见 */
+.content :deep(.mermaid-chart svg .label),
+.content :deep(.mermaid-chart svg text),
+.content :deep(.mermaid-chart svg .edgeLabel) {
+  fill: var(--mermaid-text, currentColor) !important;
+}
+
+.content :deep(.mermaid-chart svg .edgePath .path) {
+  stroke: var(--mermaid-line, currentColor) !important;
 }
 
 .content :deep(.heading-anchor) {
