@@ -58,3 +58,4 @@ config/secrets.yaml
 # Docker artifacts
 server
 yanblog
+config/frontend/config.yaml

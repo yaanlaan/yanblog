@@ -37,31 +37,28 @@ shortcuts:
     color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
 footer:
   copyright: Copyright ©2022-2025 言盐盐 All Rights Reserved
-  email: yanxia2425@foxmail.com
+  email: you@example.com
   icp:
     show: true
     text: 京ICP备xxxxxx号
     link: https://beian.miit.gov.cn
   powered_by: yanblog
-  powered_by_link: https://github.com/yaanlaan/yanblog.git
+  powered_by_link: https://github.com/yaanlaan/yanblog
   portfolio:
     show: true
     title: 作品集
     icon: icon-book
     items:
       - name: yanblog
-        url: https://github.com/yaanlaan/yanblog.git
+        url: https://github.com/yaanlaan/yanblog
         icon: icon-lianjie
   related_links:
     show: true
     title: 相关链接
-    items:
-      - name: 本博客参考博客链接（知乎：恢锦）
-        url: https://kirigaya.cn
-        icon: icon-lianjie
+    items: []
 socials:
   - name: Github
-    url: https://github.com/yaanlaan
+    url: https://github.com/your-username
     icon: icon-github-fill
     color: '#000000'
     is_circle: true
@@ -71,7 +68,7 @@ socials:
     color: '#fb7299'
     is_circle: true
   - name: Email
-    url: mailto:yanxia2425@foxmail.com
+    url: mailto:you@example.com
     icon: icon-email
     color: '#0000ff'
     is_circle: true
@@ -85,12 +82,12 @@ contacts:
   wechat_qr: /assets/wechat-qr.png
   items:
     - name: Email
-      url: mailto:yanxia2425@foxmail.com
+      url: mailto:you@example.com
       icon: icon-email
       color: '#0000ff'
       is_circle: true
     - name: Github
-      url: https://github.com/yaanlaan
+      url: https://github.com/your-username
       icon: icon-github-fill
       color: '#000000'
       is_circle: true

@@ -50,11 +50,16 @@ func init() {
 	configPath := getConfigPath("config/backend/config.yaml")
 	file, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		log.Printf("尝试读取默认配置文件失败: %s", err)
+		log.Printf("未找到 config/backend/config.yaml，尝试旧路径...")
 		configPath = "config/config.yaml"
 		file, err = ioutil.ReadFile(configPath)
 		if err != nil {
-			log.Fatalf("读取配置文件失败，错误信息：%s", err)
+			log.Printf("未找到 config/config.yaml，使用模板 config/config_template.yaml")
+			configPath = "config/config_template.yaml"
+			file, err = ioutil.ReadFile(configPath)
+			if err != nil {
+				log.Fatalf("读取配置文件失败，请从 config/config_template.yaml 创建 config/backend/config.yaml。错误信息：%s", err)
+			}
 		}
 	}
 	LoadConfig(file)
@@ -123,6 +128,9 @@ func ReloadConfig() error {
 	configPath := getConfigPath("config/backend/config.yaml")
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		configPath = "config/config.yaml"
+		if _, err := os.Stat(configPath); os.IsNotExist(err) {
+			configPath = "config/config_template.yaml"
+		}
 	}
 	file, err := ioutil.ReadFile(configPath)
 	if err != nil {
