@@ -7,6 +7,7 @@
           <div>
             <el-button type="success" @click="zipDialogVisible = true">ZIP 发布</el-button>
             <el-button type="primary" @click="handleAdd">新增文章</el-button>
+            <el-button type="info" plain @click="showHelp = true">Markdown 帮助</el-button>
           </div>
         </div>
       </template>
@@ -105,7 +106,34 @@
         @current-change="handleCurrentChange"
         class="pagination"
       />
-      
+
+      <!-- Markdown 帮助对话框 -->
+      <el-dialog v-model="showHelp" title="Markdown 语法 & ZIP 发布说明" width="700px">
+        <div class="markdown-help">
+          <h3>YAML Front Matter 字段（ZIP 上传）</h3>
+          <table>
+            <tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            <tr><td><code>title</code></td><td>字符串</td><td>是</td><td>文章标题。为空时使用文件名</td></tr>
+            <tr><td><code>date</code></td><td>日期</td><td>否</td><td>格式 YYYY-MM-DD</td></tr>
+            <tr><td><code>tags</code></td><td>数组</td><td>否</td><td>如 [Go, Vue]</td></tr>
+            <tr><td><code>category</code></td><td>字符串</td><td>否</td><td>分类名。不存在自动创建</td></tr>
+            <tr><td><code>desc</code></td><td>字符串</td><td>否</td><td>文章摘要</td></tr>
+            <tr><td><code>cover</code></td><td>字符串</td><td>否</td><td>封面图路径（相对于 zip）</td></tr>
+          </table>
+          <h4>示例</h4>
+          <pre><code>---
+title: "文章标题"
+date: 2024-06-08
+tags: [Go, Vue]
+category: "技术"
+desc: "摘要"
+cover: "images/cover.jpg"
+---</code></pre>
+          <h3>支持的 Markdown 功能</h3>
+          <p>代码块（语法高亮+行号+复制）、KaTeX 数学公式 <code>$x^2$</code> <code>$$\int$$</code>、Mermaid 流程图、表格、链接卡片（单独一行 URL 自动渲染为卡片）</p>
+        </div>
+      </el-dialog>
+
       <!-- ZIP上传对话框 -->
       <el-dialog v-model="zipDialogVisible" title="批量发布文章 (ZIP)" width="30%">
         <el-upload
@@ -438,6 +466,8 @@ const handleDelete = (article: Article) => {
 
 // ZIP上传对话框
 const zipDialogVisible = ref(false)
+// Markdown 帮助对话框
+const showHelp = ref(false)
 
 // ZIP上传处理
 const handleZipUpload = async (options: any) => {
@@ -539,4 +569,12 @@ onActivated(() => {
   display: flex;
   justify-content: flex-end;
 }
+.markdown-help h3 { margin: 16px 0 8px; border-bottom: 1px solid #ebeef5; padding-bottom: 4px; }
+.markdown-help h4 { margin: 12px 0 6px; font-size: 14px; }
+.markdown-help table { width: 100%; border-collapse: collapse; margin: 8px 0 16px; }
+.markdown-help th, .markdown-help td { border: 1px solid #ebeef5; padding: 6px 10px; text-align: left; font-size: 13px; }
+.markdown-help th { background: #f5f7fa; }
+.markdown-help code { background: #f5f7fa; padding: 1px 5px; border-radius: 3px; font-size: 13px; color: #e96900; }
+.markdown-help pre { background: #f5f7fa; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 13px; margin: 8px 0 16px; }
+.markdown-help p { font-size: 13px; color: #606266; margin: 4px 0; }
 </style>

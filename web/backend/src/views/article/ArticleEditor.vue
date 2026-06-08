@@ -178,18 +178,38 @@ graph TD
         <p>效果：居中卡片，hover 上浮，显示域名作为描述。</p>
 
         <h3>ZIP 批量发布</h3>
-        <p>将 .md 文件和 images 文件夹打包为 .zip，直接上传即可发布。Markdown 文件头部支持 YAML Front Matter：</p>
+        <p>将 <code>.md</code> 文件和 <code>images/</code> 文件夹打包为 <code>.zip</code>，上传即发布。图片自动上传并替换路径。</p>
+
+        <h4>YAML Front Matter 字段</h4>
+        <table>
+          <tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr>
+          <tr><td><code>title</code></td><td>字符串</td><td>是</td><td>文章标题。为空时使用文件名</td></tr>
+          <tr><td><code>date</code></td><td>日期</td><td>否</td><td>格式 YYYY-MM-DD，如 2024-01-01</td></tr>
+          <tr><td><code>tags</code></td><td>数组</td><td>否</td><td>标签列表，如 [Go, Vue, Web]</td></tr>
+          <tr><td><code>category</code></td><td>字符串</td><td>否</td><td>分类名。不存在则自动创建</td></tr>
+          <tr><td><code>desc</code></td><td>字符串</td><td>否</td><td>文章摘要/简介</td></tr>
+          <tr><td><code>cover</code></td><td>字符串</td><td>否</td><td>封面图路径，相对于 zip 根目录，如 images/cover.jpg</td></tr>
+        </table>
+
+        <h4>完整示例</h4>
         <pre><code>---
-title: "文章标题"
-date: 2024-01-01
-tags: [标签1, 标签2]
-category: "分类名"
-desc: "文章摘要"
-cover: "images/封面.jpg"
+title: "我的新文章"
+date: 2024-06-08
+tags: [Go, Vue, Docker]
+category: "技术笔记"
+desc: "一篇关于全栈部署的文章"
+cover: "images/cover.jpg"
 ---
+
 # 正文内容
 
-![图片](images/example.png)</code></pre>
+段落文字...
+
+![示例图片](images/example.png)
+
+```go
+fmt.Println("hello")
+```</code></pre>
       </div>
     </el-dialog>
   </div>
