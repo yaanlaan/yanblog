@@ -2,23 +2,12 @@ services:
   yanblog:
     build: .
     ports:
-      - "3002:80"
-      - "3011:81"
+      - "3002:80"   # Frontend
+      - "3011:81"   # Admin
     volumes:
       - uploads_data:/app/uploads
-      - ./config:/app/config:ro
-      - ./config/frontend/config.yaml:/usr/share/nginx/html/web/config.yaml:ro
-    environment:
-      - APP_MODE=${APP_MODE:release}
-      - DB_HOST=${DB_HOST:db}
-      - DB_PORT=${DB_PORT:3306}
-      - DB_USER=${DB_USER:root}
-      - DB_PASSWORD=${DB_PASSWORD:rootpassword}
-      - DB_NAME=${DB_NAME:yanblog}
-      - JWT_KEY=${JWT_KEY:}
-      - SITE_URL=${SITE_URL:}
-      - WEATHER_API_KEY=${WEATHER_API_KEY:}
-      - WEATHER_CITY=${WEATHER_CITY:Hefei}
+      # Mount host config directory (optional — falls back to templates)
+      - ./config:/app/host-config:ro
     depends_on:
       db:
         condition: service_healthy
@@ -29,15 +18,15 @@ services:
   db:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:rootpassword}
-      MYSQL_DATABASE: ${DB_NAME:yanblog}
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: yanblog
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
       - yanblog-network
     restart: always
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:rootpassword}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
       interval: 5s
       timeout: 3s
       retries: 10

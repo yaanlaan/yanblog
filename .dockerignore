@@ -1,34 +1,40 @@
 # Git
 .git
 .gitignore
+.gitattributes
 
 # Docker
 docker-compose.yaml
 Dockerfile
 .dockerignore
 
-# Build
-**/dist
-dist
-build
-bin
-
-# Dependencies
-**/node_modules
+# Dependencies (reinstalled in Docker)
 node_modules
-vendor
+**/node_modules
 
-# Logs
-logs
-*.log
+# Build outputs (built in Docker)
+dist
+**/dist
 
 # IDE
 .idea
 .vscode
+.trae
+.claude
 *.swp
-*.swo
 
-# Data & Runtime
-docker_field/mysql
-docker_field/uploads
+# Runtime data (not needed in image)
+*.db
+*.sqlite
+uploads/
+log/
+*.log
 
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs (not needed in image)
+readme_src
+apidoc.md
+QUICK_START.md

@@ -25,64 +25,60 @@ RUN npm run build
 # Stage 4: Final Unified Image
 FROM nginx:alpine
 
-# Install basic dependencies
-RUN apk add --no-cache ca-certificates tzdata netcat-openbsd
+RUN apk add --no-cache ca-certificates tzdata
 
 WORKDIR /app
 
-# 1. Setup Backend
+# --- Backend ---
 COPY --from=backend-builder /app/server .
-COPY entrypoint.sh .
-# Fix line endings (CRLF -> LF) for Windows hosts
-RUN sed -i 's/\r$//' entrypoint.sh
-RUN chmod +x entrypoint.sh
-RUN mkdir -p config uploads
+RUN mkdir -p /app/config /app/uploads
 
-# 2. Setup Frontend Files
+# Copy config template (host mount overrides at runtime)
+COPY config/config_template.yaml /app/config/config.yaml.template
+# Copy frontend config
+COPY config/frontend/config.yaml /app/config/frontend_config.yaml
+
+# --- Frontend ---
 RUN mkdir -p /usr/share/nginx/html/web
 COPY --from=frontend-builder /app/dist /usr/share/nginx/html/web
-# COPY --from=frontend-builder /app/public/static /usr/share/nginx/html/web/static
-# COPY --from=frontend-builder /app/public/iconfont /usr/share/nginx/html/web/iconfont
-# COPY --from=frontend-builder /app/public/favicon.ico /usr/share/nginx/html/web/favicon.ico
 
-# Ensure permissions are correct for Nginx
-RUN chmod -R 755 /usr/share/nginx/html
-
-# 3. Setup Admin Files
+# --- Admin ---
 RUN mkdir -p /usr/share/nginx/html/admin
 COPY --from=admin-builder /app/dist /usr/share/nginx/html/admin
 
-# 4. Link Paths for Go Backend Compatibility
-# Go code expects: "./web/frontend/public/static/about.md"
-# Real location: "/usr/share/nginx/html/web/static/about.md"
-RUN mkdir -p /app/web/frontend/public && \
-    ln -s /usr/share/nginx/html/web/static /app/web/frontend/public/static && \
-    ln -s /usr/share/nginx/html/web/iconfont /app/web/frontend/public/iconfont && \
-    ln -s /usr/share/nginx/html/web/favicon.ico /app/web/frontend/public/favicon.ico
+# --- Static files for Go backend routes ---
+# Go serves /static, /iconfont, /favicon.ico from ./web/frontend/public/
+RUN mkdir -p /app/web/frontend/public
+COPY web/frontend/public/static /app/web/frontend/public/static
+COPY web/frontend/public/iconfont /app/web/frontend/public/iconfont
+COPY web/frontend/public/favicon.ico /app/web/frontend/public/favicon.ico
+COPY web/frontend/public/favicon.svg /app/web/frontend/public/favicon.svg
+# Frontend config (for Go to serve at /config.yaml)
+COPY config/frontend/config.yaml /app/web/frontend/public/config.yaml
 
-# 5. Bake in Configuration (Avoids Host Mount Issues)
-COPY config/config.yaml /app/config/config.yaml
-# 直接覆盖前端静态目录中的配置，避免 Nginx alias 权限/路径问题
-COPY web/frontend/public/config.yaml /usr/share/nginx/html/web/config.yaml
+# --- Permissions ---
+RUN chmod -R 755 /usr/share/nginx/html && chmod -R 755 /app
 
-# 创建软链接：让后端(操作 /app/config/frontend_config.yaml) 实际上修改的是 Nginx 的文件
-# 这样就实现了后端修改，前端生效，且共享同一份配置
-RUN ln -sf /usr/share/nginx/html/web/config.yaml /app/config/frontend_config.yaml
-
-# 确保配置文件存在
-RUN test -f /app/config/config.yaml || (echo "Error: config.yaml not found!" && exit 1) && \
-    test -L /app/config/frontend_config.yaml || (echo "Error: frontend_config.yaml symlink failed!" && exit 1)
-
-# 确保所有文件对 Nginx 用户(通常是 nginx:nginx)可读
-# 赋予所有目录 +x 权限，所有文件 +r 权限
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chmod -R 755 /usr/share/nginx/html && \
-    chmod -R 755 /app
-
-# 6. Setup Nginx Config
+# --- Nginx Config ---
 COPY nginx.conf.unified /etc/nginx/conf.d/default.conf
 
-# Expose ports
 EXPOSE 80 81
 
-CMD ["/app/entrypoint.sh"]
+# Startup: use host config if mounted, otherwise fall back to template
+CMD ["/bin/sh", "-c", "\
+  if [ -f /app/host-config/backend/config.yaml ]; then \
+    cp /app/host-config/backend/config.yaml /app/config/config.yaml; \
+    echo 'Using host backend config'; \
+  else \
+    cp /app/config/config.yaml.template /app/config/config.yaml; \
+    echo 'Using default backend config (template)'; \
+  fi && \
+  if [ -f /app/host-config/frontend/config.yaml ]; then \
+    cp /app/host-config/frontend/config.yaml /app/config/frontend_config.yaml; \
+    cp /app/host-config/frontend/config.yaml /app/web/frontend/public/config.yaml; \
+    echo 'Using host frontend config'; \
+  fi && \
+  /app/server & \
+  sleep 2 && \
+  nginx -g 'daemon off;' \
+"]
