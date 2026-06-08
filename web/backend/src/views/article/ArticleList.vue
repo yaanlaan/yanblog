@@ -178,7 +178,7 @@ const router = useRouter()
 const route = useRoute()
 
 // 默认图片
-const defaultImage = '/uploads/defaults/hero.jpg'
+const defaultImage = new URL('../../assets/img/无封面.jpg', import.meta.url).href
 
 // 文章数据类型
 interface Article {

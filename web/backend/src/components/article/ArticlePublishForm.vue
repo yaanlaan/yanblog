@@ -50,11 +50,23 @@
           </el-select>
         </el-form-item>
 
+        <el-form-item label="发布时间">
+          <el-date-picker
+            v-model="publishData.createdAt"
+            type="datetime"
+            placeholder="选择发布时间"
+            format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            style="width: 100%"
+            @change="handleFormChange"
+          />
+        </el-form-item>
+
         <el-form-item label="摘要">
-          <el-input 
-            v-model="publishData.desc" 
-            type="textarea" 
-            :rows="4" 
+          <el-input
+            v-model="publishData.desc"
+            type="textarea"
+            :rows="4"
             placeholder="请输入文章摘要"
             @input="handleFormChange"
           />
@@ -131,6 +143,7 @@ const props = defineProps<{
     img: string
     top: number
     tags: string
+    createdAt?: string
   }
   categories: {id: number, name: string}[]
   isEdit: boolean
@@ -141,7 +154,7 @@ const props = defineProps<{
 
 // 定义事件
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: {categoryId: number | undefined, desc: string, img: string, top: number, tags: string}): void
+  (e: 'update:modelValue', value: {categoryId: number | undefined, desc: string, img: string, top: number, tags: string, createdAt?: string}): void
   (e: 'submit'): void
 }>()
 
@@ -176,7 +189,8 @@ const publishData = reactive({
   desc: props.modelValue.desc,
   img: props.modelValue.img,
   top: props.modelValue.top || 0,
-  tags: props.modelValue.tags || ''
+  tags: props.modelValue.tags || '',
+  createdAt: props.modelValue.createdAt || ''
 })
 
 // 监听属性变化
@@ -186,6 +200,7 @@ watch(() => props.modelValue, (newVal) => {
   publishData.img = newVal.img
   publishData.top = newVal.top || 0
   publishData.tags = newVal.tags || ''
+  publishData.createdAt = newVal.createdAt || ''
 
   if (newVal.tags) {
     selectedTags.value = newVal.tags.split(',').filter(t => t.trim())
@@ -223,7 +238,8 @@ const handleFormChange = () => {
     desc: publishData.desc,
     img: publishData.img,
     top: publishData.top,
-    tags: publishData.tags
+    tags: publishData.tags,
+    createdAt: publishData.createdAt
   })
 }
 

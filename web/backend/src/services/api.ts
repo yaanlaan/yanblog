@@ -162,17 +162,18 @@ export const articleApi = {
     apiClient.get(`/v1/article/info/${id}`),
   
   // 创建文章
-  createArticle: (data: { 
-    title: string; 
-    cid: number; 
-    desc: string; 
-    content: string; 
+  createArticle: (data: {
+    title: string;
+    cid: number;
+    desc: string;
+    content: string;
     img: string;
     top: number;
     tags?: string;
     type?: number;
     pdf_url?: string;
-  }) => 
+    createdAt?: string;
+  }) =>
     apiClient.post('/v1/article/add', data),
   
   // 上传ZIP发布文章

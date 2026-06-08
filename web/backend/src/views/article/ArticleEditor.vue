@@ -342,7 +342,8 @@ const publishForm = reactive({
   desc: '',
   img: '',
   top: 0,
-  tags: ''
+  tags: '',
+  createdAt: ''
 })
 
 // 分类列表
@@ -443,6 +444,7 @@ const handlePublishFormUpdate = (value: {categoryId: number | undefined, desc: s
   publishForm.img = value.img
   publishForm.top = value.top
   publishForm.tags = value.tags
+  publishForm.createdAt = value.createdAt || ''
 }
 
 // 提交文章
@@ -469,6 +471,7 @@ const submitArticle = async () => {
       img: publishForm.img,
       top: publishForm.top,
       tags: publishForm.tags,
+      createdAt: publishForm.createdAt || undefined,
       type: articleType.value,
       pdf_url: pdfUrl.value
     }
@@ -521,6 +524,7 @@ const getArticleDetail = async (id: number) => {
     publishForm.tags = article.tags || ''
     publishForm.img = article.img
     publishForm.top = article.top || 0
+    publishForm.createdAt = article.CreatedAt || ''
     articleType.value = article.type || 1
     pdfUrl.value = article.pdf_url || ''
 

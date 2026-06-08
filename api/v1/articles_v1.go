@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 	"yanblog/model"
 	"yanblog/utils/errmsg"
 
@@ -14,11 +15,38 @@ import (
 
 // 添加文章
 func AddArticle(c *gin.Context) {
-	var data model.Article
+	var input struct {
+		Title     string `json:"title"`
+		Cid       int    `json:"cid"`
+		Desc      string `json:"desc"`
+		Content   string `json:"content"`
+		Img       string `json:"img"`
+		Top       int    `json:"top"`
+		Tags      string `json:"tags"`
+		Type      int    `json:"type"`
+		PdfUrl    string `json:"pdf_url"`
+		CreatedAt string `json:"createdAt"`
+	}
 	var code int
-	_ = c.ShouldBindJSON(&data)
+	_ = c.ShouldBindJSON(&input)
 
-	// 检查标题是否重复
+	data := model.Article{
+		Title:   input.Title,
+		Cid:     input.Cid,
+		Desc:    input.Desc,
+		Content: input.Content,
+		Img:     input.Img,
+		Top:     input.Top,
+		Tags:    input.Tags,
+		Type:    input.Type,
+		PdfUrl:  input.PdfUrl,
+	}
+	if input.CreatedAt != "" {
+		if t, err := time.Parse("2006-01-02 15:04:05", input.CreatedAt); err == nil {
+			data.CreatedAt = t
+		}
+	}
+
 	code = model.CheckArtTitle(data.Title)
 	if code == errmsg.SUCCESS {
 		code = model.CreateArt(&data)

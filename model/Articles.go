@@ -259,6 +259,10 @@ func EditArt(id int, data *Article) int {
 	// 补全缺失的更新字段
 	maps["type"] = data.Type
 	maps["pdf_url"] = data.PdfUrl
+	// 支持修改发布时间
+	if !data.CreatedAt.IsZero() {
+		maps["created_at"] = data.CreatedAt
+	}
 
 	// 处理标签更新
 	var newTags []Tag
