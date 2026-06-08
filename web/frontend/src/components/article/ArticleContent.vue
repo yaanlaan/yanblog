@@ -139,6 +139,8 @@ initMermaidTheme()
 
 const themeObserver = new MutationObserver(() => {
   initMermaidTheme()
+  // 移除已渲染标记，允许用新主题重新渲染
+  document.querySelectorAll('.mermaid-chart[data-rendered]').forEach(b => b.removeAttribute('data-rendered'))
   renderPostProcess()
 })
 themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
@@ -232,7 +234,7 @@ const renderPostProcess = async () => {
       }
     });
     
-    const mermaidBlocks = contentRef.value.querySelectorAll('.mermaid-chart');
+    const mermaidBlocks = contentRef.value.querySelectorAll('.mermaid-chart:not([data-rendered])');
     for (let i = 0; i < mermaidBlocks.length; i++) {
       const block = mermaidBlocks[i];
       if (block instanceof HTMLElement) {
@@ -240,6 +242,7 @@ const renderPostProcess = async () => {
           const code = block.textContent || '';
           const { svg } = await mermaid.render(block.id + '-svg', code);
           block.innerHTML = svg;
+          block.setAttribute('data-rendered', 'true');
         } catch (error) {
           console.error('Mermaid渲染错误:', error);
           block.innerHTML = '<p style="color: red;">图表渲染失败</p>';
