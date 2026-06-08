@@ -7,7 +7,7 @@ Write-Host ">>> Starting YanBlog Deployment (Single Container Mode)..."
 
 if (-not (Test-Path "$CONFIG_DIR/backend") -or -not (Test-Path $BACKEND_CONFIG)) {
     Write-Host ">>> Initializing configuration..."
-    .\init.ps1
+    .\setup.bat
 }
 
 if (Test-Path $COMPOSE_FILE) {

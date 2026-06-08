@@ -10,7 +10,7 @@ FRONTEND_CONFIG="$CONFIG_DIR/frontend/config.yaml"
 
 if [ ! -d "$CONFIG_DIR/backend" ] || [ ! -f "$BACKEND_CONFIG" ]; then
     echo ">>> Initializing configuration..."
-    ./init.sh
+    ./setup.sh
 fi
 
 if [ -f "$COMPOSE_FILE" ]; then
