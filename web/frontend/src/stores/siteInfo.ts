@@ -228,7 +228,7 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
                     hostname.endsWith('.local')
     
     if (isLocal) {
-      config.admin_url = `${window.location.protocol}//${window.location.host}/admin`
+      config.admin_url = '/admin'
     }
   }
 
