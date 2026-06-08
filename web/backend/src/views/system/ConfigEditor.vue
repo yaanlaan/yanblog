@@ -338,9 +338,6 @@
               <el-form-item label="显示联系方式">
                 <el-switch v-model="configForm.contacts.show" />
               </el-form-item>
-              <el-form-item label="微信二维码">
-                <image-uploader v-model="configForm.contacts.wechat_qr" />
-              </el-form-item>
               <el-divider content-position="left">联系项目</el-divider>
               <el-button type="primary" plain size="small" @click="addContactItem" class="mb-4">添加联系方式</el-button>
               <el-table :data="configForm.contacts.items" border>
@@ -385,15 +382,12 @@
           <!-- 默认图片 -->
           <el-tab-pane label="默认图片" name="defaultImages">
             <el-form label-width="120px" class="config-form">
-              <div class="form-tip" style="margin-bottom:16px">文章无封面、头像加载失败、二维码缺失时的回退图片</div>
+              <div class="form-tip" style="margin-bottom:16px">文章无封面、头像加载失败时的回退图片</div>
               <el-form-item label="默认封面">
                 <image-uploader v-model="configForm.default_images.cover" />
               </el-form-item>
               <el-form-item label="默认头像">
                 <image-uploader v-model="configForm.default_images.avatar" />
-              </el-form-item>
-              <el-form-item label="默认二维码">
-                <image-uploader v-model="configForm.default_images.qr_code" />
               </el-form-item>
             </el-form>
           </el-tab-pane>
@@ -520,7 +514,7 @@ const mode = ref<'yaml' | 'form'>('form')
 const activeTab = ref('basic')
 const configContent = ref('')
 const configForm = ref<any>({
-  default_images: { cover: '', avatar: '', qr_code: '' },
+  default_images: { cover: '', avatar: '' },
   footer: { icp: {}, portfolio: { items: [] }, related_links: { items: [] } },
   socials: [],
   contacts: { items: [] },
@@ -540,7 +534,7 @@ const loadConfig = async () => {
         if (!Array.isArray(configForm.value.allowed_hosts)) {
           configForm.value.allowed_hosts = []
         if (!configForm.value.default_images) {
-          configForm.value.default_images = { cover: '', avatar: '', qr_code: '' }
+          configForm.value.default_images = { cover: '', avatar: '' }
         }
         }
       } catch (e) {
@@ -655,7 +649,7 @@ const removeSocial = (i: number) => configForm.value.socials?.splice(i, 1)
 
 // 联系方式
 const addContactItem = () => {
-  if (!configForm.value.contacts) configForm.value.contacts = { show: false, wechat_qr: '', items: [] }
+  if (!configForm.value.contacts) configForm.value.contacts = { show: false, items: [] }
   if (!configForm.value.contacts.items) configForm.value.contacts.items = []
   configForm.value.contacts.items.push({ name: '', url: '', icon: '', color: '', is_circle: true })
 }

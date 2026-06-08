@@ -7,7 +7,6 @@ author_bio: 欢迎光临 (￣▽￣)~*
 default_images:
   cover: /uploads/defaults/hero.jpg
   avatar: /uploads/defaults/avatar.jpg
-  qr_code: /uploads/defaults/hero.jpg
 hero:
   title: 草木山石<br>日月星辰
   subtitle: yaan's blog
@@ -83,7 +82,6 @@ socials:
     is_circle: true
 contacts:
   show: true
-  wechat_qr: /assets/wechat-qr.png
   items:
     - name: Email
       url: mailto:you@example.com

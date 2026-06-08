@@ -11,7 +11,6 @@ export interface SiteInfo {
   default_images: {
     cover: string
     avatar: string
-    qr_code: string
   }
   hero: {
     title: string
@@ -80,7 +79,6 @@ export interface SiteInfo {
   }>
   contacts: {
     show: boolean
-    wechat_qr: string
     items: Array<{
       name: string
       url: string
@@ -116,8 +114,7 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
     author_bio: '',
     default_images: {
       cover: '',
-      avatar: '',
-      qr_code: ''
+      avatar: ''
     },
     hero: {
       title: '',
@@ -167,7 +164,6 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
     socials: [],
     contacts: {
       show: false,
-      wechat_qr: '',
       items: []
     },
     comment: {

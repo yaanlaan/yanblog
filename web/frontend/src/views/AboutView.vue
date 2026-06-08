@@ -43,15 +43,6 @@
       </template>
     </MainLayout>
 
-    <!-- 微信二维码弹窗 -->
-    <div v-if="showWechatQR" class="qr-modal" @click="showWechatQR = false">
-      <div class="qr-content" @click.stop>
-        <h3>微信二维码</h3>
-        <img :src="siteInfo.contacts?.wechat_qr || defaultQrImg" alt="微信二维码" @error="handleQRError">
-        <p>扫描二维码添加微信</p>
-        <button class="close-btn" @click="showWechatQR = false">关闭</button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -63,11 +54,10 @@ import MainLayout from '@/components/layout/MainLayout.vue'
 import ProfileCard from '@/components/sidebar/ProfileCard.vue'
 import { useSiteInfoStore } from '@/stores/siteInfo'
 import { storeToRefs } from 'pinia'
-import { useDefaultAvatar, useDefaultQrCode } from '@/utils/defaults'
+import { useDefaultAvatar } from '@/utils/defaults'
 
 const siteInfoStore = useSiteInfoStore()
 const defaultAvatarImg = useDefaultAvatar()
-const defaultQrImg = useDefaultQrCode()
 const { siteInfo } = storeToRefs(siteInfoStore)
 
 // 渲染 Markdown 内容
@@ -84,44 +74,11 @@ onMounted(async () => {
   }
 })
 
-// 微信二维码显示状态
-const showWechatQR = ref(false)
-
-// 联系方式卡片引用
-const contactCard = ref<HTMLElement | null>(null)
-
-// 处理头像加载错误
-const handleAvatarError = (e: Event) => {
-  const target = e.target as HTMLImageElement
-  target.src = defaultAvatarImg.value
-}
-
-// 处理二维码图片加载错误
-const handleQRError = (e: Event) => {
-  const target = e.target as HTMLImageElement
-  target.src = defaultQrImg.value
-}
-
 // 打开链接
 const openLink = (url: string) => {
   window.open(url, '_blank')
 }
 
-// 打开QQ聊天
-const openQQChat = (qqNumber: string) => {
-  window.open(`http://wpa.qq.com/msgrd?v=3&uin=${qqNumber}&site=qq&menu=yes`, '_blank')
-}
-
-// 显示二维码
-const showQRCode = (type: string) => {
-  if (type === 'wechat') {
-    showWechatQR.value = true
-  }
-}
-
-// 组件挂载时添加滚动监听
-// 注意：由于这是一个局部组件，我们不需要在这里添加滚动监听
-// 吸附效果更适合在整个应用级别实现
 </script>
 
 <style scoped>
@@ -368,60 +325,6 @@ const showQRCode = (type: string) => {
   font-size: 14px;
   color: var(--color-text-secondary);
   margin: 0;
-}
-
-/* 二维码弹窗样式 */
-.qr-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-.qr-content {
-  background: var(--color-background-soft);
-  padding: 30px;
-  border-radius: 8px;
-  text-align: center;
-  max-width: 300px;
-  width: 90%;
-}
-
-.qr-content h3 {
-  margin-top: 0;
-  color: var(--color-heading);
-}
-
-.qr-content img {
-  width: 200px;
-  height: 200px;
-  object-fit: contain;
-  margin: 15px 0;
-}
-
-.qr-content p {
-  margin: 10px 0;
-  color: var(--color-text-secondary);
-}
-
-.close-btn {
-  background: var(--color-accent);
-  color: white;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 15px;
-}
-
-.close-btn:hover {
-  opacity: 0.9;
 }
 
 @media (max-width: 992px) {
