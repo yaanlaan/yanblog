@@ -148,6 +148,29 @@
     text-align: center;
   }
 }
+
+@media (max-width: 480px) {
+  .copyright-container {
+    padding: 20px 0;
+  }
+
+  .copyright-container .ref-link h2 {
+    font-size: 20px;
+  }
+
+  .copyright-container .ref-link>span {
+    font-size: 14px;
+    margin: 4px;
+  }
+
+  .copyright-container .copyright {
+    font-size: 13px;
+  }
+
+  .container {
+    padding: 0 12px;
+  }
+}
 </style>
 
 <script setup lang="ts">

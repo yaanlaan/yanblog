@@ -299,20 +299,45 @@ const handleRandomVisit = async () => {
     grid-template-columns: 1fr;
     height: auto;
   }
-  
+
   .hero-card {
-    height: 240px; /* 增加移动端卡片高度，给内容更多空间 */
+    height: 240px;
     margin-bottom: 15px;
   }
-  
+
   .hero-bottom-grid {
     grid-template-columns: 1fr;
     height: auto;
   }
-  
+
   .nav-card {
     height: 80px;
     margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-card {
+    height: auto;
+    min-height: 180px;
+    padding: 20px;
+  }
+
+  .blog-title {
+    font-size: 1.4em;
+  }
+
+  .blog-subtitle {
+    font-size: 0.9em;
+  }
+
+  .welcome-title {
+    font-size: 1.2em;
+  }
+
+  .recommend-btn {
+    padding: 8px 16px;
+    font-size: 13px;
   }
 }
 </style>

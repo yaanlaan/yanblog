@@ -830,6 +830,14 @@ onUpdated(() => {
   transition: opacity 0.2s;
 }
 
+/* 触屏设备始终显示复制按钮 */
+@media (hover: none) and (pointer: coarse) {
+  .content :deep(.mac-copy-btn) {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
 .content :deep(.math-block:hover),
 .content :deep(.math-inline:hover) {
   opacity: 0.8;

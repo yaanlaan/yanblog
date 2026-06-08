@@ -574,18 +574,52 @@ onBeforeUnmount(() => {
 
 /* 响应式断点控制 */
 @media (max-width: 992px) {
-  .navbar-center, 
+  .navbar-center,
   .admin-btn-fixed,
   .search-container {
     display: none !important;
   }
-  
+
   .mobile-menu-btn {
     display: flex;
   }
 
   .blog-name {
     font-size: 1em;
+  }
+
+  .logo-container {
+    width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-content {
+    height: 52px;
+  }
+
+  .avatar {
+    width: 26px;
+    height: 26px;
+  }
+
+  .blog-name {
+    font-size: 0.9em;
+  }
+
+  .mobile-menu-btn {
+    width: 22px;
+    height: 22px;
+    margin-left: 10px;
+  }
+
+  .theme-toggle-btn {
+    padding: 4px;
+  }
+
+  .theme-toggle-btn svg {
+    width: 18px;
+    height: 18px;
   }
 }
 
@@ -594,19 +628,6 @@ onBeforeUnmount(() => {
   .mobile-menu-overlay {
     display: none;
   }
-}
-.avatar {
-  width: 32px; /* 减小头像 */
-  height: 32px;
-  object-fit: cover;
-  border-radius: 10%;
-  margin-right: 8px;
-}
-
-.blog-name {
-  font-size: 1.1em; /* 稍微减小字体 */
-  font-weight: bold;
-  color: var(--color-heading);
 }
 
 .navbar-center {
@@ -943,39 +964,8 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
-  .navbar-content {
-    flex-wrap: wrap;
-  }
-  
-  .navbar-nav,
-  .site-title-centered,
-  .navbar-center {
-    order: 3;
-    width: 100%;
-    justify-content: center;
-    margin-top: 10px;
-  }
-  
-  .navbar-right {
-    order: 2;
-    width: 100%;
-    margin: 10px 0;
-    justify-content: center;
-  }
-  
-  .search-container {
-    margin: 0;
-    width: 100%;
-    max-width: 300px;
-  }
-  
-  .logo-container {
-    order: 1;
-  }
-  
-  .login-btn {
-    order: 4;
-    margin: 10px auto;
+  .floating-progress {
+    display: none;
   }
 }
 </style>
