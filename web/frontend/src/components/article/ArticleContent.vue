@@ -133,6 +133,25 @@ mermaid.initialize({
   securityLevel: 'loose'
 })
 
+// 独立链接渲染为卡片：将 <p><a href="...">text</a></p> 转为 link-card
+const renderLinkCards = (html: string): string => {
+  return html.replace(
+    /<p>\s*<a href="([^"]+)"[^>]*>([^<]+)<\/a>\s*<\/p>/g,
+    (_, href, text) => {
+      // 提取域名作为描述
+      let domain = ''
+      try {
+        domain = new URL(href).hostname
+      } catch { domain = href }
+      return `
+<a href="${href}" target="_blank" rel="noopener noreferrer" class="link-card">
+  <span class="link-card-title">${text}</span>
+  <span class="link-card-desc">${domain}</span>
+</a>`
+    }
+  )
+}
+
 const renderedContent = computed(() => {
   if (!props.article.content) {
     return ''
@@ -143,6 +162,7 @@ const renderedContent = computed(() => {
   let html: string = marked.parse(contentWithIds) as string
 
   html = renderMath(html)
+  html = renderLinkCards(html)
 
   return html
 })

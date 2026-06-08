@@ -172,6 +172,11 @@ graph TD
 |-----|-----|-----|
 | A   | B   | C   |</code></pre>
 
+        <h3>链接卡片</h3>
+        <p>将链接单独放在一行，自动渲染为卡片样式，显示链接文本和域名：</p>
+        <pre><code>https://github.com/yaanlaan/yanblog</code></pre>
+        <p>效果：居中卡片，hover 上浮，显示域名作为描述。</p>
+
         <h3>ZIP 批量发布</h3>
         <p>将 .md 文件和 images 文件夹打包为 .zip，直接上传即可发布。Markdown 文件头部支持 YAML Front Matter：</p>
         <pre><code>---
