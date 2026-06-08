@@ -30,10 +30,10 @@ const fetchContent = async () => {
   loading.value = true
   try {
     const res = await axios.get('v1/about')
-    if (res.data.status === 200) {
-      content.value = res.data.data || ''
+    if (res.status === 200) {
+      content.value = res.data || ''
     } else {
-      ElMessage.error(res.data.message || '获取内容失败')
+      ElMessage.error(res.message || '获取内容失败')
     }
   } catch (error) {
     console.error(error)
