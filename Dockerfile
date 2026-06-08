@@ -36,8 +36,9 @@ RUN mkdir -p /app/config /app/uploads
 
 # Copy config template (host mount overrides at runtime)
 COPY config/config_template.yaml /app/config/config.yaml.template
-# Copy frontend config
-COPY config/frontend/config.yaml /app/config/frontend_config.yaml
+# Copy frontend config (Go expects config/frontend/config.yaml)
+RUN mkdir -p /app/config/frontend
+COPY config/frontend/config.yaml /app/config/frontend/config.yaml
 
 # --- Frontend ---
 RUN mkdir -p /usr/share/nginx/html/web
@@ -76,7 +77,7 @@ CMD ["/bin/sh", "-c", "\
     echo '[entry] Using default config (template)'; \
   fi && \
   if [ -f /app/host-config/frontend/config.yaml ]; then \
-    cp /app/host-config/frontend/config.yaml /app/config/frontend_config.yaml; \
+    cp /app/host-config/frontend/config.yaml /app/config/frontend/config.yaml; \
     cp /app/host-config/frontend/config.yaml /app/web/frontend/public/config.yaml; \
     echo '[entry] Using host frontend config'; \
   fi && \

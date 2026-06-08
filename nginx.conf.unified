@@ -59,7 +59,7 @@ server {
     
     # Config File (Admin might need it too, though usually it uses API)
     location /config.yaml {
-        alias /app/config/frontend_config.yaml;
+        alias /app/config/frontend/config.yaml;
     }
 
     # Uploads
