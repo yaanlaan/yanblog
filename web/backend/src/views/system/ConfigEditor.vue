@@ -474,7 +474,8 @@ const ImageUploader = defineComponent({
       h(ElUpload, {
         class: 'avatar-uploader',
         action: '/api/v1/upload',
-        data: { type: 'common' }, // 使用 common 类型
+        data: { type: 'common' },
+        headers: { Authorization: 'Bearer ' + (localStorage.getItem('token') || '') },
         showFileList: false,
         onSuccess: handleSuccess,
         onError: handleError,
@@ -505,7 +506,14 @@ const ImageUploader = defineComponent({
 const mode = ref<'yaml' | 'form'>('form')
 const activeTab = ref('basic')
 const configContent = ref('')
-const configForm = ref<any>({})
+const configForm = ref<any>({
+  default_images: { cover: '', avatar: '', qr_code: '' },
+  footer: { icp: {}, portfolio: { items: [] }, related_links: { items: [] } },
+  socials: [],
+  contacts: { items: [] },
+  shortcuts: [],
+  quotes: []
+})
 const saving = ref(false)
 
 const loadConfig = async () => {
