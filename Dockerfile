@@ -1,10 +1,11 @@
 # Stage 1: Build Go Backend
 FROM golang:1.24-alpine AS backend-builder
+RUN apk add --no-cache gcc musl-dev
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN go build -o server .
+RUN CGO_ENABLED=1 go build -o server .
 
 # Stage 2: Build Frontend (Public)
 FROM node:20-alpine AS frontend-builder
