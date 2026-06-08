@@ -61,3 +61,5 @@ config/secrets.yaml
 server
 yanblog
 config/frontend/config.yaml
+test-zip-upload/
+yanblog-test-article.zip

@@ -288,3 +288,42 @@ a,
   .mac-code-content code { font-size: 12px; line-height: 1.6; }
   .mac-copy-btn { padding: 4px 8px; font-size: 11px; }
 }
+
+/* ============================================
+   全局图片优化 — 防止超大图片溢出
+   ============================================ */
+
+.article-main-content img,
+.markdown-body img,
+.content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* 封面/缩略图统一约束 */
+.cover-image,
+.article-cover img,
+.article-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  aspect-ratio: 16 / 9;
+}
+
+/* 小尺寸缩略图 */
+.thumb-sm {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.thumb-md {
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 10px;
+  flex-shrink: 0;
+}

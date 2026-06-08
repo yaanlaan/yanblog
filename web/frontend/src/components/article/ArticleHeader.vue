@@ -296,8 +296,7 @@ const formatNumber = (num: number) => {
 
 .article-image {
   width: 100%;
-  height: auto;
-  /* Removed max-height to display full image */
+  max-height: 450px;
   overflow: hidden;
   margin-bottom: 40px;
   border-radius: 12px;
@@ -306,10 +305,10 @@ const formatNumber = (num: number) => {
 
 .article-image img {
   width: 100%;
-  /* Removed fixed height to maintain aspect ratio */
-  height: auto;
+  height: 100%;
   display: block;
-  object-fit: contain; /* Ensure full image is visible */
+  object-fit: cover;
+  aspect-ratio: 16 / 9;
   transition: transform 0.5s ease;
 }
 
@@ -321,22 +320,22 @@ const formatNumber = (num: number) => {
   .article-title {
     font-size: 26px;
   }
-  
+
   .article-meta-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
   }
-  
+
   .meta-stats {
     width: 100%;
     justify-content: flex-start;
-    padding-left: 60px; /* Align with text not avatar */
+    padding-left: 60px;
     margin-top: -10px;
   }
-  
+
   .article-image {
-    max-height: 300px;
+    max-height: 220px;
   }
 }
 </style>
