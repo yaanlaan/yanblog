@@ -5,10 +5,12 @@ services:
       - "3002:80"   # 前台
       - "3011:81"   # 后台
     volumes:
-      - uploads_data:/app/uploads
-      - ./config:/app/host-config:ro
+      # 上传文件：宿主机可直接管理
+      - ./uploads:/app/uploads
+      # 数据库：持久化，重建容器不丢失
+      - ./data:/app/data
+      # 配置：双向同步，后台修改即时生效
+      - ./config:/app/host-config
     restart: always
 
-volumes:
-  uploads_data:
-    driver: local
+volumes: {}

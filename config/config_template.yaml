@@ -1,82 +1,30 @@
 # ===========================================
-# 博客系统配置文件
-# 使用说明：复制此文件为 config.yaml 并修改相应配置
+# YanBlog 配置文件
+# 复制为 config/backend/config.yaml 后修改
 # ===========================================
 
 server:
-  # 运行模式：debug（开发） / production（生产）
-  # 开发模式会显示更多调试信息
   AppMode: debug
-  
-  # 服务器端口，一般不需要修改
-  # Docker 部署：:8080
-  # 本地部署：:8080（确保端口未被占用）
   HttpPort: :8080
-  
-  # 站点域名，用于生成 Sitemap 和 SEO
-  # 格式：https://你的域名.com（末尾不要带 /）
-  # 本地测试可以留空
-  SiteUrl: 
+  SiteUrl:
 
 database:
-  # 数据库类型，目前只支持 MYSQL
-  Db: MYSQL
-  
-  # 数据库连接配置
-  # Docker 部署：DbHost 固定为 db
-  # 本地部署：DbHost 为 localhost 或 127.0.0.1
-  DbHost: db
+  # SQLite（默认，无需额外配置）或 MYSQL
+  Db: SQLite
+  DbHost: localhost
   DbPort: 3306
-  
-  # 数据库用户名和密码
-  # ️ 首次使用请修改默认密码！
   DbUser: root
-  DbPassWord: rootpassword  # 【重要】请修改为你的强密码
-  
-  # 数据库名称，一般不需要修改
-  DbName: yanblog
-  
-# ===========================================
-# JWT 认证配置
-# ===========================================
+  DbPassWord: rootpassword
+  DbName: data/yanblog.db
 
-# JWT 密钥，用于生成和验证 Token
-# ⚠️ 【必须修改】为了安全，请生成一个随机字符串
-# 
-# 生成方法（任选其一）：
-# 1. Mac/Linux 命令行：openssl rand -hex 32
-# 2. Windows（Git Bash）：openssl rand -hex 32
-# 3. 在线生成：https://randomkeygen.com/
-#
-# 示例：JwtKey: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
-JwtKey: 
-
-# ===========================================
-# 天气功能配置（可选）
-# ===========================================
+# JWT 密钥（必须修改）
+# 生成: openssl rand -hex 32
+JwtKey:
 
 weather:
-  # 天气服务提供商
-  # 目前支持：openweathermap
   Provider: openweathermap
-  
-  # API 密钥
-  # 获取方式：
-  # 1. 访问 https://openweathermap.org/
-  # 2. 注册账号
-  # 3. 在 API keys 页面生成密钥
-  # 4. 复制到下方
-  # 如果不需要天气功能，可以留空
-  ApiKey: 
-  
-  # 默认显示的城市
-  # 支持中文城市名，如：Beijing, Shanghai, Hefei
+  ApiKey:
   DefaultCity: Hefei
 
-# ===========================================
-# 前端配置
-# ===========================================
-
 # 前端配置文件路径
-# 一般不需要修改
-FrontEndConfigPath: web/frontend/public/config.yaml
+FrontEndConfigPath: config/frontend/config.yaml

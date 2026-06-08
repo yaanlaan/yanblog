@@ -2,6 +2,8 @@ package model
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 	"yanblog/utils"
@@ -115,7 +117,12 @@ func initSQLite() (*gorm.DB, error) {
 	if dbPath == "" {
 		dbPath = "yanblog.db"
 	}
-	
+
+	// 确保数据库文件所在目录存在
+	if dir := filepath.Dir(dbPath); dir != "." {
+		os.MkdirAll(dir, 0755)
+	}
+
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 		DisableForeignKeyConstraintWhenMigrating: true,

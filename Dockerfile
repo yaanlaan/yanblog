@@ -32,7 +32,7 @@ WORKDIR /app
 
 # --- Backend ---
 COPY --from=backend-builder /app/server .
-RUN mkdir -p /app/config /app/uploads
+RUN mkdir -p /app/config /app/data /app/uploads
 
 # Copy config template (host mount overrides at runtime)
 COPY config/config_template.yaml /app/config/config.yaml.template
