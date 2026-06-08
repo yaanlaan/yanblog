@@ -23,6 +23,11 @@ func GetFrontEndConfig(c *gin.Context) {
 		return
 	}
 
+	// 禁止缓存，确保修改后立即生效
+	c.Header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	c.Header("Pragma", "no-cache")
+	c.Header("Expires", "0")
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  errmsg.SUCCESS,
 		"data":    string(content),

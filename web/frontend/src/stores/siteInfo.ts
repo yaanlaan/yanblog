@@ -194,7 +194,7 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
       let configContent: string | null = null
 
       try {
-        const apiResponse = await axios.get('/api/v1/frontend/config')
+        const apiResponse = await axios.get(`/api/v1/frontend/config?t=${new Date().getTime()}`)
         if (apiResponse.data && apiResponse.data.status === 200 && apiResponse.data.data) {
           configContent = apiResponse.data.data
           // console.log('Loaded config from API')
