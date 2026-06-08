@@ -127,10 +127,24 @@ const handleScroll = () => {
   }
 }
 
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'neutral',
-  securityLevel: 'loose'
+// Mermaid 主题随暗色模式切换
+const getMermaidTheme = (): string => {
+  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+}
+
+const initMermaidTheme = () => {
+  mermaid.initialize({ startOnLoad: false, theme: getMermaidTheme(), securityLevel: 'loose' })
+}
+initMermaidTheme()
+
+const themeObserver = new MutationObserver(() => {
+  initMermaidTheme()
+  renderPostProcess()
+})
+themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+
+onUnmounted(() => {
+  themeObserver.disconnect()
 })
 
 // 独立链接渲染为卡片：将 <p><a href="...">text</a></p> 转为 link-card
