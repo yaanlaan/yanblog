@@ -463,12 +463,18 @@ const ImageUploader = defineComponent({
       return true
     }
 
-    // 预览图片
     const previewImage = () => {
        if (props.modelValue) {
          window.open(props.modelValue, '_blank')
        }
     }
+
+    const defaultOptions = [
+      { label: '默认 Logo', value: '/uploads/defaults/logo.png' },
+      { label: '默认头像', value: '/uploads/defaults/avatar.jpg' },
+      { label: '默认背景', value: '/uploads/defaults/hero.jpg' },
+      { label: '默认 Favicon', value: '/uploads/defaults/favicon.svg' },
+    ]
 
     return () => h('div', { class: 'custom-image-uploader' }, [
       h(ElUpload, {
@@ -488,15 +494,22 @@ const ImageUploader = defineComponent({
             h(ElIcon, { class: 'avatar-uploader-icon' }, () => h(Plus))
         ]
       }),
-      // 如果有图片，显示预览URL和操作
       props.modelValue && h('div', { class: 'image-actions' }, [
         h('span', { class: 'image-url', title: props.modelValue }, props.modelValue),
-        h(ElButton, {
-           size: 'small', 
-           link: true, 
-           type: 'primary',
-           onClick: previewImage
-        }, () => '查看原图')
+        h(ElButton, { size: 'small', link: true, type: 'primary', onClick: previewImage }, () => '查看原图')
+      ]),
+      // 快速选择：从 uploads 中选取已有图片（包含默认资源）
+      h('div', { class: 'quick-pick' }, [
+        h('span', { class: 'quick-pick-label' }, '或选择已有：'),
+        ...defaultOptions.map(opt =>
+          h(ElButton, {
+            key: opt.value,
+            size: 'small',
+            type: props.modelValue === opt.value ? 'primary' : '',
+            plain: true,
+            onClick: () => emit('update:modelValue', opt.value)
+          }, () => opt.label)
+        )
       ])
     ])
   }
@@ -769,6 +782,18 @@ onMounted(() => {
   background: #f4f4f5;
   padding: 2px 6px;
   border-radius: 4px;
+}
+
+:deep(.quick-pick) {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+:deep(.quick-pick-label) {
+  font-size: 12px;
+  color: #909399;
 }
 
 .sub-config {

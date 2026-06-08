@@ -26,7 +26,8 @@ dist
 # Runtime data (not needed in image)
 *.db
 *.sqlite
-uploads/
+uploads/*
+!uploads/defaults/
 log/
 *.log
 
