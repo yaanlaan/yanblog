@@ -1,0 +1,59 @@
+\documentclass[tikz,border=0pt]{standalone}
+\usepackage{ctex}
+\usetikzlibrary{shadows.blur, positioning, backgrounds, shapes.geometric}
+
+% 定义颜色 - 参考了网站的渐变风格
+\definecolor{yan-mint}{RGB}{132, 250, 176}   % #84fab0
+\definecolor{yan-sky}{RGB}{143, 211, 244}    % #8fd3f4
+\definecolor{yan-bg}{RGB}{30, 30, 30}        % 深色背景模拟暗黑模式
+
+\begin{document}
+\begin{tikzpicture}[
+    font=\sffamily\bfseries,
+    logo node/.style={
+        circle,
+        minimum size=4cm,
+        inner sep=0pt,
+        text=white,
+        align=center,
+        blur shadow={shadow blur steps=10, shadow blur extra rounding=2pt}
+    }
+]
+
+    % 背景圆 - 使用网站风格的渐变色
+    \shade[
+        left color=yan-mint,
+        right color=yan-sky,
+        shading angle=135
+    ] (0,0) circle (2.2cm);
+
+    % 内部装饰圆环 (模拟光晕)
+    \draw[white, opacity=0.3, line width=1.5mm] (0,0) circle (1.9cm);
+    
+    % 中心正方形容器 (代码风格)
+    \node[
+        rounded corners=6pt,
+        fill=white!95,
+        minimum size=3.1cm,
+        blur shadow={shadow blur steps=5}
+    ] (box) at (0,0) {};
+
+    % 文字 "Yan"
+    \node[scale=5] at (0,0.15) {
+        \textcolor{yan-mint}{Y}\textcolor{yan-sky}{an}
+    };
+    
+    % 下方的小字 "Blog" - Favicon模式下隐藏以增大主体
+    % \node[scale=0.8, text=gray!80, font=\sffamily] at (0,-0.6) {B L O G};
+
+    % 装饰元素 - 四周的小圆点 (科技感) - Favicon模式下隐藏
+    % \foreach \angle in {0, 90, 180, 270} {
+    %     \fill[white] (\angle:2.6cm) circle (2pt);
+    % }
+    
+    % 装饰线条 (极简风) - Favicon模式下隐藏
+    % \draw[white, line width=0.8mm, line cap=round] (-2.6, 0) arc (180:270:2.6cm);
+    % \draw[white, line width=0.8mm, line cap=round] (2.6, 0) arc (0:90:2.6cm);
+
+\end{tikzpicture}
+\end{document}
