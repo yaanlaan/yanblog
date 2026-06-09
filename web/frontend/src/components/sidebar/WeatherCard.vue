@@ -4,7 +4,7 @@
       <!-- Location Header -->
       <div class="location-row">
         <i class="iconfont icon-location"></i>
-        <span class="city">{{ weather.city }} hefei</span>
+        <span class="city">{{ weather.city }}</span>
       </div>
       
       <!-- Main Weather Info -->
@@ -66,7 +66,7 @@ const fetchWeather = async () => {
     error.value = ''
     // Try to get real weather, but fallback to mock if it fails or returns error
     try {
-        const response = await weatherApi.getWeather({ city: 'Shanghai' }) 
+        const response = await weatherApi.getWeather()
         if (response.data.status === 200) {
             weather.value = response.data.data
             return // Success

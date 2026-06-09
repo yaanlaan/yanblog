@@ -402,6 +402,31 @@
             </el-form>
           </el-tab-pane>
 
+          <!-- Backend -->
+          <el-tab-pane label="后端配置" name="backend">
+            <el-form label-width="140px" class="config-form">
+              <el-alert title="修改后端配置后需要重启服务才能生效" type="warning" show-icon :closable="false" class="mb-4" />
+              <el-divider content-position="left">天气设置</el-divider>
+              <el-form-item label="天气 API 密钥">
+                <el-input v-model="backendConfig.weather.apiKey" placeholder="OpenWeatherMap API Key（免费注册获取）" />
+                <div class="form-tip">
+                  在 <a href="https://openweathermap.org/api" target="_blank">openweathermap.org</a> 免费注册获取。
+                  留空则使用模拟天气数据。
+                </div>
+              </el-form-item>
+              <el-form-item label="默认城市">
+                <el-input v-model="backendConfig.weather.defaultCity" placeholder="如 Hefei, Shanghai" />
+              </el-form-item>
+              <div class="form-tip" style="margin-top:16px">
+                天气 API 免费密钥每分钟限制 60 次调用，获取后填入上方输入框即可。
+              </div>
+              <el-divider style="margin-top:24px" />
+              <el-button type="primary" @click="saveBackendConfig" :loading="savingBackend">
+                保存后端配置
+              </el-button>
+            </el-form>
+          </el-tab-pane>
+
         </el-tabs>
       </div>
     </el-card>
@@ -522,6 +547,43 @@ const configForm = ref<any>({
   quotes: []
 })
 const saving = ref(false)
+const savingBackend = ref(false)
+
+// Backend config (separate from frontend YAML)
+const backendConfig = ref({
+  weather: { apiKey: '', defaultCity: 'Hefei' }
+})
+
+const loadBackendConfig = async () => {
+  try {
+    const res = await systemApi.getBackendConfig()
+    if (res.data.status === 200) {
+      const cfg = res.data.data
+      if (cfg.weather) {
+        backendConfig.value = { weather: { ...cfg.weather } }
+      }
+    }
+  } catch (e) {
+    console.error('Load backend config failed', e)
+  }
+}
+
+const saveBackendConfig = async () => {
+  try {
+    savingBackend.value = true
+    const res = await systemApi.updateBackendConfig(backendConfig.value)
+    if (res.data.status === 200) {
+      ElMessage.success('后端配置保存成功，请重启服务使其生效')
+    } else {
+      ElMessage.error(res.data.message || '保存失败')
+    }
+  } catch (e) {
+    console.error(e)
+    ElMessage.error('保存失败')
+  } finally {
+    savingBackend.value = false
+  }
+}
 
 const loadConfig = async () => {
   try {
@@ -657,6 +719,7 @@ const removeContactItem = (i: number) => configForm.value.contacts?.items?.splic
 
 onMounted(() => {
   loadConfig()
+  loadBackendConfig()
 })
 </script>
 

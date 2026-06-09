@@ -27,7 +27,7 @@ type ArticleFrontMatter struct {
 	Cover    string   `yaml:"cover"`
 }
 
-// UploadArticleZip 处理ZIP上传
+// UploadArticleZip 处理单个ZIP上传
 func UploadArticleZip(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -38,7 +38,6 @@ func UploadArticleZip(c *gin.Context) {
 		return
 	}
 
-	// 1. 保存上传的ZIP文件到临时目录
 	tempDir := "./temp_zip"
 	if _, err := os.Stat(tempDir); os.IsNotExist(err) {
 		_ = os.MkdirAll(tempDir, os.ModePerm)
@@ -52,9 +51,8 @@ func UploadArticleZip(c *gin.Context) {
 		})
 		return
 	}
-	defer os.Remove(tempZipPath) // 处理完后删除ZIP包
+	defer os.Remove(tempZipPath)
 
-	// 2. 解压ZIP
 	unzipDir := strings.TrimSuffix(tempZipPath, ".zip") + "_extracted"
 	if err := unzip(tempZipPath, unzipDir); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -63,53 +61,164 @@ func UploadArticleZip(c *gin.Context) {
 		})
 		return
 	}
-	defer os.RemoveAll(unzipDir) // 确保清理解压目录
+	defer os.RemoveAll(unzipDir)
 
-	// 3. 寻找 Markdown 文件
+	article, code := processZipArticle(unzipDir)
+	if code != errmsg.SUCCESS {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  code,
+			"message": errmsg.GetErrMsg(code),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  errmsg.SUCCESS,
+		"data":    article,
+		"message": "上传成功",
+	})
+}
+
+// parseDate 尝试多种日期格式解析
+func parseDate(s string) (time.Time, error) {
+	formats := []string{
+		"2006-01-02 15:04:05",
+		"2006-01-02T15:04:05Z",
+		"2006-01-02T15:04:05+08:00",
+		"2006-01-02 15:04",
+		"2006-01-02",
+		"2006/01/02 15:04:05",
+		"2006/01/02",
+		"2006-1-2 15:04:05",
+		"2006-1-2",
+	}
+	for _, f := range formats {
+		if t, err := time.Parse(f, s); err == nil {
+			return t, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("无法解析日期: %s", s)
+}
+
+// UploadArticleZipBatch 批量上传ZIP文章
+func UploadArticleZipBatch(c *gin.Context) {
+	form, err := c.MultipartForm()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "请上传文件",
+		})
+		return
+	}
+
+	files := form.File["files"]
+	if len(files) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "未找到文件，请使用 files 字段上传",
+		})
+		return
+	}
+
+	type Result struct {
+		FileName string `json:"file_name"`
+		Title    string `json:"title"`
+		Status   int    `json:"status"`
+		Message  string `json:"message"`
+	}
+
+	results := make([]Result, 0, len(files))
+	successCount := 0
+
+	for _, fileHeader := range files {
+		result := Result{FileName: fileHeader.Filename}
+
+		// 保存临时文件
+		tempDir := "./temp_zip"
+		if _, err := os.Stat(tempDir); os.IsNotExist(err) {
+			_ = os.MkdirAll(tempDir, os.ModePerm)
+		}
+
+		tempZipPath := filepath.Join(tempDir, fmt.Sprintf("%d_%s", time.Now().UnixNano(), fileHeader.Filename))
+		if err := c.SaveUploadedFile(fileHeader, tempZipPath); err != nil {
+			result.Status = errmsg.ERROR
+			result.Message = "保存文件失败"
+			results = append(results, result)
+			continue
+		}
+
+		// 解压
+		unzipDir := strings.TrimSuffix(tempZipPath, ".zip") + "_extracted"
+		if err := unzip(tempZipPath, unzipDir); err != nil {
+			result.Status = errmsg.ERROR
+			result.Message = "解压失败: " + err.Error()
+			results = append(results, result)
+			os.Remove(tempZipPath)
+			os.RemoveAll(unzipDir)
+			continue
+		}
+
+		// 处理
+		article, code := processZipArticle(unzipDir)
+		result.Status = code
+		result.Message = errmsg.GetErrMsg(code)
+		if article != nil {
+			result.Title = article.Title
+			if code == errmsg.SUCCESS {
+				successCount++
+			}
+		}
+
+		results = append(results, result)
+
+		// 清理
+		os.Remove(tempZipPath)
+		os.RemoveAll(unzipDir)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  errmsg.SUCCESS,
+		"total":   len(files),
+		"success": successCount,
+		"results": results,
+	})
+}
+
+// processZipArticle 处理单个解压后的ZIP目录，返回文章和状态码
+func processZipArticle(unzipDir string) (*model.Article, int) {
+	// 查找 Markdown 文件
 	var mdPath string
-	err = filepath.Walk(unzipDir, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(unzipDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if !info.IsDir() && strings.HasSuffix(strings.ToLower(info.Name()), ".md") {
 			mdPath = path
-			return io.EOF // Found, stop walking
+			return io.EOF
 		}
 		return nil
 	})
 
 	if mdPath == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  errmsg.ERROR,
-			"message": "压缩包内未找到 Markdown 文件",
-		})
-		return
+		return nil, errmsg.ERROR
 	}
 
-	// 4. 解析 Front Matter 和 Content
+	// 解析 Front Matter
 	contentBytes, err := os.ReadFile(mdPath)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  errmsg.ERROR,
-			"message": "读取 Markdown 文件失败",
-		})
-		return
+		return nil, errmsg.ERROR
 	}
 	contentStr := string(contentBytes)
 
 	var frontMatter ArticleFrontMatter
 	var bodyContent string
 
-	// 检查是否有 YAML Front Matter
 	if strings.HasPrefix(contentStr, "---") {
 		parts := strings.SplitN(contentStr, "---", 3)
 		if len(parts) >= 3 {
-			// 解析元数据
 			if err := yaml.Unmarshal([]byte(parts[1]), &frontMatter); err != nil {
-				// 解析失败，忽略元数据，当作普通内容
 				bodyContent = contentStr
 			} else {
-				// 解析成功，取正文
 				bodyContent = parts[2]
 			}
 		} else {
@@ -119,38 +228,26 @@ func UploadArticleZip(c *gin.Context) {
 		bodyContent = contentStr
 	}
 
-	// 默认值处理
 	if frontMatter.Title == "" {
-		// 使用文件名作为标题
 		base := filepath.Base(mdPath)
 		frontMatter.Title = strings.TrimSuffix(base, filepath.Ext(base))
 	}
 
-	// 5. 处理并上传图片
-	// 正则匹配 ![alt](src) 和 <img src="src">
-	// 简单起见，主要匹配 Markdown 图片语法
+	// 处理图片
 	imgRegex := regexp.MustCompile(`!\[(.*?)\]\((.*?)\)`)
 	matches := imgRegex.FindAllStringSubmatch(bodyContent, -1)
-
 	processedContent := bodyContent
 
 	for _, match := range matches {
 		originalPath := match[2]
-		// 忽略网络图片
 		if strings.HasPrefix(originalPath, "http") || strings.HasPrefix(originalPath, "//") {
 			continue
 		}
-
-		// 拼接绝对路径 (相对于md文件所在目录)
 		mdDir := filepath.Dir(mdPath)
 		imageFullPath := filepath.Join(mdDir, originalPath)
-
-		// 检查图片是否存在
 		if _, err := os.Stat(imageFullPath); err == nil {
-			// 上传图片
 			newURL, err := uploadLocalFile(imageFullPath, "article")
 			if err == nil {
-				// 替换内容中的路径
 				processedContent = strings.Replace(processedContent, originalPath, newURL, -1)
 			}
 		}
@@ -168,47 +265,32 @@ func UploadArticleZip(c *gin.Context) {
 		}
 	}
 
-	// 6. 保存文章到数据库
 	// 处理分类
 	var cid int
 	if frontMatter.Category != "" {
-		// 检查分类是否存在
-		// 我们假设 model 包里可以直接查，或者我们需要加个方法 GetCategoryByName
-		// 暂时用 CheckCategory 逻辑变通一下
-		// 这里需要直接操作 DB 查找 ID
-		// 由于 model 包不可见 db 变量(它是私有的 in model)，我们需要 model 提供方法
-		// 我们先假设 category 总是要存在的，如果不存在就创建
 		cid = model.GetOrCreateCategory(frontMatter.Category)
 	} else {
-		// 默认分类?
-		cid = 1 // 假设1是默认
+		cid = 1
 	}
 
-	article := model.Article{
+	article := &model.Article{
 		Title:   frontMatter.Title,
 		Cid:     cid,
 		Desc:    frontMatter.Desc,
 		Content: processedContent,
 		Img:     frontMatter.Cover,
-		Tags:    strings.Join(frontMatter.Tags, ","), // 逗号分隔
+		Tags:    strings.Join(frontMatter.Tags, ","),
 	}
 
-	// 创建文章
-	code := model.CreateArt(&article)
-
-	if code != errmsg.SUCCESS {
-		c.JSON(http.StatusOK, gin.H{
-			"status":  code,
-			"message": errmsg.GetErrMsg(code),
-		})
-		return
+	// 保留原始创建时间
+	if frontMatter.Date != "" {
+		if t, err := parseDate(frontMatter.Date); err == nil {
+			article.CreatedAt = t
+		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":  errmsg.SUCCESS,
-		"data":    article,
-		"message": "上传成功",
-	})
+	code := model.CreateArt(article)
+	return article, code
 }
 
 // 辅助函数：解压

@@ -305,6 +305,18 @@ func DeleteArt(id int) int {
 	return errmsg.SUCCESS
 }
 
+// BatchDeleteArts 批量删除文章
+func BatchDeleteArts(ids []int) (deleted int, failed int) {
+	for _, id := range ids {
+		if DeleteArt(id) == errmsg.SUCCESS {
+			deleted++
+		} else {
+			failed++
+		}
+	}
+	return
+}
+
 // GetSitemapData 获取站点地图所需数据
 func GetSitemapData() ([]Article, int) {
 	var articles []Article
