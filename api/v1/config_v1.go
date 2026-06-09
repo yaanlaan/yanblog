@@ -3,6 +3,8 @@ package v1
 import (
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 	"yanblog/middlewares"
 	"yanblog/utils"
 	"yanblog/utils/errmsg"
@@ -94,8 +96,34 @@ func UpdateBackendConfig(c *gin.Context) {
 		return
 	}
 
-	configPath := utils.GetConfigPath("config/backend/config.yaml")
-	data, err := yaml.Marshal(input)
+	// 1. 读取现有配置（按优先级查找，与 ReloadConfig 一致）
+	var existing map[string]interface{}
+	var configPath string
+	for _, p := range []string{
+		"config/backend/config.yaml",
+		"config/config.yaml",
+		"config/config_template.yaml",
+	} {
+		if raw, err := ioutil.ReadFile(p); err == nil {
+			configPath = p
+			if yaml.Unmarshal(raw, &existing) != nil {
+				existing = make(map[string]interface{})
+			}
+			break
+		}
+	}
+	if existing == nil {
+		existing = make(map[string]interface{})
+	}
+	// 始终写入主路径，确保 ReloadConfig 能读回
+	configPath = utils.GetConfigPath("config/backend/config.yaml")
+
+	// 2. 深度合并
+	deepMerge(existing, input)
+
+	// 3. 写入
+	_ = os.MkdirAll(filepath.Dir(configPath), 0755)
+	data, err := yaml.Marshal(existing)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  errmsg.ERROR,
@@ -112,6 +140,10 @@ func UpdateBackendConfig(c *gin.Context) {
 		})
 		return
 	}
+
+	// 重新加载配置到内存，使修改即时生效
+	_ = utils.ReloadConfig()
+	middlewares.RefreshJwtKey()
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  errmsg.SUCCESS,
@@ -153,4 +185,21 @@ func GetAllConfig(c *gin.Context) {
 		"frontend_yaml": string(frontendContent),
 		"message":       errmsg.GetErrMsg(errmsg.SUCCESS),
 	})
+}
+
+// deepMerge 递归合并 src 到 dst，保留 dst 中已有的字段
+func deepMerge(dst, src map[string]interface{}) {
+	for key, srcVal := range src {
+		if dstVal, ok := dst[key]; ok {
+			// 两边都是 map，递归合并
+			srcMap, srcIsMap := srcVal.(map[string]interface{})
+			dstMap, dstIsMap := dstVal.(map[string]interface{})
+			if srcIsMap && dstIsMap {
+				deepMerge(dstMap, srcMap)
+				continue
+			}
+		}
+		// 否则直接覆盖或新增
+		dst[key] = srcVal
+	}
 }

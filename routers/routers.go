@@ -16,6 +16,7 @@ func InitRouter() {
 
 	// 初始化路由
 	r := gin.New()
+	r.MaxMultipartMemory = 200 << 20 // 批量上传支持 200MB
 
 	// 使用中间件
 	r.Use(middleware.Logger())
@@ -52,10 +53,12 @@ func InitRouter() {
 		auth.DELETE("category/:id", v1.DeleteCate)
 		// 文章模块的路由接口
 		auth.POST("article/add", v1.AddArticle)
-		auth.POST("article/zip", v1.UploadArticleZip) // 上传ZIP发布文章
+		auth.POST("article/zip", v1.UploadArticleZip)       // 上传单个ZIP发布文章
+		auth.POST("article/zip/batch", v1.UploadArticleZipBatch) // 批量上传ZIP
 		auth.PUT("article/:id", v1.EditArt)
 
 		auth.DELETE("article/:id", v1.DeleteArt)
+		auth.POST("article/batch-delete", v1.BatchDeleteArt)
 		// 标签模块
 		auth.POST("tags/add", v1.AddTag)
 		auth.PUT("tags/:id", v1.EditTag)

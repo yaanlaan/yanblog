@@ -51,8 +51,12 @@ data/
 
 # Configuration with secrets (do NOT track)
 config/backend/config.yaml
+config/config.yaml
 config/*.local
 config/secrets.yaml
+
+# Migration temp files
+temp/
 
 # Claude Code
 .claude/

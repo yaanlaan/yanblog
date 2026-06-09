@@ -1,8 +1,9 @@
 server {
     listen 80;
     server_name _;  # 替换为你的域名
-    client_max_body_size 50M;
+    client_max_body_size 200M;
     include /etc/nginx/mime.types;
+    absolute_redirect off;
 
     # --- 后台管理 (Admin) - 路径 /admin ---
     location /admin {

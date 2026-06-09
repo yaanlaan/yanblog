@@ -176,11 +176,18 @@ export const articleApi = {
   }) =>
     apiClient.post('/v1/article/add', data),
   
-  // 上传ZIP发布文章
+  // 上传ZIP发布文章（单个）
   uploadZip: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
     return apiClient.post('/v1/article/zip', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  },
+
+  // 批量上传ZIP
+  uploadZipBatch: (formData: FormData) => {
+    return apiClient.post('/v1/article/zip/batch', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
   },
@@ -200,8 +207,12 @@ export const articleApi = {
     apiClient.put(`/v1/article/${id}`, data),
   
   // 删除文章
-  deleteArticle: (id: number) => 
-    apiClient.delete(`/v1/article/${id}`)
+  deleteArticle: (id: number) =>
+    apiClient.delete(`/v1/article/${id}`),
+
+  // 批量删除文章
+  batchDeleteArticles: (ids: number[]) =>
+    apiClient.post('/v1/article/batch-delete', { ids })
 }
 
 // 文件上传API
@@ -218,12 +229,20 @@ export const uploadApi = {
 // 系统配置API
 export const systemApi = {
   // 获取前端配置
-  getFrontEndConfig: () => 
+  getFrontEndConfig: () =>
     apiClient.get('/v1/frontend/config'),
-  
+
   // 更新前端配置
-  updateFrontEndConfig: (data: { content: string }) => 
-    apiClient.put('/v1/frontend/config', data)
+  updateFrontEndConfig: (data: { content: string }) =>
+    apiClient.put('/v1/frontend/config', data),
+
+  // 获取后端配置
+  getBackendConfig: () =>
+    apiClient.get('/v1/backend/config'),
+
+  // 更新后端配置
+  updateBackendConfig: (data: any) =>
+    apiClient.put('/v1/backend/config', data),
 }
 
 export default apiClient

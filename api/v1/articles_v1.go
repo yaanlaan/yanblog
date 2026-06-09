@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -335,5 +336,38 @@ func DeleteArt(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
 		"message": errmsg.GetErrMsg(code),
+	})
+}
+
+// 批量删除文章
+func BatchDeleteArt(c *gin.Context) {
+	var data struct {
+		Ids []int `json:"ids"`
+	}
+	if err := c.ShouldBindJSON(&data); err != nil || len(data.Ids) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "参数错误，需要 ids 数组",
+		})
+		return
+	}
+
+	// 先清理各文章的关联文件夹
+	for _, id := range data.Ids {
+		art, code := model.GetArtInfo(id)
+		if code == errmsg.SUCCESS && art.Title != "" {
+			targetDir := filepath.Join("uploads", "articles", filepath.Clean(art.Title))
+			_ = os.RemoveAll(targetDir)
+		}
+	}
+
+	deleted, failed := model.BatchDeleteArts(data.Ids)
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  errmsg.SUCCESS,
+		"message": fmt.Sprintf("成功删除 %d 篇，失败 %d 篇", deleted, failed),
+		"deleted": deleted,
+		"failed": failed,
+		"total":   len(data.Ids),
 	})
 }

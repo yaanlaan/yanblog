@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sync"
 
@@ -13,34 +14,34 @@ import (
 
 type Config struct {
 	Server struct {
-		AppMode  string `yaml:"AppMode"`
-		HttpPort string `yaml:"HttpPort"`
-		SiteUrl  string `yaml:"SiteUrl"`
-	} `yaml:"server"`
+		AppMode  string `yaml:"AppMode" json:"appMode"`
+		HttpPort string `yaml:"HttpPort" json:"httpPort"`
+		SiteUrl  string `yaml:"SiteUrl" json:"siteUrl"`
+	} `yaml:"server" json:"server"`
 
 	Database struct {
-		Db         string `yaml:"Db"`
-		DbHost     string `yaml:"DbHost"`
-		DbPort     int    `yaml:"DbPort"`
-		DbUser     string `yaml:"DbUser"`
-		DbPassWord string `yaml:"DbPassWord"`
-		DbName     string `yaml:"DbName"`
-	} `yaml:"database"`
+		Db         string `yaml:"Db" json:"db"`
+		DbHost     string `yaml:"DbHost" json:"dbHost"`
+		DbPort     int    `yaml:"DbPort" json:"dbPort"`
+		DbUser     string `yaml:"DbUser" json:"dbUser"`
+		DbPassWord string `yaml:"DbPassWord" json:"dbPassWord"`
+		DbName     string `yaml:"DbName" json:"dbName"`
+	} `yaml:"database" json:"database"`
 
-	JwtKey string `yaml:"JwtKey"`
+	JwtKey string `yaml:"JwtKey" json:"jwtKey"`
 
 	Weather struct {
-		Provider    string `yaml:"Provider"`
-		ApiKey      string `yaml:"ApiKey"`
-		DefaultCity string `yaml:"DefaultCity"`
-	} `yaml:"weather"`
+		Provider    string `yaml:"Provider" json:"provider"`
+		ApiKey      string `yaml:"ApiKey" json:"apiKey"`
+		DefaultCity string `yaml:"DefaultCity" json:"defaultCity"`
+	} `yaml:"weather" json:"weather"`
 
-	FrontEndConfigPath string `yaml:"FrontEndConfigPath"`
+	FrontEndConfigPath string `yaml:"FrontEndConfigPath" json:"frontEndConfigPath"`
 
 	Cities []struct {
-		Name  string `yaml:"Name"`
-		Alias string `yaml:"Alias"`
-	} `yaml:"cities"`
+		Name  string `yaml:"Name" json:"name"`
+		Alias string `yaml:"Alias" json:"alias"`
+	} `yaml:"cities" json:"cities"`
 }
 
 var ServerConfig = Config{}
@@ -121,6 +122,8 @@ func SaveConfig() error {
 		return err
 	}
 	configPath := getConfigPath("config/backend/config.yaml")
+	// 确保目录存在（Docker 容器中可能没有 config/backend/ 子目录）
+	_ = os.MkdirAll(filepath.Dir(configPath), 0755)
 	return ioutil.WriteFile(configPath, data, 0644)
 }
 

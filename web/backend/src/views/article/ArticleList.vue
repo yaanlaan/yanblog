@@ -5,6 +5,9 @@
         <div class="card-header">
           <span>文章管理</span>
           <div>
+            <el-button type="danger" plain @click="handleBatchDelete" :disabled="selectedRows.length === 0">
+              批量删除 ({{ selectedRows.length }})
+            </el-button>
             <el-button type="success" @click="zipDialogVisible = true">ZIP 发布</el-button>
             <el-button type="primary" @click="handleAdd">新增文章</el-button>
             <el-button type="info" plain @click="showHelp = true">Markdown 帮助</el-button>
@@ -22,13 +25,15 @@
       />
       
       <!-- 文章表格 -->
-      <el-table 
-        :data="articleList" 
-        border 
-        style="width: 100%" 
+      <el-table
+        :data="articleList"
+        border
+        style="width: 100%"
         v-loading="loading"
         :empty-text="error ? '数据加载失败，请检查网络连接' : '暂无数据'"
+        @selection-change="handleSelectionChange"
       >
+        <el-table-column type="selection" width="50" />
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column label="类型" width="80">
           <template #default="scope">
@@ -135,25 +140,44 @@ cover: "images/cover.jpg"
       </el-dialog>
 
       <!-- ZIP上传对话框 -->
-      <el-dialog v-model="zipDialogVisible" title="批量发布文章 (ZIP)" width="30%">
+      <el-dialog v-model="zipDialogVisible" title="批量发布文章 (ZIP)" width="550px" @closed="zipFileList = []; uploadResults = []">
         <el-upload
           class="upload-demo"
           drag
           action="#"
-          :http-request="handleZipUpload"
+          multiple
+          :auto-upload="false"
+          :file-list="zipFileList"
           :before-upload="beforeZipUpload"
-          :show-file-list="false"
+          :on-remove="handleZipRemove"
+          :on-change="handleZipChange"
         >
           <el-icon class="el-icon--upload"><upload-filled /></el-icon>
           <div class="el-upload__text">
-            拖拽文件到这里 或 <em>点击上传</em>
+            拖拽文件到这里 或 <em>点击选择</em>
           </div>
           <template #tip>
             <div class="el-upload__tip">
-              请上传包含 .md 和 images/ 的压缩包
+              支持同时选择多个 .zip 文件，每个文件为包含 .md 和 images/ 的压缩包
             </div>
           </template>
         </el-upload>
+        <div v-if="uploadResults.length > 0" style="margin-top:16px; max-height:200px; overflow-y:auto;">
+          <div v-for="r in uploadResults" :key="r.file_name" style="padding:4px 0; border-bottom:1px solid #eee;">
+            <span :style="{color: r.status === 200 ? '#67c23a' : '#f56c6c'}">
+              {{ r.status === 200 ? '✓' : '✗' }}
+            </span>
+            <span style="margin-left:8px;">{{ r.file_name }}</span>
+            <span v-if="r.title" style="margin-left:8px; color:#909399;">→ {{ r.title }}</span>
+            <span v-if="r.status !== 200" style="margin-left:8px; color:#f56c6c; font-size:12px;">{{ r.message }}</span>
+          </div>
+        </div>
+        <template #footer>
+          <el-button @click="zipDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleBatchUpload" :loading="uploading" :disabled="zipFileList.length === 0">
+            上传全部 ({{ zipFileList.length }})
+          </el-button>
+        </template>
       </el-dialog>
     </el-card>
   </div>
@@ -464,44 +488,94 @@ const handleDelete = (article: Article) => {
   })
 }
 
-// ZIP上传对话框
-const zipDialogVisible = ref(false)
-// Markdown 帮助对话框
-const showHelp = ref(false)
+// 批量选择
+const selectedRows = ref<Article[]>([])
+const handleSelectionChange = (rows: Article[]) => {
+  selectedRows.value = rows
+}
 
-// ZIP上传处理
-const handleZipUpload = async (options: any) => {
-  const { file, onSuccess, onError } = options
+// 批量删除
+const handleBatchDelete = async () => {
+  if (selectedRows.value.length === 0) {
+    ElMessage.warning('请先选择要删除的文章')
+    return
+  }
   try {
-    const res = await articleApi.uploadZip(file)
+    await ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedRows.value.length} 篇文章吗？此操作不可恢复！`,
+      '批量删除确认',
+      { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'error' }
+    )
+    const ids = selectedRows.value.map(row => row.id)
+    const res = await articleApi.batchDeleteArticles(ids)
     if (res.data.status === 200) {
-      onSuccess(res.data)
-      ElMessage.success('上传发布成功')
-      zipDialogVisible.value = false
-      getArticleList() // 刷新列表
+      ElMessage.success(`成功删除 ${res.data.deleted} 篇`)
+      selectedRows.value = []
+      getArticleList()
     } else {
-      onError(new Error(res.data.message || '上传失败'))
-      ElMessage.error(res.data.message || '上传失败')
+      ElMessage.error(res.data.message || '删除失败')
     }
   } catch (err) {
-    onError(err)
-    ElMessage.error('上传出错')
+    // 取消操作
   }
 }
 
+// ZIP上传对话框
+const zipDialogVisible = ref(false)
+const zipFileList = ref<any[]>([])
+const uploadResults = ref<any[]>([])
+const uploading = ref(false)
+
+// Markdown 帮助对话框
+const showHelp = ref(false)
+
+// 文件校验
 const beforeZipUpload = (file: File) => {
   const isZip = file.type === 'application/zip' || file.name.endsWith('.zip')
   const isLt50M = file.size / 1024 / 1024 < 50
-
-  if (!isZip) {
-    ElMessage.error('只能上传 ZIP 文件!')
-    return false
-  }
-  if (!isLt50M) {
-    ElMessage.error('文件大小不能超过 50MB!')
-    return false
-  }
+  if (!isZip) { ElMessage.error('只能上传 ZIP 文件!'); return false }
+  if (!isLt50M) { ElMessage.error('文件大小不能超过 50MB!'); return false }
   return true
+}
+
+const handleZipChange = () => {
+  uploadResults.value = []
+}
+
+const handleZipRemove = (_file: any, fileList: any[]) => {
+  zipFileList.value = fileList
+}
+
+// 批量上传
+const handleBatchUpload = async () => {
+  if (zipFileList.value.length === 0) {
+    ElMessage.warning('请先选择 ZIP 文件')
+    return
+  }
+  uploading.value = true
+  uploadResults.value = []
+  try {
+    const formData = new FormData()
+    zipFileList.value.forEach((f: any) => {
+      formData.append('files', f.raw || f)
+    })
+    const res = await articleApi.uploadZipBatch(formData)
+    if (res.data.results) {
+      uploadResults.value = res.data.results
+      const successCount = res.data.success || 0
+      if (successCount > 0) {
+        ElMessage.success(`成功上传 ${successCount}/${res.data.total} 篇文章`)
+        getArticleList()
+      }
+      if (successCount < res.data.total) {
+        ElMessage.warning(`${res.data.total - successCount} 篇失败，详见下方列表`)
+      }
+    }
+  } catch (err) {
+    ElMessage.error('上传出错')
+  } finally {
+    uploading.value = false
+  }
 }
 
 // 监听路由参数变化
