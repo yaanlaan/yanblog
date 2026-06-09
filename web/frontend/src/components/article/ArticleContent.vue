@@ -38,11 +38,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUpdated, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUpdated, onUnmounted, nextTick } from 'vue'
 import { marked } from 'marked'
-import katex from 'katex'
 import mermaid from 'mermaid'
-import 'katex/dist/katex.min.css'
 
 const escapeHtml = (unsafe: unknown) => {
   if (typeof unsafe !== 'string') {
@@ -194,28 +192,7 @@ const addIdsToHeadings = (content: string) => {
 }
 
 const renderMath = (html: string) => {
-  html = html.replace(/\$\$([\s\S]*?)\$\$/g, (_, formula) => {
-    const cleanFormula = formula.trim()
-    try {
-      const rendered = katex.renderToString(cleanFormula, { displayMode: true })
-      return `<div class="math-block" data-tex="${encodeURIComponent(cleanFormula)}">${rendered}</div>`
-    } catch (error) {
-      console.error('KaTeX渲染错误:', error)
-      return `<span style="color: red;">公式渲染错误: ${formula}</span>`
-    }
-  })
-  
-  html = html.replace(/\$([^\$\n]+?)\$/g, (_, formula) => {
-    const cleanFormula = formula.trim()
-    try {
-      const rendered = katex.renderToString(cleanFormula, { displayMode: false })
-      return `<span class="math-inline" data-tex="${encodeURIComponent(cleanFormula)}">${rendered}</span>`
-    } catch (error) {
-      console.error('KaTeX渲染错误:', error)
-      return `<span style="color: red;">公式渲染错误: ${formula}</span>`
-    }
-  })
-  
+  // MathJax 在客户端扫描 $...$ 和 $$...$$ 渲染，无需预处理
   return html
 }
 
@@ -233,12 +210,11 @@ const renderPostProcess = async () => {
         wrapper.appendChild(table);
       }
     });
-    
+
     const mermaidBlocks = contentRef.value.querySelectorAll('.mermaid-chart:not([data-rendered])');
     for (let i = 0; i < mermaidBlocks.length; i++) {
       const block = mermaidBlocks[i];
       if (block instanceof HTMLElement) {
-        // 首次渲染前保存原始源码
         if (!block.getAttribute('data-source')) {
           block.setAttribute('data-source', block.textContent || '');
         }
@@ -253,20 +229,15 @@ const renderPostProcess = async () => {
         }
       }
     }
-    
-    const blockFormulas = contentRef.value.querySelectorAll('p');
-    blockFormulas.forEach(element => {
-      const text = element.textContent || '';
-      if (text.startsWith('$$') && text.endsWith('$$')) {
-        try {
-          const formula = text.substring(2, text.length - 2);
-          const katexHtml = katex.renderToString(formula.trim(), { displayMode: true });
-          element.innerHTML = katexHtml;
-        } catch (error) {
-          console.error('KaTeX渲染错误:', error);
-        }
+
+    // 使用 MathJax 渲染所有数学公式
+    if (window.MathJax && contentRef.value) {
+      try {
+        await (window.MathJax.typesetPromise || window.MathJax.typeset)([contentRef.value]);
+      } catch (e) {
+        console.error('MathJax渲染错误:', e);
       }
-    });
+    }
   }
 }
 
@@ -329,25 +300,7 @@ const handleContentClick = async (event: MouseEvent) => {
     }
   }
 
-  const mathElement = target.closest('.math-block, .math-inline') as HTMLElement
-  if (mathElement) {
-    event.preventDefault()
-    const isShowingCode = mathElement.classList.contains('show-code')
-    const tex = decodeURIComponent(mathElement.getAttribute('data-tex') || '')
-    
-    if (isShowingCode) {
-      mathElement.classList.remove('show-code')
-      try {
-         const displayMode = mathElement.classList.contains('math-block')
-         mathElement.innerHTML = katex.renderToString(tex, { displayMode })
-      } catch(e) {
-        console.error('KaTeX重渲染错误:', e)
-      }
-    } else {
-      mathElement.classList.add('show-code')
-      mathElement.textContent = tex
-    }
-  }
+  // MathJax 渲染的公式不需要特殊处理，保持可选中/复制即可
 }
 
 onMounted(() => {
