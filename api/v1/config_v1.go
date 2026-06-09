@@ -121,7 +121,18 @@ func UpdateBackendConfig(c *gin.Context) {
 	// 2. 深度合并
 	deepMerge(existing, input)
 
-	// 3. 写入
+	// 3. 通过 Config struct 规范化键名（消除 ApiKey/apiKey 等重复键）
+	var normalized utils.Config
+	if tempYaml, err := yaml.Marshal(existing); err == nil {
+		if yaml.Unmarshal(tempYaml, &normalized) == nil {
+			// 再用 Config struct 回写，利用 yaml tag 统一键名
+			if normalizedData, err := yaml.Marshal(&normalized); err == nil {
+				yaml.Unmarshal(normalizedData, &existing)
+			}
+		}
+	}
+
+	// 4. 写入
 	_ = os.MkdirAll(filepath.Dir(configPath), 0755)
 	data, err := yaml.Marshal(existing)
 	if err != nil {
