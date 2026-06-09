@@ -538,7 +538,8 @@ const beforeZipUpload = (file: File) => {
   return true
 }
 
-const handleZipChange = () => {
+const handleZipChange = (_file: any, fileList: any[]) => {
+  zipFileList.value = fileList
   uploadResults.value = []
 }
 
