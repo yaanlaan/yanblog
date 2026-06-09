@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -96,45 +97,36 @@ func UpdateBackendConfig(c *gin.Context) {
 		return
 	}
 
-	// 1. 读取现有配置（按优先级查找，与 ReloadConfig 一致）
-	var existing map[string]interface{}
-	var configPath string
+	// 1. 读取现有 YAML 配置，通过 Config struct 解析（保证键名统一）
+	var cfg utils.Config
+	found := false
 	for _, p := range []string{
 		"config/backend/config.yaml",
 		"config/config.yaml",
 		"config/config_template.yaml",
 	} {
 		if raw, err := ioutil.ReadFile(p); err == nil {
-			configPath = p
-			if yaml.Unmarshal(raw, &existing) != nil {
-				existing = make(map[string]interface{})
-			}
-			break
-		}
-	}
-	if existing == nil {
-		existing = make(map[string]interface{})
-	}
-	// 始终写入主路径，确保 ReloadConfig 能读回
-	configPath = utils.GetConfigPath("config/backend/config.yaml")
-
-	// 2. 深度合并
-	deepMerge(existing, input)
-
-	// 3. 通过 Config struct 规范化键名（消除 ApiKey/apiKey 等重复键）
-	var normalized utils.Config
-	if tempYaml, err := yaml.Marshal(existing); err == nil {
-		if yaml.Unmarshal(tempYaml, &normalized) == nil {
-			// 再用 Config struct 回写，利用 yaml tag 统一键名
-			if normalizedData, err := yaml.Marshal(&normalized); err == nil {
-				yaml.Unmarshal(normalizedData, &existing)
+			if yaml.Unmarshal(raw, &cfg) != nil {
+				cfg = utils.Config{} // 重置
+			} else {
+				found = true
+				break
 			}
 		}
 	}
+	_ = found
 
-	// 4. 写入
+	// 2. 将前端的 JSON 输入（小写 key）合并到 Config struct
+	// 通过 JSON 中间格式统一键名：input → JSON → Config struct
+	if inputJson, err := json.Marshal(input); err == nil {
+		// 用 json tag 把前端输入写入 cfg（只会覆盖匹配的字段）
+		json.Unmarshal(inputJson, &cfg)
+	}
+
+	// 3. 写回 YAML（用 yaml tag 输出规范的 camelCase 键名）
+	configPath := utils.GetConfigPath("config/backend/config.yaml")
 	_ = os.MkdirAll(filepath.Dir(configPath), 0755)
-	data, err := yaml.Marshal(existing)
+	data, err := yaml.Marshal(&cfg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  errmsg.ERROR,
