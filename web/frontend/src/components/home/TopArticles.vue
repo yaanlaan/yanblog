@@ -106,7 +106,7 @@ const loadMore = () => {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #42b883;
+  border-top: 4px solid var(--color-accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 10px;
@@ -132,7 +132,7 @@ const loadMore = () => {
 
 .see-more-button {
   padding: 10px 30px;
-  background-color: #42b883;
+  background-color: var(--color-accent);
   border: none;
   border-radius: 20px;
   cursor: pointer;
@@ -142,12 +142,12 @@ const loadMore = () => {
   display: flex;
   align-items: center;
   gap: 5px;
-  box-shadow: 0 4px 15px rgba(66, 184, 131, 0.4);
+  box-shadow: 0 4px 15px color-mix(in srgb, var(--color-accent) 40%, transparent);
 }
 
 .see-more-button:hover {
-  background-color: #3aa876;
-  box-shadow: 0 6px 20px rgba(66, 184, 131, 0.6);
+  background-color: color-mix(in srgb, var(--color-accent) 82%, black);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent) 60%, transparent);
   transform: translateY(-2px);
 }
 

@@ -62,7 +62,7 @@ onMounted(() => {
 }
 
 .more-link:hover {
-  color: #42b883;
+  color: var(--color-accent);
 }
 
 .category-grid {
@@ -88,7 +88,7 @@ onMounted(() => {
   background: var(--color-background-soft);
   border-color: var(--color-accent);
   color: var(--color-accent);
-  box-shadow: 0 2px 8px rgba(66, 184, 131, 0.1);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-accent) 15%, transparent);
 }
 
 .cat-name {
@@ -108,7 +108,7 @@ onMounted(() => {
 }
 
 .category-item:hover .cat-count {
-  background: #42b883;
+  background: var(--color-accent);
   color: white;
 }
 </style>

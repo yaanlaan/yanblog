@@ -134,7 +134,7 @@ onUnmounted(() => {
 
 .profile-header {
   height: 100px;
-  background: linear-gradient(135deg, #42b883 0%, #3aa876 100%);
+  background: linear-gradient(135deg, var(--color-accent) 0%, color-mix(in srgb, var(--color-accent) 82%, black) 100%);
   border-radius: 12px 12px 0 0;
   position: relative;
   margin-bottom: 40px;

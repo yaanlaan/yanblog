@@ -60,7 +60,7 @@
 }
 
 .copyright-container a:hover {
-  color: #42b883;
+  color: var(--color-accent);
 }
 
 .container {

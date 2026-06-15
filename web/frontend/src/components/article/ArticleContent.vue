@@ -681,7 +681,7 @@ onUpdated(() => {
 
 .content :deep(.article-link:hover) {
   border-bottom-color: var(--color-accent);
-  background: rgba(66, 184, 131, 0.1);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
   padding: 2px 4px;
   margin: -2px -4px;
   border-radius: 3px;

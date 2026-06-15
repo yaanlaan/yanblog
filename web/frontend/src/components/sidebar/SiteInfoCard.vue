@@ -1,7 +1,7 @@
 <template>
   <div class="sidebar-card site-info-card">
     <div class="card-header">
-      <h3><i class="iconfont icon-chart" style="color: #42b883; margin-right: 5px;"></i> 站点信息</h3>
+      <h3><i class="iconfont icon-chart" style="color: var(--color-accent); margin-right: 5px;"></i> 站点信息</h3>
     </div>
     <div class="card-content">
       <div class="info-item">

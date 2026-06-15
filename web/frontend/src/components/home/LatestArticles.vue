@@ -127,7 +127,7 @@ defineEmits<{
 
 .see-more-button {
   padding: 10px 30px;
-  background-color: #42b883;
+  background-color: var(--color-accent);
   border: none;
   border-radius: 20px;
   cursor: pointer;
@@ -137,12 +137,12 @@ defineEmits<{
   display: flex;
   align-items: center;
   gap: 5px;
-  box-shadow: 0 4px 15px rgba(66, 184, 131, 0.4);
+  box-shadow: 0 4px 15px color-mix(in srgb, var(--color-accent) 40%, transparent);
 }
 
 .see-more-button:hover {
-  background-color: #3aa876;
-  box-shadow: 0 6px 20px rgba(66, 184, 131, 0.6);
+  background-color: color-mix(in srgb, var(--color-accent) 82%, black);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent) 60%, transparent);
   transform: translateY(-2px);
 }
 

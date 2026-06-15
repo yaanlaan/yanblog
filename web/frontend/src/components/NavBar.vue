@@ -854,9 +854,9 @@ onBeforeUnmount(() => {
 }
 
 .login-btn:hover {
-  background-color: #3aa876;
+  background-color: color-mix(in srgb, var(--color-accent) 82%, black);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(66, 184, 131, 0.3);
+  box-shadow: 0 4px 8px color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 .login-btn i {
@@ -912,7 +912,7 @@ onBeforeUnmount(() => {
   fill: none;
   stroke-width: 2.8;
   stroke-linecap: round;
-  stroke: #42b883;
+  stroke: var(--color-accent);
   animation: progress 1s ease-out forwards;
   transition: stroke-dasharray 0.1s;
 }
@@ -930,7 +930,7 @@ onBeforeUnmount(() => {
   bottom: 0;
   left: 0;
   height: 3px;
-  background: linear-gradient(to right, #42b883, #3aa876);
+  background: linear-gradient(to right, var(--color-accent), color-mix(in srgb, var(--color-accent) 82%, black));
   transition: width 0.1s;
   z-index: 1001;
 }

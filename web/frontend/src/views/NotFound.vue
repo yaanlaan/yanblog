@@ -141,9 +141,9 @@ const goBack = () => {
 }
 
 .primary-btn:hover {
-  background: #3aa876; /* Slightly darker accent */
+  background: color-mix(in srgb, var(--color-accent) 82%, black);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(66, 184, 131, 0.3);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 .secondary-btn {

@@ -137,7 +137,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(66, 184, 131, 0.4);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--color-accent) 40%, transparent);
 }
 
 .logo-text {
