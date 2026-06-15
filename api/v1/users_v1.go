@@ -2,6 +2,7 @@ package v1
 
 import (
 	"yanblog/model"
+	"yanblog/utils"
 	"yanblog/utils/errmsg"
 	"yanblog/utils/validator"
 
@@ -73,25 +74,24 @@ func AddUser(c *gin.Context) {
 	})
 }
 
+// stripPasswords 清除用户列表中的密码哈希，防止泄露到 API 响应
+func stripPasswords(users []model.User) {
+	for i := range users {
+		users[i].Password = ""
+	}
+}
+
 // 查询用户列表
 func GetUsers(c *gin.Context) {
-	pageSize, _ := strconv.Atoi(c.Query("pagesize"))
-	pageNum, _ := strconv.Atoi(c.Query("pagenum"))
-	var code int
-
-	if pageSize <= 0 {
-		pageSize = -1
-	}
-	if pageNum <= 0 {
-		pageNum = -1
-	}
+	pageSize, pageNum, _ := utils.ParsePageParams(c)
+	code := errmsg.SUCCESS
 
 	// 获取当前操作用户的用户名和角色
 	currentUsername, _ := c.Get("username")
 	currentUserRole := model.GetUserRole(currentUsername.(string))
 
 	data, total := model.GetUsers(pageSize, pageNum, currentUserRole)
-	code = errmsg.SUCCESS
+	stripPasswords(data)
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
 		"data":    data,
@@ -102,22 +102,13 @@ func GetUsers(c *gin.Context) {
 
 // 搜索用户
 func SearchUsers(c *gin.Context) {
-	pageSize, _ := strconv.Atoi(c.Query("pagesize"))
-	pageNum, _ := strconv.Atoi(c.Query("pagenum"))
+	pageSize, pageNum, _ := utils.ParsePageParams(c)
 	keyword := c.Query("keyword")
 	roleStr := c.Query("role")
 	var role int
-	var code int
 
 	if roleStr != "" {
 		role, _ = strconv.Atoi(roleStr)
-	}
-
-	if pageSize <= 0 {
-		pageSize = -1
-	}
-	if pageNum <= 0 {
-		pageNum = -1
 	}
 
 	// 获取当前操作用户的用户名和角色
@@ -125,7 +116,8 @@ func SearchUsers(c *gin.Context) {
 	currentUserRole := model.GetUserRole(currentUsername.(string))
 
 	data, total := model.SearchUser(keyword, role, pageSize, pageNum, currentUserRole)
-	code = errmsg.SUCCESS
+	stripPasswords(data)
+	code := errmsg.SUCCESS
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
 		"data":    data,
@@ -138,12 +130,8 @@ func SearchUsers(c *gin.Context) {
 func EditUser(c *gin.Context) {
 	var data model.User
 	var code int
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  errmsg.ERROR,
-			"message": "参数错误",
-		})
+	id, ok := utils.ParseIDParam(c)
+	if !ok {
 		return
 	}
 	_ = c.ShouldBindJSON(&data)
@@ -250,12 +238,8 @@ func EditUser(c *gin.Context) {
 
 // 删除用户
 func DeleteUser(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  errmsg.ERROR,
-			"message": "参数错误",
-		})
+	id, ok := utils.ParseIDParam(c)
+	if !ok {
 		return
 	}
 

@@ -15,11 +15,11 @@
 </template>
 
 <script setup lang="ts">
-import { User, Document, Folder } from '@element-plus/icons-vue'
+import { User, Document, Folder, Collection } from '@element-plus/icons-vue'
 
 // 定义组件属性
 interface Props {
-  type: 'users' | 'articles' | 'categories'
+  type: 'users' | 'articles' | 'categories' | 'tags'
   number: number
   label: string
 }
@@ -30,7 +30,8 @@ const props = defineProps<Props>()
 const iconMap = {
   users: User,
   articles: Document,
-  categories: Folder
+  categories: Folder,
+  tags: Collection
 }
 
 // 获取图标
@@ -70,6 +71,10 @@ const icon = iconMap[props.type]
 
 .stat-icon.categories {
   background-color: #e6a23c;
+}
+
+.stat-icon.tags {
+  background-color: #f56c6c;
 }
 
 .stat-info {

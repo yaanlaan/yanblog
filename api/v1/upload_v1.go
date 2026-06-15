@@ -2,11 +2,27 @@ package v1
 
 import (
 	"net/http"
+	"path/filepath"
+	"strings"
 	"yanblog/model"
 	"yanblog/utils/errmsg"
 
 	"github.com/gin-gonic/gin"
 )
+
+// 允许上传的文件扩展名白名单
+var allowedExtensions = map[string]bool{
+	".jpg":  true, ".jpeg": true, ".png": true, ".gif": true,
+	".webp": true, ".svg": true, ".bmp": true, ".ico": true,
+	".pdf":  true, ".doc": true, ".docx": true, ".xls": true,
+	".xlsx": true, ".ppt": true, ".pptx": true, ".txt": true,
+	".md":   true, ".zip": true, ".rar": true, ".7z": true,
+	".mp3":  true, ".mp4": true, ".avi": true, ".mov": true,
+	".json": true, ".csv": true, ".xml": true,
+}
+
+// 单文件最大大小（10MB）
+const maxFileSize = 10 << 20 // 10MB
 
 func UpLoad(c *gin.Context) {
 	file, fileHeader, err := c.Request.FormFile("file")
@@ -14,6 +30,28 @@ func UpLoad(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  errmsg.ERROR,
 			"message": "文件上传失败: " + err.Error(),
+			"url":     "",
+		})
+		return
+	}
+	defer file.Close()
+
+	// 校验文件大小
+	if fileHeader.Size > maxFileSize {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "文件过大，单文件最大支持 10MB",
+			"url":     "",
+		})
+		return
+	}
+
+	// 校验文件扩展名
+	ext := strings.ToLower(filepath.Ext(fileHeader.Filename))
+	if !allowedExtensions[ext] && ext != "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "不支持的文件类型: " + ext,
 			"url":     "",
 		})
 		return

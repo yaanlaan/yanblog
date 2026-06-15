@@ -34,8 +34,8 @@ WORKDIR /app
 # --- Backend ---
 COPY --from=backend-builder /app/server .
 RUN mkdir -p /app/config /app/data /app/uploads
-# Default images for recovery
-COPY uploads/defaults /app/uploads/defaults
+# Default images for recovery (backup location, copied to uploads/defaults at runtime)
+COPY uploads/defaults /app/defaults
 
 # Copy backend config template (used on first run if no host config exists)
 COPY config/config_template.yaml /app/config/config.yaml.template
@@ -81,6 +81,14 @@ CMD ["/bin/sh", "-c", "\
     echo '[entry] Frontend config initialized from demo'; \
   fi && \
   mkdir -p /app/data && \
+  mkdir -p /app/uploads/defaults && \
+  for f in /app/defaults/*; do \
+    fname=$(basename $f); \
+    if [ ! -f /app/uploads/defaults/$fname ]; then \
+      cp $f /app/uploads/defaults/$fname; \
+      echo \"[entry] Restored default image: $fname\"; \
+    fi; \
+  done && \
   echo '[entry] Starting nginx...' && \
   nginx && \
   echo '[entry] Starting Go backend...' && \

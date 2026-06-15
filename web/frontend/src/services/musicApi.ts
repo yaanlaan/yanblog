@@ -27,7 +27,8 @@ export const getRecommendSongs = async () => {
 // 获取歌单详情
 export const getPlaylistDetail = async (id: string) => {
   try {
-    const response = await musicApi.get(`/playlist/detail?id=${id}`)
+    const params = new URLSearchParams({ id })
+    const response = await musicApi.get(`/playlist/detail?${params.toString()}`)
     return response.data
   } catch (error) {
     console.error('获取歌单详情失败:', error)
@@ -38,7 +39,8 @@ export const getPlaylistDetail = async (id: string) => {
 // 获取歌曲详情
 export const getSongDetail = async (ids: string) => {
   try {
-    const response = await musicApi.get(`/song/detail?ids=${ids}`)
+    const params = new URLSearchParams({ ids })
+    const response = await musicApi.get(`/song/detail?${params.toString()}`)
     return response.data
   } catch (error) {
     console.error('获取歌曲详情失败:', error)
@@ -49,7 +51,8 @@ export const getSongDetail = async (ids: string) => {
 // 获取歌曲播放链接
 export const getSongUrl = async (id: string) => {
   try {
-    const response = await musicApi.get(`/song/url?id=${id}`)
+    const params = new URLSearchParams({ id })
+    const response = await musicApi.get(`/song/url?${params.toString()}`)
     return response.data
   } catch (error) {
     console.error('获取歌曲播放链接失败:', error)
@@ -60,7 +63,8 @@ export const getSongUrl = async (id: string) => {
 // 搜索歌曲
 export const searchSongs = async (keywords: string, limit: number = 30) => {
   try {
-    const response = await musicApi.get(`/search?keywords=${keywords}&limit=${limit}`)
+    const params = new URLSearchParams({ keywords, limit: String(limit) })
+    const response = await musicApi.get(`/search?${params.toString()}`)
     return response.data
   } catch (error) {
     console.error('搜索歌曲失败:', error)

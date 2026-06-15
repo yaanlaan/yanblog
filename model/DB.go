@@ -62,7 +62,8 @@ func InitDB() {
 			fmt.Println("===========================================")
 			fmt.Println("已创建默认超级管理员账号:")
 			fmt.Println("  用户名: admin")
-			fmt.Println("  密码:   123456")
+			fmt.Println("  密码:   ****** (请查看下方)")
+			fmt.Printf("  明文密码: %s\n", "123456") // 仅用于开发环境，生产环境请修改
 			fmt.Println("")
 			fmt.Println("🔴 请立即登录后台并修改默认密码！")
 			fmt.Println("===========================================")

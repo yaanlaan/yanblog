@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"yanblog/model"
 	"yanblog/utils"
 	"yanblog/utils/errmsg"
 
@@ -67,20 +68,47 @@ func CheckToken(tokenString string) (*MyClaims, int) {
 	}
 }
 
+// AdminRequired 管理员权限中间件，仅允许超级管理员和管理员操作
+func AdminRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		username, exists := c.Get("username")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"status":  errmsg.ERROR_TOKEN_WRONG,
+				"message": "无法获取用户信息",
+			})
+			c.Abort()
+			return
+		}
+
+		role := model.GetUserRole(username.(string))
+		if role > 2 {
+			c.JSON(http.StatusOK, gin.H{
+				"status":  errmsg.ERROR_USER_NO_RIGHT,
+				"message": "无权执行此操作，需要管理员权限",
+			})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
 // JwtToken JWT认证中间件函数
 // 返回: Gin中间件处理函数
 func JwtToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var code int // 声明响应状态码变量
-		
+
 		// 1. 从请求头获取Authorization字段
 		tokenHeader := c.Request.Header.Get("Authorization")
-		
+
 		// 2. 检查token是否存在
 		if tokenHeader == "" {
 			code = errmsg.ERROR_TOKEN_EXIST
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"code":    code,
+				"status":  code,
 				"message": errmsg.GetErrMsg(code),
 			})
 			c.Abort() // 终止请求处理
@@ -92,7 +120,7 @@ func JwtToken() gin.HandlerFunc {
 		if len(checkToken) != 2 || checkToken[0] != "Bearer" {
 			code = errmsg.ERROR_TOKEN_TYPE_WRONG
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"code":    code,
+				"status":  code,
 				"message": errmsg.GetErrMsg(code),
 			})
 			c.Abort()
@@ -104,7 +132,7 @@ func JwtToken() gin.HandlerFunc {
 		if Tcode == errmsg.ERROR {
 			code = errmsg.ERROR_TOKEN_WRONG
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"code":    code,
+				"status":  code,
 				"message": errmsg.GetErrMsg(code),
 			})
 			c.Abort()
@@ -115,7 +143,7 @@ func JwtToken() gin.HandlerFunc {
 		if key.RegisteredClaims.ExpiresAt == nil || time.Now().After(key.RegisteredClaims.ExpiresAt.Time) {
 			code = errmsg.ERROR_TOKEN_RUNTIME
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"code":    code,
+				"status":  code,
 				"message": errmsg.GetErrMsg(code),
 			})
 			c.Abort()

@@ -14,7 +14,9 @@ const ArticleList = () => import('@/views/article/ArticleList.vue')
 const ArticleEditor = () => import('@/views/article/ArticleEditor.vue')
 const MediaManager = () => import('@/views/media/MediaManager.vue')
 const ConfigEditor = () => import('@/views/system/ConfigEditor.vue')
+const BackendConfig = () => import('@/views/system/BackendConfig.vue')
 const AboutEditor = () => import('@/views/system/AboutEditor.vue')
+const SystemStatus = () => import('@/views/system/SystemStatus.vue')
 
 // 定义路由
 const routes: RouteRecordRaw[] = [
@@ -45,74 +47,38 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: '/user',
-        name: 'User',
-        redirect: '/user/list',
+        name: 'UserList',
+        component: UserList,
         meta: {
           title: '用户管理',
           icon: 'User'
         }
       },
       {
-        path: '/user/list',
-        name: 'UserList',
-        component: UserList,
-        meta: {
-          title: '用户列表',
-          activeMenu: '/user'
-        }
-      },
-      {
         path: '/category',
-        name: 'Category',
-        redirect: '/category/list',
+        name: 'CategoryList',
+        component: CategoryList,
         meta: {
           title: '分类管理',
           icon: 'Folder'
         }
       },
       {
-        path: '/category/list',
-        name: 'CategoryList',
-        component: CategoryList,
-        meta: {
-          title: '分类列表',
-          activeMenu: '/category'
-        }
-      },
-      {
         path: '/tag',
-        name: 'Tag',
-        redirect: '/tag/list',
+        name: 'TagList',
+        component: TagList,
         meta: {
           title: '标签管理',
           icon: 'Collection'
         }
       },
       {
-        path: '/tag/list',
-        name: 'TagList',
-        component: TagList,
-        meta: {
-          title: '标签列表',
-          activeMenu: '/tag'
-        }
-      },
-      {
         path: '/article',
-        name: 'Article',
-        redirect: '/article/list',
-        meta: {
-          title: '文章管理',
-          icon: 'Document'
-        }
-      },
-      {
-        path: '/article/list',
         name: 'ArticleList',
         component: ArticleList,
         meta: {
-          title: '文章列表',
-          activeMenu: '/article'
+          title: '文章管理',
+          icon: 'Document'
         }
       },
       {
@@ -150,11 +116,29 @@ const routes: RouteRecordRaw[] = [
         }
       },
       {
+        path: '/system/status',
+        name: 'SystemStatus',
+        component: SystemStatus,
+        meta: {
+          title: '系统监控',
+          activeMenu: '/system'
+        }
+      },
+      {
         path: '/system/config',
         name: 'ConfigEditor',
         component: ConfigEditor,
         meta: {
           title: '前台配置',
+          activeMenu: '/system'
+        }
+      },
+      {
+        path: '/system/backend',
+        name: 'BackendConfig',
+        component: BackendConfig,
+        meta: {
+          title: '后端配置',
           activeMenu: '/system'
         }
       },
@@ -168,6 +152,11 @@ const routes: RouteRecordRaw[] = [
         }
       }
     ]
+  },
+  {
+    // 兜底路由：所有未匹配的路径都重定向到登录页
+    path: '/:pathMatch(.*)*',
+    redirect: '/login'
   }
 ]
 
@@ -183,7 +172,7 @@ router.beforeEach((to, from, next) => {
   if (to.meta?.title) {
     document.title = `${to.meta.title} - 博客后台管理系统`
   }
-  
+
   // 检查是否需要登录
   const token = localStorage.getItem('token')
   if (to.path !== '/login' && !token) {

@@ -28,8 +28,9 @@ func ValidateConfig() error {
 	// 验证 JWT 密钥：空密钥仅警告，自动生成临时密钥
 	jwtKey := ServerConfig.JwtKey
 	if jwtKey == "" {
-		warnings = append(warnings, "⚠️  JWT 密钥未设置，已自动生成临时密钥。请尽快设置永久密钥！")
 		ServerConfig.JwtKey = generateTempKey()
+		warnings = append(warnings, "⚠️  JWT 密钥未设置，已自动生成临时密钥（本次运行有效，重启后将重新生成）。请尽快在配置文件中设置永久 JwtKey！")
+		fmt.Printf("  临时JWT密钥: %s\n", ServerConfig.JwtKey)
 	} else if len(jwtKey) < 32 {
 		warnings = append(warnings, fmt.Sprintf("⚠️  JWT 密钥长度不足（当前 %d 位），建议使用 64 位随机密钥", len(jwtKey)))
 	}
@@ -73,10 +74,10 @@ func PrintStartupInfo() {
 		ServerConfig.Database.DbName)
 
 	// 天气配置
-	if ServerConfig.Weather.ApiKey != "" {
-		fmt.Printf("🌤️  天气服务：已启用 (%s)\n", ServerConfig.Weather.DefaultCity)
+	if ServerConfig.Weather.DefaultCity != "" {
+		fmt.Printf("🌤️  天气服务：已启用 (%s) [Open-Meteo]\n", ServerConfig.Weather.DefaultCity)
 	} else {
-		fmt.Println("🌤️  天气服务：未启用")
+		fmt.Println("🌤️  天气服务：未配置默认城市")
 	}
 
 	fmt.Println("===========================================")

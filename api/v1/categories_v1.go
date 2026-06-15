@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"yanblog/model"
+	"yanblog/utils"
 	"yanblog/utils/errmsg"
 
 	"github.com/gin-gonic/gin"
@@ -37,15 +38,10 @@ func AddCategory(c *gin.Context) {
 
 // 查询分类信息
 func GetCateInfo(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  errmsg.ERROR,
-			"message": "参数错误",
-		})
+	id, ok := utils.ParseIDParam(c)
+	if !ok {
 		return
 	}
-	var code int
 
 	data, code := model.GetCateInfo(id)
 
@@ -58,25 +54,9 @@ func GetCateInfo(c *gin.Context) {
 
 // 查询分类列表
 func GetCate(c *gin.Context) {
-	pageSize, _ := strconv.Atoi(c.Query("pagesize"))
-	pageNum, _ := strconv.Atoi(c.Query("pagenum"))
-	var code int
-
-	if pageSize == -1 && pageNum == -1 {
-		// 查询所有分类
-		data, total := model.GetCate(-1, -1)
-		code = errmsg.SUCCESS
-		c.JSON(http.StatusOK, gin.H{
-			"status":  code,
-			"data":    data,
-			"total":   total,
-			"message": errmsg.GetErrMsg(code),
-		})
-		return
-	}
-
+	pageSize, pageNum, _ := utils.ParsePageParams(c)
 	data, total := model.GetCate(pageSize, pageNum)
-	code = errmsg.SUCCESS
+	code := errmsg.SUCCESS
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
@@ -88,21 +68,11 @@ func GetCate(c *gin.Context) {
 
 // 搜索分类
 func SearchCate(c *gin.Context) {
-	pageSize, _ := strconv.Atoi(c.Query("pagesize"))
-	pageNum, _ := strconv.Atoi(c.Query("pagenum"))
+	pageSize, pageNum, _ := utils.ParsePageParams(c)
 	keyword := c.Query("keyword")
-	var code int
-
-	if pageSize <= 0 {
-		pageSize = -1
-	}
-	if pageNum <= 0 {
-		pageNum = -1
-	}
+	code := errmsg.SUCCESS
 
 	data, total := model.SearchCategory(keyword, pageSize, pageNum)
-
-	code = errmsg.SUCCESS
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
@@ -116,12 +86,8 @@ func SearchCate(c *gin.Context) {
 func EditCate(c *gin.Context) {
 	var data model.Category
 	var code int
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  errmsg.ERROR,
-			"message": "参数错误",
-		})
+	id, ok := utils.ParseIDParam(c)
+	if !ok {
 		return
 	}
 	_ = c.ShouldBindJSON(&data)
@@ -144,12 +110,8 @@ func EditCate(c *gin.Context) {
 
 // 删除分类
 func DeleteCate(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  errmsg.ERROR,
-			"message": "参数错误",
-		})
+	id, ok := utils.ParseIDParam(c)
+	if !ok {
 		return
 	}
 	force, _ := strconv.ParseBool(c.Query("force")) // 是否强制删除关联文章

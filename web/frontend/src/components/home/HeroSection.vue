@@ -51,15 +51,13 @@ const { siteInfo } = storeToRefs(siteInfoStore)
 
 const handleRandomVisit = async () => {
   try {
-    const res = await articleApi.getArticles({ pagesize: -1, pagenum: -1 })
+    const res = await articleApi.getRandomArticle()
     const { data, status } = res.data
-    if (status === 200 && data && data.length > 0) {
-      const randomIndex = Math.floor(Math.random() * data.length)
-      const randomArticle = data[randomIndex]
-      router.push({ name: 'article-detail', params: { id: randomArticle.ID } })
+    if (status === 200 && data) {
+      router.push({ name: 'article-detail', params: { id: data.ID || data.id } })
     }
   } catch (error) {
-    console.error('Failed to fetch articles for random visit:', error)
+    console.error('Failed to fetch random article:', error)
   }
 }
 </script>

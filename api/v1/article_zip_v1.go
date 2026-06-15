@@ -40,7 +40,7 @@ func UploadArticleZip(c *gin.Context) {
 
 	tempDir := "./temp_zip"
 	if _, err := os.Stat(tempDir); os.IsNotExist(err) {
-		_ = os.MkdirAll(tempDir, os.ModePerm)
+		_ = os.MkdirAll(tempDir, 0755)
 	}
 
 	tempZipPath := filepath.Join(tempDir, fmt.Sprintf("%d_%s", time.Now().UnixNano(), file.Filename))
@@ -136,7 +136,7 @@ func UploadArticleZipBatch(c *gin.Context) {
 		// 保存临时文件
 		tempDir := "./temp_zip"
 		if _, err := os.Stat(tempDir); os.IsNotExist(err) {
-			_ = os.MkdirAll(tempDir, os.ModePerm)
+			_ = os.MkdirAll(tempDir, 0755)
 		}
 
 		tempZipPath := filepath.Join(tempDir, fmt.Sprintf("%d_%s", time.Now().UnixNano(), fileHeader.Filename))
@@ -310,11 +310,11 @@ func unzip(src, dest string) error {
 		}
 
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(fpath, os.ModePerm)
+			os.MkdirAll(fpath, 0755)
 			continue
 		}
 
-		if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+		if err = os.MkdirAll(filepath.Dir(fpath), 0755); err != nil {
 			return err
 		}
 
@@ -360,7 +360,7 @@ func uploadLocalFile(path string, uploadType string) (string, error) {
 	}
 
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
-		_ = os.MkdirAll(targetDir, os.ModePerm)
+		_ = os.MkdirAll(targetDir, 0755)
 	}
 
 	// 生成文件名

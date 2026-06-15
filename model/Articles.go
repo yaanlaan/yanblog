@@ -1,8 +1,6 @@
 package model
 
 import (
-	// "fmt"
-	// "os"
 	"strings"
 	"yanblog/utils"
 	"yanblog/utils/errmsg"
@@ -26,26 +24,36 @@ type Article struct {
 	TagModels []Tag  `gorm:"many2many:article_tags" json:"tag_models"`
 }
 
+// parseTags 解析标签字符串为 Tag 模型切片（公共函数，消除重复代码）
+// 参数: tagsStr - 逗号分隔的标签字符串
+// 返回: Tag 模型切片
+func parseTags(tagsStr string) []Tag {
+	if tagsStr == "" {
+		return nil
+	}
+
+	tagNames := strings.Split(tagsStr, ",")
+	var tags []Tag
+
+	for _, name := range tagNames {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			continue
+		}
+		var tag Tag
+		db.FirstOrCreate(&tag, Tag{Name: name})
+		tags = append(tags, tag)
+	}
+
+	return tags
+}
+
 // CreateArt 新增文章
 // 参数: data - 文章信息
 // 返回: 状态码
 func CreateArt(data *Article) int {
-	// 1. 处理标签逻辑：将 Tags 字符串解析为 Tag 模型
-	if data.Tags != "" {
-		tagNames := strings.Split(data.Tags, ",") // 假设前端传逗号分隔 e.g. "go,web"
-		var tags []Tag
-		for _, name := range tagNames {
-			name = strings.TrimSpace(name)
-			if name == "" {
-				continue
-			}
-			var tag Tag
-			// FirstOrCreate: 如果不存在则创建，存在则查找
-			db.FirstOrCreate(&tag, Tag{Name: name})
-			tags = append(tags, tag)
-		}
-		data.TagModels = tags
-	}
+	// 处理标签逻辑：使用公共的解析函数
+	data.TagModels = parseTags(data.Tags)
 
 	err := db.Create(&data).Error
 	if err != nil {
@@ -60,7 +68,6 @@ func CreateArt(data *Article) int {
 func SearchArticle(keyword string, cid int, pageSize int, pageNum int) ([]Article, int, int64) {
 	var articleList []Article
 	var total int64
-	var err error
 
 	// 构建查询条件
 	query := db.Preload("Category")
@@ -79,13 +86,17 @@ func SearchArticle(keyword string, cid int, pageSize int, pageNum int) ([]Articl
 	// 添加排序
 	query = query.Order("top ASC, created_at DESC")
 
-	// 执行查询
+	// 先查询总数（性能优化：分离 Count 和 Find）
+	query.Model(&Article{}).Count(&total)
+
+	// 执行分页查询
+	var err error
 	if pageSize == -1 && pageNum == -1 {
 		// 查询所有
-		err = query.Find(&articleList).Count(&total).Error
+		err = query.Find(&articleList).Error
 	} else {
 		// 分页查询
-		err = query.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&articleList).Count(&total).Error
+		err = query.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&articleList).Error
 	}
 
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -100,12 +111,17 @@ func SearchArticle(keyword string, cid int, pageSize int, pageNum int) ([]Articl
 func GetCateArt(id int, pageSize int, pageNum int) ([]Article, int, int64) {
 	var cateArtList []Article
 	var total int64
-	var err error
 
+	query := db.Preload("Category").Where("cid = ?", id).Order("top ASC, created_at DESC")
+
+	// 先查询总数（性能优化：分离 Count 和 Find）
+	query.Model(&Article{}).Count(&total)
+
+	var err error
 	if pageSize == -1 || pageNum == -1 {
-		err = db.Preload("Category").Where("cid = ?", id).Order("top ASC, created_at DESC").Find(&cateArtList).Count(&total).Error
+		err = query.Find(&cateArtList).Error
 	} else {
-		err = db.Preload("Category").Limit(pageSize).Offset((pageNum-1)*pageSize).Where("cid =?", id).Order("top ASC, created_at DESC").Find(&cateArtList).Count(&total).Error
+		err = query.Limit(pageSize).Offset((pageNum-1)*pageSize).Find(&cateArtList).Error
 	}
 
 	if err != nil {
@@ -133,16 +149,27 @@ func IncrementArtViews(id int) {
 }
 
 // GetArt 查询文章列表
-// 参数: pageSize - 每页数量, pageNum - 页码
+// 参数: pageSize - 每页数量, pageNum - 页码, excludeTop - 是否排除置顶文章
 // 返回: 文章列表、状态码和总数
-func GetArt(pageSize int, pageNum int) ([]Article, int, int64) {
+func GetArt(pageSize int, pageNum int, excludeTop ...bool) ([]Article, int, int64) {
 	var articleList []Article
-	var err error
 	var total int64
+
+	query := db.Preload("Category").Order("top ASC, created_at DESC")
+
+	// 如果需要排除置顶文章
+	if len(excludeTop) > 0 && excludeTop[0] {
+		query = query.Where("top = 0")
+	}
+
+	// 先查询总数（性能优化：分离 Count 和 Find）
+	query.Model(&Article{}).Count(&total)
+
+	var err error
 	if pageSize == -1 && pageNum == -1 { // 查询所有文章
-		err = db.Preload("Category").Order("top ASC, created_at DESC").Find(&articleList).Count(&total).Error
+		err = query.Find(&articleList).Error
 	} else { // 分页查询
-		err = db.Preload("Category").Order("top ASC, created_at DESC").Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&articleList).Count(&total).Error
+		err = query.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&articleList).Error
 	}
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errmsg.ERROR, 0
@@ -264,22 +291,10 @@ func EditArt(id int, data *Article) int {
 		maps["created_at"] = data.CreatedAt
 	}
 
-	// 处理标签更新
-	var newTags []Tag
-	if data.Tags != "" {
-		tagNames := strings.Split(data.Tags, ",")
-		for _, name := range tagNames {
-			name = strings.TrimSpace(name)
-			if name == "" {
-				continue
-			}
-			var tag Tag
-			db.FirstOrCreate(&tag, Tag{Name: name})
-			newTags = append(newTags, tag)
-		}
-	}
+	// 处理标签更新：使用公共的解析函数
+	newTags := parseTags(data.Tags)
 
-	err = db.Model(&art).Where("id = ? ", id).Updates(maps).Error
+	err := db.Model(&art).Where("id = ? ", id).Updates(maps).Error
 	if err != nil {
 		return errmsg.ERROR
 	}
@@ -326,4 +341,48 @@ func GetSitemapData() ([]Article, int) {
 		return nil, errmsg.ERROR
 	}
 	return articles, errmsg.SUCCESS
+}
+
+// GetRandomArticle 随机获取一篇文章
+func GetRandomArticle() (Article, int) {
+	var art Article
+
+	// 根据数据库类型选择随机函数
+	dbType := strings.ToUpper(utils.ServerConfig.Database.Db)
+	randFunc := "RAND()"
+	if dbType == "SQLITE" {
+		randFunc = "RANDOM()"
+	}
+
+	err := db.Preload("Category").Order(randFunc).Limit(1).First(&art).Error
+	if err != nil {
+		return art, errmsg.ERROR
+	}
+	return art, errmsg.SUCCESS
+}
+
+// GetAdjacentArticle 获取相邻文章（上一篇、下一篇）
+// 按 created_at 排序，返回当前文章的前一篇和后一篇
+func GetAdjacentArticle(id int) (prev Article, next Article, code int) {
+	// 先获取当前文章的创建时间
+	var currentArt Article
+	if err := db.Select("id", "created_at").Where("id = ?", id).First(&currentArt).Error; err != nil {
+		return Article{}, Article{}, errmsg.ERROR_ART_NOT_EXIST
+	}
+
+	// 查询上一篇（发布时间比当前文章更早的最新一篇）
+	db.Preload("Category").
+		Where("created_at < ?", currentArt.CreatedAt).
+		Order("created_at DESC").
+		Limit(1).
+		First(&prev)
+
+	// 查询下一篇（发布时间比当前文章更新的最早一篇）
+	db.Preload("Category").
+		Where("created_at > ?", currentArt.CreatedAt).
+		Order("created_at ASC").
+		Limit(1).
+		First(&next)
+
+	return prev, next, errmsg.SUCCESS
 }

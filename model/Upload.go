@@ -49,7 +49,7 @@ func UpLoadFile(file multipart.File, fileHeader *multipart.FileHeader, uploadTyp
 
 	// 确保存储目录存在
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
-		_ = os.MkdirAll(targetDir, os.ModePerm)
+		_ = os.MkdirAll(targetDir, 0755)
 	}
 
 	// 2. 生成文件名

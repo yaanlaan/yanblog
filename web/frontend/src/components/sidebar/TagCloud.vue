@@ -1,7 +1,7 @@
 <template>
   <div class="sidebar-card tag-cloud">
     <div class="card-header">
-      <h3><i class="iconfont icon-tags" style="color: #2aa073ff; margin-right: 5px;"></i> 标签云</h3>
+      <h3><i class="iconfont icon-tags tag-icon"></i> 标签云</h3>
       <div class="view-switch" @click="toggleView" :title="is3DView ? '切换到列表视图' : '切换到3D视图'">
         <span class="switch-label">{{ is3DView ? '3D' : '列表' }}</span>
         <div class="switch-track" :class="{ 'active': is3DView }">
@@ -72,7 +72,7 @@
       </div>
 
       <div class="error-message" v-else-if="error">
-        <p>❌ {{ error }}</p>
+        <p>{{ error }}</p>
         <button @click="onRetry" class="retry-button">重试</button>
       </div>
       <div class="empty-state" v-else>
@@ -107,7 +107,7 @@ const tags3D = ref<Tag3D[]>([])
 const loading = ref(false)
 const error = ref('')
 const showAll = ref(false)
-const is3DView = ref(false)
+const is3DView = ref(true) // 默认3D视图
 
 // 3D 动画相关
 const containerRef = ref<HTMLElement | null>(null)
@@ -123,6 +123,20 @@ let mouseY = 0
 let isDragging = false
 let lastX = 0
 let lastY = 0
+
+// 缓存主题色，避免每帧都读取 DOM
+let cachedAccentColor = ''
+let cachedTextColor = ''
+const refreshThemeColors = () => {
+  const style = getComputedStyle(document.documentElement)
+  cachedAccentColor = style.getPropertyValue('--color-accent').trim()
+  cachedTextColor = style.getPropertyValue('--color-text-secondary').trim()
+}
+
+// 监听主题变化
+const themeObserver = new MutationObserver(() => {
+  refreshThemeColors()
+})
 
 // 计算显示的标签 (列表视图)
 const displayedTags = computed(() => {
@@ -145,6 +159,7 @@ const toggleView = () => {
       init3D()
       startAnimation()
       initCanvas()
+      refreshThemeColors()
     })
   } else {
     stopAnimation()
@@ -178,42 +193,36 @@ const init3D = () => {
 
 // 绘制连线
 const drawConnections = () => {
-  if (!canvasRef.value || !wrapperRef.value) return
+  if (!canvasRef.value || !wrapperRef.value || !containerRef.value) return
   
   const ctx = canvasRef.value.getContext('2d')
   if (!ctx) return
   
-  // 清空画布
   ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
   
-  // 获取容器中心点
-  const containerRect = containerRef.value!.getBoundingClientRect()
-  const centerX = (containerRect.width) / 2
-  const centerY = (containerRect.height) / 2
+  const containerRect = containerRef.value.getBoundingClientRect()
+  const centerX = containerRect.width / 2
+  const centerY = containerRect.height / 2
   
-  // 获取所有标签元素的位置
   const tagElements = wrapperRef.value.querySelectorAll('.tag-3d')
   
-  // 绘制从中心到每个标签的连线
-  ctx.strokeStyle = 'rgb(114, 117, 117, 0.8)';
-  ctx.lineWidth = 1.2;
-  ctx.lineCap = 'round';
+  // 使用主题色绘制连线
+  ctx.strokeStyle = cachedAccentColor || 'rgb(66, 184, 131)'
+  ctx.lineWidth = 1.2
+  ctx.lineCap = 'round'
   
   tagElements.forEach((el, index) => {
     const rect = el.getBoundingClientRect()
-    
-    // 计算相对于容器的位置
     const x = rect.left - containerRect.left + rect.width / 2
     const y = rect.top - containerRect.top + rect.height / 2
     
-    // 根据标签的z轴深度调整透明度，更接近视角的连线更明显
     const zDepth = tags3D.value[index].z
     const depthFactor = Math.max(0.3, (zDepth + radius) / (2 * radius))
-    ctx.globalAlpha = 0.4 * depthFactor
+    ctx.globalAlpha = 0.3 * depthFactor
     
     ctx.beginPath()
-    ctx.moveTo(centerX, centerY) // 从中心点开始
-    ctx.lineTo(x, y) // 连接到标签位置
+    ctx.moveTo(centerX, centerY)
+    ctx.lineTo(x, y)
     ctx.stroke()
   })
   
@@ -223,7 +232,6 @@ const drawConnections = () => {
 // 3D 动画循环
 const animate = () => {
   tags3D.value.forEach(tag => {
-    // 绕X轴旋转
     const cosX = Math.cos(angleX)
     const sinX = Math.sin(angleX)
     const y1 = tag.y * cosX - tag.z * sinX
@@ -231,7 +239,6 @@ const animate = () => {
     tag.y = y1
     tag.z = z1
 
-    // 绕Y轴旋转
     const cosY = Math.cos(angleY)
     const sinY = Math.sin(angleY)
     const x2 = tag.x * cosY - tag.z * sinY
@@ -239,11 +246,9 @@ const animate = () => {
     tag.x = x2
     tag.z = z2
 
-    // 更新样式
-    const scale = (2 * radius + tag.z) / (2 * radius) // 简单的透视
+    const scale = (2 * radius + tag.z) / (2 * radius)
     const alpha = (tag.z + radius) / (2 * radius)
     
-    // 限制 scale 和 opacity 范围，防止过大或过小
     const safeScale = Math.max(0.5, Math.min(1.5, scale))
     const safeAlpha = Math.max(0.3, Math.min(1, alpha + 0.3))
 
@@ -251,7 +256,7 @@ const animate = () => {
       transform: `translate3d(${tag.x}px, ${tag.y}px, 0) scale(${safeScale})`,
       opacity: safeAlpha,
       zIndex: Math.floor(tag.z),
-      fontSize: calculateFontSize(tag.count) // 保持原有的大小逻辑
+      fontSize: calculateFontSize(tag.count)
     }
   })
   
@@ -282,27 +287,20 @@ const handleMouseDown = (e: MouseEvent) => {
 
 const handleMouseMove3D = (e: MouseEvent) => {
   if (!isDragging) {
-    // 鼠标移动时调整旋转速度（仅在未拖拽时）
     if (!is3DView.value) return
     if (!containerRef.value) return
     const rect = containerRef.value.getBoundingClientRect()
-    // 计算鼠标相对于容器中心的坐标 (-1 到 1)
     mouseX = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2)
     mouseY = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2)
-    
-    // 根据鼠标位置调整旋转速度和方向
     angleY = mouseX * 0.02
     angleX = -mouseY * 0.02
     return
   }
   
-  // 拖拽旋转
   const deltaX = e.clientX - lastX
   const deltaY = e.clientY - lastY
-  
   angleY = deltaX * 0.005
   angleX = -deltaY * 0.005
-  
   lastX = e.clientX
   lastY = e.clientY
 }
@@ -311,19 +309,17 @@ const handleMouseUp = () => {
   if (isDragging) {
     isDragging = false
     containerRef.value!.style.cursor = 'grab'
-    // 恢复默认旋转
     setTimeout(() => {
       if (!isDragging) {
         angleX = baseSpeed
         angleY = baseSpeed
       }
-    }, 2000) // 2秒后恢复自动旋转
+    }, 2000)
   }
 }
 
 const handleMouseLeave = () => {
   if (!isDragging) {
-    // 恢复默认旋转
     angleX = baseSpeed
     angleY = baseSpeed
   }
@@ -341,16 +337,12 @@ const handleTouchStart = (e: TouchEvent) => {
 
 const handleTouchMove = (e: TouchEvent) => {
   if (!isDragging) return
-  
   const deltaX = e.touches[0].clientX - lastX
   const deltaY = e.touches[0].clientY - lastY
-  
   angleY = deltaX * 0.005
   angleX = -deltaY * 0.005
-  
   lastX = e.touches[0].clientX
   lastY = e.touches[0].clientY
-  
   e.preventDefault()
 }
 
@@ -358,13 +350,12 @@ const handleTouchEnd = () => {
   if (isDragging) {
     isDragging = false
     containerRef.value!.style.cursor = 'grab'
-    // 恢复默认旋转
     setTimeout(() => {
       if (!isDragging) {
         angleX = baseSpeed
         angleY = baseSpeed
       }
-    }, 2000) // 2秒后恢复自动旋转
+    }, 2000)
   }
 }
 
@@ -380,7 +371,6 @@ const fetchTags = async () => {
       pagenum: 1
     })
     
-    // 检查响应状态
     if (response.status !== 200) {
       error.value = '网络请求失败'
       return
@@ -398,9 +388,14 @@ const fetchTags = async () => {
       count: tag.count
     })).sort((a: any, b: any) => b.count - a.count)
     
-    // 如果当前是3D视图，重新初始化
+    // 标签加载完成后，如果当前是3D视图则初始化
     if (is3DView.value) {
-      init3D()
+      nextTick(() => {
+        init3D()
+        startAnimation()
+        initCanvas()
+        refreshThemeColors()
+      })
     }
     
   } catch (err: any) {
@@ -438,16 +433,27 @@ defineExpose({
 // 组件挂载时获取数据
 onMounted(() => {
   fetchTags()
+  // 监听主题切换（data-theme 属性变化）
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme']
+  })
 })
 
 onBeforeUnmount(() => {
   stopAnimation()
+  themeObserver.disconnect()
 })
 </script>
 
 <style scoped>
 .iconfont {
   font-size: 10px;
+}
+
+.tag-icon {
+  color: var(--color-accent);
+  margin-right: 5px;
 }
 
 .card-header {
@@ -476,7 +482,7 @@ onBeforeUnmount(() => {
   transform: translateY(-50%);
   width: 4px;
   height: 16px;
-  background: #3d96fc;
+  background: var(--color-accent);
   border-radius: 2px;
 }
 
@@ -489,21 +495,21 @@ onBeforeUnmount(() => {
 
 .switch-label {
   font-size: 12px;
-  color: #666;
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
 .switch-track {
   width: 36px;
   height: 20px;
-  background-color: #e0e0e0;
+  background-color: var(--color-border);
   border-radius: 10px;
   position: relative;
   transition: background-color 0.3s ease;
 }
 
 .switch-track.active {
-  background-color: #05b19aff;
+  background-color: var(--color-accent);
 }
 
 .switch-thumb {
@@ -535,7 +541,7 @@ onBeforeUnmount(() => {
 }
 
 .card-content::-webkit-scrollbar-thumb {
-  background-color: #ddd;
+  background-color: var(--color-border-hover);
   border-radius: 2px;
 }
 
@@ -553,9 +559,9 @@ onBeforeUnmount(() => {
 .tag {
   display: inline-block;
   padding: 6px 14px;
-  background: rgba(61, 150, 252, 0.08);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
   border-radius: 20px;
-  color: #555;
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   text-decoration: none;
@@ -565,10 +571,10 @@ onBeforeUnmount(() => {
 }
 
 .tag:hover {
-  background: #42b883;
+  background: var(--color-accent);
   color: white;
   transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(66, 184, 131, 0.3);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 /* 3D 视图样式 */
@@ -607,28 +613,26 @@ onBeforeUnmount(() => {
   position: absolute;
   left: 0;
   top: 0;
-  color: #696e6cff; /* 默认颜色 */
+  color: var(--color-text-secondary);
   text-decoration: none;
   font-weight: bold;
   white-space: nowrap;
   transform-origin: center center;
   will-change: transform, opacity;
-  /* 移除背景色，只显示文字 */
-  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
-  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px var(--color-background);
+  transition: color 0.3s ease;
 }
 
 .tag-3d:hover {
-  color: #3daa79ff;
-  z-index: 1000 !important; /* 确保 hover 时在最上层 */
-  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  transform: scale(1.1);
+  color: var(--color-accent) !important;
+  z-index: 1000 !important;
+  text-shadow: 0 2px 4px var(--color-shadow);
 }
 
 .empty-state {
   text-align: center;
   padding: 30px 10px;
-  color: #888;
+  color: var(--color-text-secondary);
 }
 
 .skeleton-loader {
@@ -638,10 +642,10 @@ onBeforeUnmount(() => {
 
 @keyframes skeleton-loading {
   0% {
-    background-color: hsl(200, 20%, 80%);
+    background-color: var(--color-background-soft);
   }
   100% {
-    background-color: hsl(200, 20%, 95%);
+    background-color: var(--color-background-mute);
   }
 }
 
@@ -673,7 +677,7 @@ onBeforeUnmount(() => {
 .retry-button {
   margin-top: 15px;
   padding: 8px 16px;
-  background-color: #42b883;
+  background-color: var(--color-accent);
   color: white;
   border: none;
   border-radius: 6px;
@@ -683,7 +687,7 @@ onBeforeUnmount(() => {
 }
 
 .retry-button:hover {
-  background-color: #3aa876;
+  opacity: 0.85;
   border-radius: 8px;
 }
 
@@ -697,8 +701,8 @@ onBeforeUnmount(() => {
 .see-more-button {
   padding: 8px 15px;
   background-color: transparent;
-  color: #42b883;
-  border: 1px solid #42b883;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
   border-radius: 20px;
   cursor: pointer;
   font-size: 12px;
@@ -706,7 +710,7 @@ onBeforeUnmount(() => {
 }
 
 .see-more-button:hover {
-  background-color: #42b883;
+  background-color: var(--color-accent);
   color: white;
 }
 

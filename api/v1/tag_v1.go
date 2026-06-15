@@ -2,8 +2,8 @@ package v1
 
 import (
 	"net/http"
-	"strconv"
 	"yanblog/model"
+	"yanblog/utils"
 	"yanblog/utils/errmsg"
 
 	"github.com/gin-gonic/gin"
@@ -26,15 +26,7 @@ func AddTag(c *gin.Context) {
 
 // GetTags 获取标签列表
 func GetTags(c *gin.Context) {
-	pageSize, _ := strconv.Atoi(c.Query("pagesize"))
-	pageNum, _ := strconv.Atoi(c.Query("pagenum"))
-
-	if pageSize == 0 {
-		pageSize = -1 // 不填则查所有（或按业务定义）
-	}
-	if pageNum == 0 {
-		pageNum = 1
-	}
+	pageSize, pageNum, _ := utils.ParsePageParams(c)
 
 	data, total := model.GetTags(pageSize, pageNum)
 	code := errmsg.SUCCESS
@@ -49,7 +41,10 @@ func GetTags(c *gin.Context) {
 // EditTag 编辑标签
 func EditTag(c *gin.Context) {
 	var data model.Tag
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := utils.ParseIDParam(c)
+	if !ok {
+		return
+	}
 	_ = c.ShouldBindJSON(&data)
 
 	// 检查标签名是否与其他标签冲突（排除自身）
@@ -66,7 +61,10 @@ func EditTag(c *gin.Context) {
 
 // DeleteTag 删除标签
 func DeleteTag(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, ok := utils.ParseIDParam(c)
+	if !ok {
+		return
+	}
 	code := model.DeleteTag(id)
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,

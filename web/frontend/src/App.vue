@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import NavBar from '@/components/NavBar.vue'
 import Footer from '@/components/Footer.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
@@ -33,9 +33,27 @@ import { useSiteInfoStore } from '@/stores/siteInfo'
 const isLoading = ref(true)
 const siteInfoStore = useSiteInfoStore()
 
+// 保存原始标题，用于 blur/focus 切换
+let originalTitle = ''
+
+// blur 事件处理
+const handleBlur = () => {
+  originalTitle = document.title
+  if (siteInfoStore.siteInfo.page_title?.blur) {
+    document.title = siteInfoStore.siteInfo.page_title.blur
+  }
+}
+
+// focus 事件处理
+const handleFocus = () => {
+  if (originalTitle) {
+    document.title = originalTitle
+  }
+}
+
 onMounted(async () => {
   await siteInfoStore.fetchSiteInfo()
-  
+
   if (siteInfoStore.siteInfo.iconfont_url) {
     const link = document.createElement('link')
     link.rel = 'stylesheet'
@@ -74,24 +92,22 @@ onMounted(async () => {
 
   if (siteInfoStore.siteInfo.page_title?.default) {
     document.title = siteInfoStore.siteInfo.page_title.default
+    originalTitle = document.title
   }
 
-  let title = document.title
-  window.onblur = function () {
-    title = document.title
-    if (siteInfoStore.siteInfo.page_title?.blur) {
-      document.title = siteInfoStore.siteInfo.page_title.blur
-    }
-  }
-  window.onfocus = function () {
-    if (title) {
-      document.title = title
-    }
-  }
+  // 使用 addEventListener 替代直接赋值，避免内存泄漏
+  window.addEventListener('blur', handleBlur)
+  window.addEventListener('focus', handleFocus)
 
   setTimeout(() => {
     isLoading.value = false
   }, 500)
+})
+
+onUnmounted(() => {
+  // 清理事件监听器，防止内存泄漏
+  window.removeEventListener('blur', handleBlur)
+  window.removeEventListener('focus', handleFocus)
 })
 </script>
 
