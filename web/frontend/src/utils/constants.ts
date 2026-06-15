@@ -15,7 +15,8 @@ export const BREAKPOINTS = {
 export const PAGINATION = {
   DEFAULT_PAGE_SIZE: 10,
   ARTICLE_LIST_PAGE_SIZE: 12,
-  HOME_PAGE_SIZE: 10
+  HOME_PAGE_SIZE: 10,
+  ARCHIVE_PAGE_SIZE: 20
 } as const
 
 // 文章相关

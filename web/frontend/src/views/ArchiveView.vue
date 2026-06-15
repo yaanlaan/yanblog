@@ -36,7 +36,7 @@
            <!-- 左侧统计栏 -->
            <div class="contrib-stats">
               <div class="stat-item">
-                  <span class="stat-number">{{ articles.length }}</span>
+                  <span class="stat-number">{{ selectedTag ? articles.length : totalArticles }}</span>
                   <span class="stat-label">总文章数</span>
               </div>
               <div class="stat-item">
@@ -138,6 +138,29 @@
                   </div>
                 </div>
               </TransitionGroup>
+
+              <!-- 加载更多 / 加载中 / 没有更多 -->
+              <div class="load-more-section">
+                <button
+                  v-if="hasMore && !loadingMore && !selectedTag"
+                  @click="loadMoreArchive"
+                  class="see-more-button"
+                >
+                  <i class="iconfont icon-seemore"></i>
+                  <span>See More</span>
+                </button>
+                <div v-else-if="loadingMore" class="loading-hint">
+                  <div class="mini-spinner"></div>
+                  <span>加载中...</span>
+                </div>
+                <div v-else-if="!hasMore && !selectedTag && articles.length > 0" class="no-more-hint">
+                  — 已经到底啦 —
+                </div>
+                <div v-else-if="selectedTag" class="filter-hint">
+                  当前筛选：<span class="filter-tag">{{ selectedTag }}</span>
+                  <span class="clear-filter" @click="selectTag('')">清除</span>
+                </div>
+              </div>
             </div>
             
             <div class="year-nav">
@@ -162,6 +185,9 @@
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import MainLayout from '@/components/layout/MainLayout.vue'
 import { articleApi, tagApi } from '@/services/api'
+import { PAGINATION } from '@/utils/constants'
+
+const ARCHIVE_PAGE_SIZE = PAGINATION.ARCHIVE_PAGE_SIZE
 
 interface Article {
   id?: number
@@ -179,12 +205,15 @@ interface Tag {
 }
 
 const loading = ref(false)
+const loadingMore = ref(false)
 const articles = ref<Article[]>([])
 const tags = ref<Tag[]>([])
 const totalArticles = ref(0)
 const selectedTag = ref('')
 const isTagsExpanded = ref(false)
 const activeYear = ref('')
+const currentPage = ref(1)
+const hasMore = ref(true)
 
 // Helper: 格式化本地日期 YYYY-MM-DD
 const toDateKey = (date: Date) => {
@@ -314,19 +343,40 @@ const fetchTags = async () => {
   }
 }
 
-// 获取归档数据
+// 获取归档数据（分页）
 const fetchArchive = async () => {
   loading.value = true
+  currentPage.value = 1
   try {
-    const res = await articleApi.getArticles({ pagesize: -1, pagenum: -1 })
+    const res = await articleApi.getArticles({ pagesize: ARCHIVE_PAGE_SIZE, pagenum: 1 })
     if (res.status === 200 && res.data.status === 200) {
       articles.value = res.data.data
       totalArticles.value = res.data.total
+      hasMore.value = articles.value.length < res.data.total
     }
   } catch (error) {
     console.error('Failed to fetch archive:', error)
   } finally {
     loading.value = false
+  }
+}
+
+// 加载更多归档
+const loadMoreArchive = async () => {
+  if (loadingMore.value || !hasMore.value) return
+  loadingMore.value = true
+  try {
+    const nextPage = currentPage.value + 1
+    const res = await articleApi.getArticles({ pagesize: ARCHIVE_PAGE_SIZE, pagenum: nextPage })
+    if (res.status === 200 && res.data.status === 200) {
+      articles.value.push(...res.data.data)
+      currentPage.value = nextPage
+      hasMore.value = articles.value.length < totalArticles.value
+    }
+  } catch (error) {
+    console.error('Failed to load more archive:', error)
+  } finally {
+    loadingMore.value = false
   }
 }
 
@@ -916,6 +966,84 @@ watch(() => Object.keys(groupedArticles.value).length, () => {
 .list-leave-active {
   position: absolute; 
   width: 100%;
+}
+
+/* Load More */
+.load-more-section {
+  display: flex;
+  justify-content: center;
+  padding: 30px 0 10px;
+}
+
+.see-more-button {
+  padding: 10px 28px;
+  background: var(--color-accent);
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  color: white;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+.see-more-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent) 50%, transparent);
+}
+
+.loading-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.mini-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.no-more-hint {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  padding: 8px 0;
+}
+
+.filter-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.filter-tag {
+  background: var(--color-accent);
+  color: white;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.clear-filter {
+  color: var(--color-accent);
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.clear-filter:hover {
+  opacity: 0.8;
 }
 
 /* Responsive */
