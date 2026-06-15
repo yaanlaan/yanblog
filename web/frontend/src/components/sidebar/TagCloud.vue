@@ -114,6 +114,7 @@ const containerRef = ref<HTMLElement | null>(null)
 const wrapperRef = ref<HTMLElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let animationId: number | null = null
+let resizeObserver: ResizeObserver | null = null
 const radius = 100 // 球体半径
 const baseSpeed = 0.005 // 基础旋转速度
 let angleX = baseSpeed
@@ -155,15 +156,27 @@ const emit = defineEmits<{
 const toggleView = () => {
   is3DView.value = !is3DView.value
   if (is3DView.value) {
-    nextTick(() => {
-      init3D()
-      startAnimation()
-      initCanvas()
-      refreshThemeColors()
-    })
+    nextTick(() => initAfterLayout())
   } else {
     stopAnimation()
+    if (resizeObserver) {
+      resizeObserver.disconnect()
+      resizeObserver = null
+    }
   }
+}
+
+// 等待浏览器完成布局后初始化 3D（双重 rAF 确保 layout 已计算）
+const initAfterLayout = () => {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      init3D()
+      initCanvas()
+      startAnimation()
+      refreshThemeColors()
+      setupResizeObserver()
+    })
+  })
 }
 
 // 初始化 Canvas
@@ -173,6 +186,19 @@ const initCanvas = () => {
   const container = containerRef.value
   canvasRef.value.width = container.offsetWidth
   canvasRef.value.height = container.offsetHeight
+}
+
+// 监听容器尺寸变化，重设 Canvas
+const setupResizeObserver = () => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+  }
+  if (!containerRef.value) return
+  
+  resizeObserver = new ResizeObserver(() => {
+    initCanvas()
+  })
+  resizeObserver.observe(containerRef.value)
 }
 
 // 初始化 3D 坐标 (斐波那契球分布)
@@ -390,12 +416,7 @@ const fetchTags = async () => {
     
     // 标签加载完成后，如果当前是3D视图则初始化
     if (is3DView.value) {
-      nextTick(() => {
-        init3D()
-        startAnimation()
-        initCanvas()
-        refreshThemeColors()
-      })
+      nextTick(() => initAfterLayout())
     }
     
   } catch (err: any) {
@@ -442,6 +463,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   stopAnimation()
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
   themeObserver.disconnect()
 })
 </script>
