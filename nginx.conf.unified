@@ -85,10 +85,11 @@ server {
 
     # --- 字体文件优化 ---
     location ~* \.(woff|woff2|ttf|eot|otf)$ {
-        alias /usr/share/nginx/html/web/;
         expires 30d;
         add_header Cache-Control "public, immutable";
         add_header Access-Control-Allow-Origin "*";
+        add_header X-Content-Type-Options "nosniff";
+        try_files $uri =404;
     }
 
     # --- 前端配置 ---
