@@ -64,13 +64,19 @@ Write-Host ""
 # 3. Gzip 压缩测试
 Write-Host "[3] Gzip 压缩测试" -ForegroundColor Yellow
 try {
-    $response = Invoke-WebRequest -Uri "$baseUrl/admin/assets/index-CMJ96UUM.js" -Headers @{"Accept-Encoding"="gzip, deflate, br"} -UseBasicParsing -TimeoutSec 5
-    $encoding = $response.Headers['Content-Encoding']
-    # Gzip 可能对小文件或已压缩文件不生效，这是正常的
-    if($encoding -eq "gzip") {
+    # 使用 curl.exe 避免 PowerShell 自动解压
+    $tempFile = [System.IO.Path]::GetTempFileName()
+    curl.exe -H "Accept-Encoding: gzip, deflate, br" -s -D - "$baseUrl/admin/assets/index-CMJ96UUM.js" -o $tempFile 2>&1 | Out-String | Out-Null
+    $output = curl.exe -H "Accept-Encoding: gzip, deflate, br" -s -D - "$baseUrl/admin/assets/index-CMJ96UUM.js" -o $tempFile 2>&1
+    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+    
+    $outputStr = $output | Out-String
+    $match = [regex]::Match($outputStr, 'Content-Encoding:\s*(\S+)')
+    
+    if($match.Success -and $match.Groups[1].Value -eq "gzip") {
         Write-Host "  ✓ Gzip 压缩已启用" -ForegroundColor Green
     } else {
-        Write-Host "  ⚠ Gzip 未检测到 (Content-Encoding: $encoding)，可能文件已压缩或太小" -ForegroundColor Yellow
+        Write-Host "  ⚠ Gzip 未检测到，可能文件已压缩或太小" -ForegroundColor Yellow
     }
 } catch {
     Write-Host "  ✗ Gzip 测试失败: $($_.Exception.Message)" -ForegroundColor Red
@@ -81,13 +87,25 @@ Write-Host ""
 # 4. 缓存策略测试
 Write-Host "[4] 缓存策略测试" -ForegroundColor Yellow
 try {
-    $response = Invoke-WebRequest -Uri "$baseUrl/admin/assets/index-CMJ96UUM.js" -UseBasicParsing -TimeoutSec 5
-    $cacheControl = $response.Headers['Cache-Control']
-    # 检查是否有 max-age 或 immutable
-    if($cacheControl -and ($cacheControl.Contains("max-age") -or $cacheControl.Contains("immutable"))) {
-        Write-Host "  ✓ 静态资源缓存策略: $cacheControl" -ForegroundColor Green
+    # 使用 curl.exe 获取完整响应头
+    $tempFile = [System.IO.Path]::GetTempFileName()
+    $output = curl.exe -s -D - "$baseUrl/admin/assets/index-CMJ96UUM.js" -o $tempFile 2>&1
+    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+    
+    $outputStr = $output | Out-String
+    $match = [regex]::Match($outputStr, 'Cache-Control:\s*(.+?)\r?\n')
+    
+    if($match.Success) {
+        $cacheControl = $match.Groups[1].Value.Trim()
+        # 检查是否有 max-age 或 immutable
+        if($cacheControl.Contains("max-age") -or $cacheControl.Contains("immutable")) {
+            Write-Host "  ✓ 静态资源缓存策略: $cacheControl" -ForegroundColor Green
+        } else {
+            Write-Host "  ⚠ 缓存策略可能不完整 (Cache-Control: $cacheControl)" -ForegroundColor Yellow
+        }
     } else {
-        Write-Host "  ⚠ 缓存策略可能不完整 (Cache-Control: $cacheControl)" -ForegroundColor Yellow
+        Write-Host "  ✗ 未找到 Cache-Control 响应头" -ForegroundColor Red
+        $allPassed = $false
     }
 } catch {
     Write-Host "  ✗ 缓存测试失败: $($_.Exception.Message)" -ForegroundColor Red
