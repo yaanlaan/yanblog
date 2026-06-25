@@ -25,6 +25,11 @@ const (
 	// 标签模块的错误
 	ERROR_TAG_EXIST     = 4001
 	ERROR_TAG_NOT_EXIST = 4002
+	
+	// 上传模块的错误
+	ERROR_UPLOAD_BUSY    = 5001
+	ERROR_FILE_TOO_LARGE = 5002
+	ERROR_ZIP_CORRUPTED  = 5003
 )
 
 var codeMsg = map[int]string{
@@ -48,6 +53,10 @@ var codeMsg = map[int]string{
 
 	ERROR_TAG_EXIST:     "标签已存在",
 	ERROR_TAG_NOT_EXIST: "标签不存在",
+	
+	ERROR_UPLOAD_BUSY:    "上传任务繁忙，请稍后再试",
+	ERROR_FILE_TOO_LARGE: "文件过大，超过限制",
+	ERROR_ZIP_CORRUPTED:  "ZIP文件损坏或格式错误",
 }
 
 // 获取codeMsg

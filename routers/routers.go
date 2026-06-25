@@ -59,6 +59,11 @@ func InitRouter() {
 		admin.POST("article/add", v1.AddArticle)
 		admin.POST("article/zip", v1.UploadArticleZip)       // 上传单个ZIP发布文章
 		admin.POST("article/zip/batch", v1.UploadArticleZipBatch) // 批量上传ZIP
+		// 优化的ZIP上传（支持进度跟踪、断点续传、并发控制）
+		admin.POST("article/zip/optimized", v1.UploadArticleZipOptimized)
+		admin.POST("article/zip/batch/optimized", v1.UploadArticleZipBatchOptimized)
+		admin.GET("article/upload/:id", v1.GetUploadProgress)  // 获取上传进度
+		admin.DELETE("article/upload/:id", v1.CancelUpload)    // 取消上传任务
 		admin.PUT("article/:id", v1.EditArt)
 
 		admin.DELETE("article/:id", v1.DeleteArt)
