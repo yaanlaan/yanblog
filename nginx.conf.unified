@@ -27,16 +27,28 @@ server {
         image/svg+xml
         image/x-icon;
 
-    # --- 静态资源缓存 ---
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 7d;
-        add_header Cache-Control "public, immutable";
+    # --- 后台管理 (Admin) - 路径 /admin ---
+    location /admin/ {
+        alias /usr/share/nginx/html/admin/;
+        try_files $uri $uri/ /admin/index.html;
+        
+        # Admin 静态资源缓存
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            expires 7d;
+            add_header Cache-Control "public, immutable";
+        }
+    }
+    
+    location = /admin {
+        return 301 /admin/;
     }
 
-    # --- 后台管理 (Admin) - 路径 /admin ---
-    location /admin {
-        alias /usr/share/nginx/html/admin;
-        try_files $uri $uri/ /admin/index.html;
+    # --- 博客前台 (Public) ---
+    root /usr/share/nginx/html/web;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
     }
 
     # --- API 代理到 Go 后端 ---
@@ -48,23 +60,38 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
+    # --- 上传文件 ---
+    location /uploads/ {
+        alias /app/uploads/;
+        autoindex off;
+        
+        # 上传文件缓存
+        location ~* \.(png|jpg|jpeg|gif|ico|svg|webp)$ {
+            expires 30d;
+            add_header Cache-Control "public";
+        }
+    }
+    
+    # --- 默认图片 (公开访问，兼容 /defaults/ 路径) ---
+    location /defaults/ {
+        alias /app/defaults/;
+        autoindex off;
+        
+        location ~* \.(png|jpg|jpeg|gif|ico|svg|webp)$ {
+            expires 30d;
+            add_header Cache-Control "public";
+        }
+    }
+
     # --- 前端配置 ---
     location /config.yaml {
         alias /app/config/frontend/config.yaml;
         add_header Cache-Control "no-store, no-cache, must-revalidate";
     }
 
-    # --- 上传文件 ---
-    location /uploads/ {
-        alias /app/uploads/;
-        autoindex off;
-    }
-
-    # --- 博客前台 (Public) ---
-    root /usr/share/nginx/html/web;
-    index index.html;
-
-    location / {
-        try_files $uri $uri/ /index.html;
+    # --- 全局静态资源缓存 (仅匹配前台 web 资源) ---
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 7d;
+        add_header Cache-Control "public, immutable";
     }
 }
