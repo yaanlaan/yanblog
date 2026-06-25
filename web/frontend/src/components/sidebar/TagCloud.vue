@@ -75,12 +75,6 @@
             {{ tag.name }} <span class="tag-count">({{ tag.count }})</span>
           </router-link>
         </div>
-        
-        <!-- 操作提示 -->
-        <div class="zoom-hint">
-          <span class="hint-icon">🔍</span>
-          <span class="hint-text">滚轮缩放 · 拖拽旋转</span>
-        </div>
       </div>
 
       <div class="error-message" v-else-if="error">
@@ -708,39 +702,6 @@ onBeforeUnmount(() => {
   color: var(--color-accent) !important;
   z-index: 1000 !important;
   text-shadow: 0 2px 4px var(--color-shadow);
-}
-
-/* 缩放提示 */
-.zoom-hint {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: color-mix(in srgb, var(--color-background) 80%, transparent);
-  backdrop-filter: blur(8px);
-  border-radius: 16px;
-  font-size: 11px;
-  color: var(--color-text-secondary);
-  opacity: 0.7;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  white-space: nowrap;
-}
-
-.tags-3d-container:hover .zoom-hint {
-  opacity: 0;
-}
-
-.hint-icon {
-  font-size: 14px;
-}
-
-.hint-text {
-  font-weight: 500;
 }
 
 .empty-state {

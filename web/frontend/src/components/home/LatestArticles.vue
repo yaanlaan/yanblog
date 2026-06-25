@@ -93,8 +93,8 @@ defineEmits<{
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
+  border: 4px solid var(--color-border); /* 使用 CSS 变量 */
+  border-top: 4px solid var(--color-accent); /* 使用主题色 */
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 10px;
@@ -113,8 +113,8 @@ defineEmits<{
 
 .article-divider {
   height: 1px;
-  background-color: #e0e0e0;
-  margin: 0 20px;
+  background-color: var(--color-border); /* 使用 CSS 变量，适配明暗主题 */
+  margin: 20px 0; /* 优化间隔：上下各 20px */
   width: calc(100% - 40px);
   align-self: center;
 }
@@ -157,8 +157,8 @@ defineEmits<{
 .mini-spinner {
   width: 18px;
   height: 18px;
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid #007bff;
+  border: 2px solid var(--color-border); /* 使用 CSS 变量 */
+  border-top: 2px solid var(--color-accent); /* 使用主题色 */
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -172,6 +172,6 @@ defineEmits<{
 .empty-state {
   text-align: center;
   padding: 40px 0;
-  color: #888;
+  color: var(--color-text-secondary); /* 使用 CSS 变量 */
 }
 </style>
