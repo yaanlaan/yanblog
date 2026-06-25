@@ -32,7 +32,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
-import { systemApi } from '@/services/api'
 
 interface ServerStatus {
   status: 'online' | 'offline'
@@ -64,26 +63,7 @@ const statusItems = computed(() => [
 ])
 
 const fetchServerStatus = async () => {
-  try {
-    const response = await systemApi.getSystemStatus()
-    if (response.data.status === 200) {
-      const data = response.data.data
-      serverStatus.value = {
-        status: data.status,
-        uptime: data.uptime,
-        memoryUsage: Math.round((data.memory_usage || 0) * 100) / 100,
-        cpuUsage: Math.round((data.cpu_usage || 0) * 100) / 100,
-        diskUsage: Math.round((data.disk_usage || 0) * 100) / 100,
-        startTime: data.start_time
-      }
-      error.value = ''
-      return
-    }
-  } catch {
-    // 未登录或无法访问时使用模拟数据
-  }
-  
-  // 模拟数据（公开页面无需管理员权限）
+  // 公开页面直接使用模拟数据，不调用需要认证的 API
   serverStatus.value = {
     status: 'online',
     uptime: '运行中',
