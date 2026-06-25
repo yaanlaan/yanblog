@@ -34,6 +34,23 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // 核心框架
+          'vendor-vue': ['vue', 'vue-router', 'pinia'],
+          // Markdown 渲染
+          'vendor-markdown': ['marked', 'highlight.js'],
+          // 数学公式（KaTeX 体积大）
+          'vendor-katex': ['katex'],
+          // Mermaid 图表（最大的依赖）
+          'vendor-mermaid': ['mermaid'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 600
+  },
   server: {
     allowedHosts: allowedHosts,
     host: '127.0.0.1',

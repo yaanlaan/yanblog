@@ -44,7 +44,11 @@
           </template>
         </el-table-column>
         <el-table-column prop="top" label="置顶排序" width="100" />
-        <el-table-column prop="createdAt" label="创建时间" />
+        <el-table-column prop="createdAt" label="创建时间" width="180">
+          <template #default="scope">
+            {{ formatDateTime(scope.row.createdAt) }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="200">
           <template #default="scope">
             <CategoryActions
@@ -136,6 +140,20 @@ const isAdd = ref(true)
 // 加载状态
 const loading = ref(false)
 const error = ref(false)
+
+// 格式化日期时间
+const formatDateTime = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }).replace(/\//g, '-')
+}
 
 // 分类表单
 const categoryForm = reactive({

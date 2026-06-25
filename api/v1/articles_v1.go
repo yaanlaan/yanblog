@@ -82,9 +82,14 @@ func GetArtInfo(c *gin.Context) {
 		return
 	}
 
-	model.IncrementArtViews(id)
+	data, code := model.GetArtInfo(id)
+	if code != errmsg.SUCCESS {
+		utils.Error(c, code)
+		return
+	}
 
-	data, _ := model.GetArtInfo(id)
+	// 仅在文章存在时增加阅读量
+	model.IncrementArtViews(id)
 	utils.Success(c, data)
 }
 

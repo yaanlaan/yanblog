@@ -363,26 +363,34 @@ func GetRandomArticle() (Article, int) {
 
 // GetAdjacentArticle 获取相邻文章（上一篇、下一篇）
 // 按 created_at 排序，返回当前文章的前一篇和后一篇
-func GetAdjacentArticle(id int) (prev Article, next Article, code int) {
+func GetAdjacentArticle(id int) (prev *Article, next *Article, code int) {
 	// 先获取当前文章的创建时间
 	var currentArt Article
 	if err := db.Select("id", "created_at").Where("id = ?", id).First(&currentArt).Error; err != nil {
-		return Article{}, Article{}, errmsg.ERROR_ART_NOT_EXIST
+		return nil, nil, errmsg.ERROR_ART_NOT_EXIST
 	}
 
 	// 查询上一篇（发布时间比当前文章更早的最新一篇）
-	db.Preload("Category").
+	var prevArt Article
+	err := db.Preload("Category").
 		Where("created_at < ?", currentArt.CreatedAt).
 		Order("created_at DESC").
 		Limit(1).
-		First(&prev)
+		First(&prevArt).Error
+	if err == nil {
+		prev = &prevArt
+	}
 
 	// 查询下一篇（发布时间比当前文章更新的最早一篇）
-	db.Preload("Category").
+	var nextArt Article
+	err = db.Preload("Category").
 		Where("created_at > ?", currentArt.CreatedAt).
 		Order("created_at ASC").
 		Limit(1).
-		First(&next)
+		First(&nextArt).Error
+	if err == nil {
+		next = &nextArt
+	}
 
 	return prev, next, errmsg.SUCCESS
 }
