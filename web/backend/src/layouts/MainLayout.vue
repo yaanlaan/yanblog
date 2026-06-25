@@ -18,37 +18,25 @@
           <span>仪表板</span>
         </el-menu-item>
         
-        <el-sub-menu index="/user">
-          <template #title>
-            <el-icon><User /></el-icon>
-            <span>用户管理</span>
-          </template>
-          <el-menu-item index="/user/list">用户列表</el-menu-item>
-        </el-sub-menu>
+        <el-menu-item index="/user">
+          <el-icon><User /></el-icon>
+          <span>用户管理</span>
+        </el-menu-item>
         
-        <el-sub-menu index="/category">
-          <template #title>
-            <el-icon><Folder /></el-icon>
-            <span>分类管理</span>
-          </template>
-          <el-menu-item index="/category/list">分类列表</el-menu-item>
-        </el-sub-menu>
+        <el-menu-item index="/category">
+          <el-icon><Folder /></el-icon>
+          <span>分类管理</span>
+        </el-menu-item>
 
-        <el-sub-menu index="/tag">
-          <template #title>
-            <el-icon><Collection /></el-icon>
-            <span>标签管理</span>
-          </template>
-          <el-menu-item index="/tag/list">标签列表</el-menu-item>
-        </el-sub-menu>
+        <el-menu-item index="/tag">
+          <el-icon><Collection /></el-icon>
+          <span>标签管理</span>
+        </el-menu-item>
         
-        <el-sub-menu index="/article">
-          <template #title>
-            <el-icon><Document /></el-icon>
-            <span>文章管理</span>
-          </template>
-          <el-menu-item index="/article/list">文章列表</el-menu-item>
-        </el-sub-menu>
+        <el-menu-item index="/article">
+          <el-icon><Document /></el-icon>
+          <span>文章管理</span>
+        </el-menu-item>
 
         <el-menu-item index="/media">
           <el-icon><Picture /></el-icon>
@@ -60,7 +48,9 @@
             <el-icon><Setting /></el-icon>
             <span>系统设置</span>
           </template>
+          <el-menu-item index="/system/status">系统监控</el-menu-item>
           <el-menu-item index="/system/config">前台配置</el-menu-item>
+          <el-menu-item index="/system/backend">后端配置</el-menu-item>
           <el-menu-item index="/system/about">关于页管理</el-menu-item>
         </el-sub-menu>
       </el-menu>

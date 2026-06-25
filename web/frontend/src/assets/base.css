@@ -10,7 +10,7 @@
 
   --vt-c-indigo: #2c3e50;
   
-  --vt-c-green: hsla(160, 100%, 37%, 1);
+  --vt-c-green: #6cccc0;
 
   --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
   --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
@@ -76,7 +76,7 @@
   --color-text-secondary: #a1a1a1;
   
   --color-shadow: rgba(0, 0, 0, 0.5);
-  --color-accent: #42b883;
+  --color-accent: #6cccc0;
 
   --color-background-overlay: rgba(18, 18, 18, 0.92); /* Dark overlay */
 
@@ -134,12 +134,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #42b883;
+  background: var(--color-accent);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6eebb2;
+  background: color-mix(in srgb, var(--color-accent) 80%, white);
 }
 
 *,

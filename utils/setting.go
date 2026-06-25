@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -31,8 +30,6 @@ type Config struct {
 	JwtKey string `yaml:"JwtKey" json:"jwtKey"`
 
 	Weather struct {
-		Provider    string `yaml:"Provider" json:"provider"`
-		ApiKey      string `yaml:"ApiKey" json:"apiKey"`
 		DefaultCity string `yaml:"DefaultCity" json:"defaultCity"`
 	} `yaml:"weather" json:"weather"`
 
@@ -49,15 +46,15 @@ var configMutex sync.RWMutex
 
 func init() {
 	configPath := getConfigPath("config/backend/config.yaml")
-	file, err := ioutil.ReadFile(configPath)
+	file, err := os.ReadFile(configPath)
 	if err != nil {
 		log.Printf("未找到 config/backend/config.yaml，尝试旧路径...")
 		configPath = "config/config.yaml"
-		file, err = ioutil.ReadFile(configPath)
+		file, err = os.ReadFile(configPath)
 		if err != nil {
 			log.Printf("未找到 config/config.yaml，使用模板 config/config_template.yaml")
 			configPath = "config/config_template.yaml"
-			file, err = ioutil.ReadFile(configPath)
+			file, err = os.ReadFile(configPath)
 			if err != nil {
 				log.Fatalf("读取配置文件失败，请从 config/config_template.yaml 创建 config/backend/config.yaml。错误信息：%s", err)
 			}
@@ -93,6 +90,11 @@ func LoadConfig(file []byte) {
 		ServerConfig.Database.DbHost,
 		ServerConfig.Database.DbPort,
 		ServerConfig.Database.DbName)
+	if ServerConfig.Database.DbPassWord != "" && ServerConfig.Database.DbPassWord != "rootpassword" {
+		fmt.Println("  密码状态: 已配置（非默认值）")
+	} else {
+		fmt.Println("⚠️  数据库密码仍为默认值或未配置，建议修改！")
+	}
 }
 
 func replaceEnvVars(content string) string {
@@ -124,7 +126,7 @@ func SaveConfig() error {
 	configPath := getConfigPath("config/backend/config.yaml")
 	// 确保目录存在（Docker 容器中可能没有 config/backend/ 子目录）
 	_ = os.MkdirAll(filepath.Dir(configPath), 0755)
-	return ioutil.WriteFile(configPath, data, 0644)
+	return os.WriteFile(configPath, data, 0644)
 }
 
 func ReloadConfig() error {
@@ -135,7 +137,7 @@ func ReloadConfig() error {
 			configPath = "config/config_template.yaml"
 		}
 	}
-	file, err := ioutil.ReadFile(configPath)
+	file, err := os.ReadFile(configPath)
 	if err != nil {
 		return err
 	}

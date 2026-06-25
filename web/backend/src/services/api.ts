@@ -1,6 +1,6 @@
 // API服务封装
 import axios from 'axios'
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 
 // 创建axios实例
 const apiClient: AxiosInstance = axios.create({
@@ -13,7 +13,7 @@ const apiClient: AxiosInstance = axios.create({
 
 // 请求拦截器
 apiClient.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('token')
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
@@ -34,7 +34,10 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       // token过期或无效，清除本地存储并跳转到登录页
       localStorage.removeItem('token')
-      window.location.href = '/login'
+      localStorage.removeItem('user')
+      // 使用相对路径跳转，确保在 admin base 路径下正确导航
+      const base = import.meta.env.BASE_URL || '/admin/'
+      window.location.href = base + 'login'
     }
     return Promise.reject(error)
   }
@@ -43,27 +46,27 @@ apiClient.interceptors.response.use(
 // 用户相关API
 export const userApi = {
   // 登录
-  login: (data: { username: string; password: string }) => 
+  login: (data: { username: string; password: string }) =>
     apiClient.post('/v1/login', data),
-  
+
   // 获取用户列表
-  getUsers: (params: { pagesize: number; pagenum: number }) => 
+  getUsers: (params: { pagesize: number; pagenum: number }) =>
     apiClient.get('/v1/users', { params }),
-  
+
   // 搜索用户
-  searchUsers: (params: { pagesize: number; pagenum: number; keyword?: string; role?: number }) => 
+  searchUsers: (params: { pagesize: number; pagenum: number; keyword?: string; role?: number }) =>
     apiClient.get('/v1/users/search', { params }),
-  
+
   // 创建用户
-  createUser: (data: { username: string; password: string; role: number }) => 
+  createUser: (data: { username: string; password: string; role: number }) =>
     apiClient.post('/v1/user/add', data),
-  
+
   // 更新用户
-  updateUser: (id: number, data: { username: string; role: number; password?: string }) => 
+  updateUser: (id: number, data: { username: string; role: number; password?: string }) =>
     apiClient.put(`/v1/user/${id}`, data),
-  
+
   // 删除用户
-  deleteUser: (id: number) => 
+  deleteUser: (id: number) =>
     apiClient.delete(`/v1/user/${id}`)
 }
 
@@ -82,85 +85,85 @@ export const tagApi = {
 // 文件管理API
 export const fileApi = {
   // 获取文件列表
-  getFiles: (path: string = '') => 
+  getFiles: (path: string = '') =>
     apiClient.get('/v1/files', { params: { path } }),
-  
+
   // 删除文件
-  deleteFile: (path: string) => 
+  deleteFile: (path: string) =>
     apiClient.delete('/v1/files', { params: { path } }),
 
   // 创建目录
-  createFolder: (path: string, name: string) => 
+  createFolder: (path: string, name: string) =>
     apiClient.post('/v1/files/folder', { path, name }),
-    
+
   // 重命名
-  renameFile: (path: string, newName: string) => 
+  renameFile: (path: string, newName: string) =>
     apiClient.put('/v1/files', { path, newName }),
-  
+
   // 移动文件/目录
-  moveFile: (sourcePath: string, targetPath: string) => 
+  moveFile: (sourcePath: string, targetPath: string) =>
     apiClient.post('/v1/files/move', { sourcePath, targetPath }),
-  
+
   // 复制文件
-  copyFile: (sourcePath: string, targetPath: string) => 
+  copyFile: (sourcePath: string, targetPath: string) =>
     apiClient.post('/v1/files/copy', { sourcePath, targetPath }),
-  
+
   // 批量删除
-  batchDeleteFiles: (paths: string[]) => 
+  batchDeleteFiles: (paths: string[]) =>
     apiClient.post('/v1/files/batch-delete', { paths }),
-  
+
   // 批量上传
-  batchUploadFiles: (formData: FormData) => 
+  batchUploadFiles: (formData: FormData) =>
     apiClient.post('/v1/files/batch-upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
-  
+
   // 获取存储统计
-  getStorageStats: () => 
+  getStorageStats: () =>
     apiClient.get('/v1/files/stats')
 }
 
 // 分类相关API
 export const categoryApi = {
   // 获取分类列表
-  getCategories: (params: { pagesize: number; pagenum: number }) => 
+  getCategories: (params: { pagesize: number; pagenum: number }) =>
     apiClient.get('/v1/category', { params }),
-  
+
   // 搜索分类
-  searchCategories: (params: { pagesize: number; pagenum: number; keyword?: string }) => 
+  searchCategories: (params: { pagesize: number; pagenum: number; keyword?: string }) =>
     apiClient.get('/v1/category/search', { params }),
-  
+
   // 创建分类
-  createCategory: (data: { name: string; img: string; top: number }) => 
+  createCategory: (data: { name: string; img: string; top: number }) =>
     apiClient.post('/v1/category/add', data),
-  
+
   // 更新分类
-  updateCategory: (id: number, data: { name: string; img: string; top: number }) => 
+  updateCategory: (id: number, data: { name: string; img: string; top: number }) =>
     apiClient.put(`/v1/category/${id}`, data),
-  
+
   // 删除分类
-  deleteCategory: (id: number, force: boolean = false) => 
+  deleteCategory: (id: number, force: boolean = false) =>
     apiClient.delete(`/v1/category/${id}`, { params: { force } })
 }
 
 // 文章相关API
 export const articleApi = {
   // 获取文章列表
-  getArticles: (params: { pagesize: number; pagenum: number }) => 
+  getArticles: (params: { pagesize: number; pagenum: number }) =>
     apiClient.get('/v1/article', { params }),
-  
+
   // 搜索文章
-  searchArticles: (params: { pagesize: number; pagenum: number; keyword?: string; cid?: number }) => 
+  searchArticles: (params: { pagesize: number; pagenum: number; keyword?: string; cid?: number }) =>
     apiClient.get('/v1/article/search', { params }),
-  
+
   // 获取分类下的文章
-  getCategoryArticles: (id: number, params: { pagesize: number; pagenum: number }) => 
+  getCategoryArticles: (id: number, params: { pagesize: number; pagenum: number }) =>
     apiClient.get(`/v1/article/list/${id}`, { params }),
-  
+
   // 获取文章详情
-  getArticle: (id: number) => 
+  getArticle: (id: number) =>
     apiClient.get(`/v1/article/info/${id}`),
-  
+
   // 创建文章
   createArticle: (data: {
     title: string;
@@ -175,7 +178,7 @@ export const articleApi = {
     createdAt?: string;
   }) =>
     apiClient.post('/v1/article/add', data),
-  
+
   // 上传ZIP发布文章（单个）
   uploadZip: (file: File) => {
     const formData = new FormData()
@@ -193,19 +196,19 @@ export const articleApi = {
   },
 
   // 更新文章
-  updateArticle: (id: number, data: { 
-    title: string; 
-    cid: number; 
-    desc: string; 
-    content: string; 
+  updateArticle: (id: number, data: {
+    title: string;
+    cid: number;
+    desc: string;
+    content: string;
     img: string;
     top: number;
     tags?: string;
     type?: number;
     pdf_url?: string;
-  }) => 
+  }) =>
     apiClient.put(`/v1/article/${id}`, data),
-  
+
   // 删除文章
   deleteArticle: (id: number) =>
     apiClient.delete(`/v1/article/${id}`),
@@ -218,7 +221,7 @@ export const articleApi = {
 // 文件上传API
 export const uploadApi = {
   // 上传文件
-  uploadFile: (formData: FormData) => 
+  uploadFile: (formData: FormData) =>
     apiClient.post('/v1/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -243,6 +246,10 @@ export const systemApi = {
   // 更新后端配置
   updateBackendConfig: (data: any) =>
     apiClient.put('/v1/backend/config', data),
+
+  // 获取系统状态
+  getSystemStatus: () =>
+    apiClient.get('/v1/system/status'),
 }
 
 export default apiClient

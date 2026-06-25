@@ -113,7 +113,7 @@ onMounted(() => {
 
 .comment-header i {
   font-size: 20px;
-  color: var(--color-primary, #42b883);
+  color: var(--color-accent, #6cccc0);
 }
 
 .giscus-wrapper {

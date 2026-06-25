@@ -36,16 +36,16 @@
            <!-- 左侧统计栏 -->
            <div class="contrib-stats">
               <div class="stat-item">
+                  <span class="stat-number">{{ selectedTag ? articles.length : totalArticles }}</span>
                   <span class="stat-label">总文章数</span>
-                  <span class="stat-value">{{ articles.length }} 篇</span>
               </div>
               <div class="stat-item">
-                  <span class="stat-label">最长连续</span>
-                  <span class="stat-value">{{ longestStreak }} 天</span>
+                  <span class="stat-number">{{ longestStreak }}</span>
+                  <span class="stat-label">最长连续(天)</span>
               </div>
               <div class="stat-item">
-                  <span class="stat-label">最近更新</span>
-                  <span class="stat-value">{{ lastUpdate }}</span>
+                  <span class="stat-number">{{ thisYearCount }}</span>
+                  <span class="stat-label">今年发布</span>
               </div>
            </div>
 
@@ -118,22 +118,49 @@
             <div class="timeline">
               <TransitionGroup name="list">
                 <div v-for="(group, year) in groupedArticles" :key="year" :id="`year-${year}`" class="timeline-year">
-            <h2 class="year-title">{{ year }}</h2>
-            
-            <div v-for="(articles, month) in group" :key="month" class="timeline-month">
-              <h3 class="month-title">{{ month }}月</h3>
-              
-              <div class="timeline-items">
-                <div v-for="article in articles" :key="article.id || article.ID" class="timeline-item">
-                  <span class="date">{{ formatDateDay(article.createdAt || article.CreatedAt) }}</span>
-                  <router-link :to="`/article/${article.id || article.ID}`" class="title">
-                    {{ article.title }}
-                  </router-link>
-                </div>
-              </div>
-                </div>
+                  <h2 class="year-title">
+                    <span class="year-badge">{{ year }}</span>
+                    <span class="year-count">{{ getYearCount(group) }} 篇</span>
+                  </h2>
+                  
+                  <div v-for="(monthArticles, month) in group" :key="month" class="timeline-month">
+                    <h3 class="month-title">{{ month }}月 <span class="month-count">{{ monthArticles.length }}</span></h3>
+                    
+                    <div class="timeline-items">
+                      <div v-for="article in monthArticles" :key="article.id || article.ID" class="timeline-item">
+                        <span class="date-dot"></span>
+                        <span class="date">{{ formatDateDay(article.createdAt || article.CreatedAt) }}</span>
+                        <router-link :to="`/article/${article.id || article.ID}`" class="title">
+                          {{ article.title }}
+                        </router-link>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </TransitionGroup>
+
+              <!-- 加载更多 / 加载中 / 没有更多 -->
+              <div class="load-more-section">
+                <button
+                  v-if="hasMore && !loadingMore && !selectedTag"
+                  @click="loadMoreArchive"
+                  class="see-more-button"
+                >
+                  <i class="iconfont icon-seemore"></i>
+                  <span>See More</span>
+                </button>
+                <div v-else-if="loadingMore" class="loading-hint">
+                  <div class="mini-spinner"></div>
+                  <span>加载中...</span>
+                </div>
+                <div v-else-if="!hasMore && !selectedTag && articles.length > 0" class="no-more-hint">
+                  — 已经到底啦 —
+                </div>
+                <div v-else-if="selectedTag" class="filter-hint">
+                  当前筛选：<span class="filter-tag">{{ selectedTag }}</span>
+                  <span class="clear-filter" @click="selectTag('')">清除</span>
+                </div>
+              </div>
             </div>
             
             <div class="year-nav">
@@ -141,6 +168,7 @@
                 v-for="(group, year) in groupedArticles" 
                 :key="year"
                 class="year-nav-item"
+                :class="{ active: activeYear === year }"
                 @click="scrollToYear(year as string)"
                >
                  {{ year }}
@@ -154,9 +182,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import MainLayout from '@/components/layout/MainLayout.vue'
 import { articleApi, tagApi } from '@/services/api'
+import { PAGINATION } from '@/utils/constants'
+
+const ARCHIVE_PAGE_SIZE = PAGINATION.ARCHIVE_PAGE_SIZE
 
 interface Article {
   id?: number
@@ -174,11 +205,15 @@ interface Tag {
 }
 
 const loading = ref(false)
+const loadingMore = ref(false)
 const articles = ref<Article[]>([])
 const tags = ref<Tag[]>([])
 const totalArticles = ref(0)
 const selectedTag = ref('')
 const isTagsExpanded = ref(false)
+const activeYear = ref('')
+const currentPage = ref(1)
+const hasMore = ref(true)
 
 // Helper: 格式化本地日期 YYYY-MM-DD
 const toDateKey = (date: Date) => {
@@ -192,7 +227,6 @@ const toDateKey = (date: Date) => {
 const contributionData = computed(() => {
   const map = new Map<string, number>()
   articles.value.forEach(art => {
-    // 兼容多种字段名
     const dStr = art.createdAt || art.CreatedAt
     if (dStr) {
       const date = new Date(dStr)
@@ -202,8 +236,17 @@ const contributionData = computed(() => {
       }
     }
   })
-  // console.log('Contribution Map:', map)
   return map
+})
+
+// 今年文章数
+const thisYearCount = computed(() => {
+  const year = new Date().getFullYear()
+  return articles.value.filter(art => {
+    const dStr = art.createdAt || art.CreatedAt
+    if (!dStr) return false
+    return new Date(dStr).getFullYear() === year
+  }).length
 })
 
 // 生成类似 Github 的周视图数据 (52列 x 7行)
@@ -211,9 +254,7 @@ const calendarWeeks = computed(() => {
   const weeks: { date: string; count: number; level: number }[][] = []
   const end = new Date()
   
-  // 从一年前（约52周前）开始，确保能覆盖到今天
   const start = new Date()
-  // start.setFullYear(start.getFullYear() - 1) // 这种方式可能会因为闰年或星期对齐导致少一周
   start.setDate(start.getDate() - 52 * 7)
   
   // 调整到该周的周日 (Start of the week)
@@ -223,7 +264,6 @@ const calendarWeeks = computed(() => {
 
   const current = new Date(start)
   
-  // 生成53周
   for (let w = 0; w < 53; w++) {
     const week: { date: string; count: number; level: number }[] = []
     for (let i = 0; i < 7; i++) {
@@ -236,12 +276,7 @@ const calendarWeeks = computed(() => {
         if (count > 4) level = 3
         if (count > 6) level = 4
         
-        // 只有不晚于今天的日期才显示有效数据，未来日期虽占位但不应有数据(理论上)
-        // 但如果用户穿越发文呢？这里我们如实显示
-        
         week.push({ date: dateStr, count, level })
-        
-        // 增加一天
         current.setDate(current.getDate() + 1)
     }
     weeks.push(week)
@@ -263,19 +298,6 @@ const monthLabels = computed(() => {
     }
   })
   return labels
-})
-
-const lastUpdate = computed(() => {
-    if (articles.value.length === 0) return '暂无'
-    // 假设文章已按时间倒序排列，否则需自行排序
-    const sorted = [...articles.value].sort((a, b) => {
-        const dA = new Date(a.createdAt || a.CreatedAt || 0).getTime()
-        const dB = new Date(b.createdAt || b.CreatedAt || 0).getTime()
-        return dB - dA
-    })
-    const latest = sorted[0].createdAt || sorted[0].CreatedAt
-    if (!latest) return '未知'
-    return latest.split('T')[0]
 })
 
 const longestStreak = computed(() => {
@@ -301,13 +323,12 @@ const longestStreak = computed(() => {
     return Math.max(maxStreak, currentStreak)
 })
 
-
 // 展示的标签
 const visibleTags = computed(() => {
   if (isTagsExpanded.value) {
     return tags.value
   }
-  return tags.value.slice(0, 15) //只显示前15个
+  return tags.value.slice(0, 15)
 })
 
 // 获取所有标签
@@ -322,20 +343,40 @@ const fetchTags = async () => {
   }
 }
 
-// 获取归档数据
+// 获取归档数据（分页）
 const fetchArchive = async () => {
   loading.value = true
+  currentPage.value = 1
   try {
-    // 获取足够多的文章用于归档
-    const res = await articleApi.getArticles({ pagesize: 1000, pagenum: 1 })
+    const res = await articleApi.getArticles({ pagesize: ARCHIVE_PAGE_SIZE, pagenum: 1 })
     if (res.status === 200 && res.data.status === 200) {
       articles.value = res.data.data
       totalArticles.value = res.data.total
+      hasMore.value = articles.value.length < res.data.total
     }
   } catch (error) {
     console.error('Failed to fetch archive:', error)
   } finally {
     loading.value = false
+  }
+}
+
+// 加载更多归档
+const loadMoreArchive = async () => {
+  if (loadingMore.value || !hasMore.value) return
+  loadingMore.value = true
+  try {
+    const nextPage = currentPage.value + 1
+    const res = await articleApi.getArticles({ pagesize: ARCHIVE_PAGE_SIZE, pagenum: nextPage })
+    if (res.status === 200 && res.data.status === 200) {
+      articles.value.push(...res.data.data)
+      currentPage.value = nextPage
+      hasMore.value = articles.value.length < totalArticles.value
+    }
+  } catch (error) {
+    console.error('Failed to load more archive:', error)
+  } finally {
+    loadingMore.value = false
   }
 }
 
@@ -345,11 +386,9 @@ const filteredArticles = computed(() => {
     return articles.value
   }
   return articles.value.filter(article => {
-    // 优先检查 tag_models
     if (article.tag_models && article.tag_models.length > 0) {
       return article.tag_models.some(t => t.name === selectedTag.value)
     }
-    // 降级检查 tags 字符串
     if (article.tags) {
       const tagsList = article.tags.split(/,|，/).map(t => t.trim())
       return tagsList.includes(selectedTag.value)
@@ -358,12 +397,11 @@ const filteredArticles = computed(() => {
   })
 })
 
-// 按年月分组 (基于筛选后的文章)
+// 按年月分组
 const groupedArticles = computed(() => {
   const groups: Record<string, Record<string, Article[]>> = {}
   
   filteredArticles.value.forEach(article => {
-    // 兼容后端可能返回 CreatedAt 或 createdAt
     const dateStr = article.createdAt || article.CreatedAt
     if (!dateStr) return
 
@@ -382,7 +420,6 @@ const groupedArticles = computed(() => {
     groups[year][month].push(article)
   })
   
-  // 排序：年份倒序，月份倒序
   const sortedGroups: Record<string, Record<string, Article[]>> = {}
   Object.keys(groups).sort((a, b) => Number(b) - Number(a)).forEach(year => {
     sortedGroups[year] = {}
@@ -394,6 +431,10 @@ const groupedArticles = computed(() => {
   return sortedGroups
 })
 
+const getYearCount = (group: Record<string, Article[]>) => {
+  return Object.values(group).reduce((sum, arts) => sum + arts.length, 0)
+}
+
 const formatDateDay = (dateStr?: string) => {
   if (!dateStr) return ''
   const date = new Date(dateStr)
@@ -403,7 +444,7 @@ const formatDateDay = (dateStr?: string) => {
 
 const selectTag = (tagName: string) => {
   if (selectedTag.value === tagName) {
-    selectedTag.value = '' // 取消选择
+    selectedTag.value = ''
   } else {
     selectedTag.value = tagName
   }
@@ -420,9 +461,43 @@ const scrollToYear = (year: string) => {
   }
 }
 
+// IntersectionObserver 用于年份导航高亮
+let observer: IntersectionObserver | null = null
+
 onMounted(() => {
   fetchArchive()
   fetchTags()
+
+  // 监听年份进入视口，高亮对应的导航项
+  observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id')
+        if (id) {
+          activeYear.value = id.replace('year-', '')
+        }
+      }
+    })
+  }, { rootMargin: '-100px 0px -60% 0px' })
+})
+
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect()
+  }
+})
+
+// 当分组数据加载后，开始观察每个年份 section
+const observeYears = () => {
+  if (!observer) return
+  observer.disconnect()
+  const yearSections = document.querySelectorAll('.timeline-year')
+  yearSections.forEach(el => observer!.observe(el))
+}
+
+// 监听 articles 变化，重新设置 Observer
+watch(() => Object.keys(groupedArticles.value).length, () => {
+  setTimeout(observeYears, 100)
 })
 </script>
 
@@ -431,7 +506,7 @@ onMounted(() => {
   background: var(--color-background);
   padding: 30px;
   border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 12px var(--color-shadow);
   position: relative;
 }
 
@@ -448,102 +523,16 @@ onMounted(() => {
   margin-bottom: 10px;
 }
 
+.page-header h1 .iconfont {
+  color: var(--color-accent);
+}
+
 .subtitle {
-  color: var(--color-text);
-  opacity: 0.8;
+  color: var(--color-text-secondary);
+  font-size: 15px;
 }
 
-.timeline {
-  flex: 1;
-  position: relative;
-  padding-left: 20px;
-}
-
-.timeline::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--color-border);
-}
-
-.timeline-year {
-  margin-bottom: 40px;
-}
-
-.year-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--color-heading);
-  margin-bottom: 20px;
-  position: relative;
-}
-
-.year-title::before {
-  content: '';
-  position: absolute;
-  left: -25px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 12px;
-  height: 12px;
-  background: #06bac7ff;
-  border-radius: 50%;
-  border: 2px solid var(--color-background);
-}
-
-.timeline-month {
-  margin-left: 20px;
-  margin-bottom: 20px;
-}
-
-.month-title {
-  font-size: 18px;
-  color: var(--color-text);
-  margin-bottom: 15px;
-  opacity: 0.9;
-}
-
-.timeline-items {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.timeline-item {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 10px;
-  border-radius: 6px;
-  transition: all 0.3s;
-}
-
-.timeline-item:hover {
-  background: var(--color-background-soft);
-  transform: translateX(5px);
-}
-
-.date {
-  color: var(--color-text);
-  opacity: 0.7;
-  font-size: 14px;
-  min-width: 40px;
-}
-
-.title {
-  color: var(--color-heading);
-  text-decoration: none;
-  font-size: 16px;
-  transition: color 0.3s;
-}
-
-.title:hover {
-  color: #21e7ddff;
-}
-
+/* Tag Filter */
 .tag-filter-section {
   margin-bottom: 30px;
   padding: 0 20px;
@@ -552,40 +541,41 @@ onMounted(() => {
 .tag-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
   justify-content: center;
 }
 
 .tag-item {
-  padding: 6px 14px;
+  padding: 5px 12px;
   background: var(--color-background-soft);
   border-radius: 20px;
-  font-size: 14px;
-  color: var(--color-text);
+  font-size: 13px;
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  border: 1px solid transparent;
+  transition: all 0.25s ease;
+  border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  user-select: none;
 }
 
 .tag-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  border-color: #21e7ddff;
-  color: #21e7ddff;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px var(--color-shadow);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .tag-item.active {
-  background: linear-gradient(135deg, #21e7ddff 0%, #06bac7ff 100%);
+  background: var(--color-accent);
   color: white;
-  box-shadow: 0 4px 12px rgba(33, 231, 221, 0.3);
-  border-color: transparent;
+  border-color: var(--color-accent);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 .tag-item .count {
-  font-size: 12px;
+  font-size: 11px;
   opacity: 0.8;
 }
 
@@ -593,25 +583,24 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 12px;
+  padding: 5px 10px;
   background: transparent;
   border-radius: 20px;
-  font-size: 13px;
-  color: var(--color-text);
-  opacity: 0.7;
+  font-size: 12px;
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.25s;
+  border: 1px dashed var(--color-border);
 }
 .tag-toggle:hover {
-  color: #21e7ddff;
-  background: var(--color-background-soft);
-  opacity: 1;
+  color: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
-/* Heatmap - GitHub Style */
+/* Heatmap */
 .contribution-section {
     display: flex;
-    gap: 20px;
+    gap: 24px;
     margin-bottom: 40px;
     padding: 24px;
     background: var(--color-background-soft);
@@ -619,12 +608,11 @@ onMounted(() => {
     border: 1px solid var(--color-border);
 }
 
-/* New Stats Sidebar */
 .contrib-stats {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  min-width: 120px;
+  gap: 18px;
+  min-width: 110px;
   border-right: 1px solid var(--color-border);
   padding-right: 20px;
   justify-content: center;
@@ -633,24 +621,24 @@ onMounted(() => {
 .stat-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
+}
+
+.stat-number {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-accent);
+  line-height: 1.2;
 }
 
 .stat-label {
   font-size: 12px;
-  color: var(--color-text);
-  opacity: 0.7;
-}
-
-.stat-value {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--color-heading);
+  color: var(--color-text-secondary);
 }
 
 .calendar-wrapper {
   flex: 1;
-  min-width: 0; /* Important for scroll within flex item */
+  min-width: 0;
   overflow-x: auto;
   display: flex;
   flex-direction: column;
@@ -664,16 +652,15 @@ onMounted(() => {
   width: 100%;
   margin-bottom: 4px;
   font-size: 12px;
-  color: var(--color-text);
+  color: var(--color-text-secondary);
 }
 
 .month-label {
   position: absolute;
   top: 0;
-  font-size: 10px; /* Reduced font size to match GitHub */
+  font-size: 10px;
 }
 
-/* Container for labels + grid */
 .graph-row {
   display: flex;
 }
@@ -681,21 +668,18 @@ onMounted(() => {
 .weekdays-col {
   display: flex;
   flex-direction: column;
-  gap: 3px; /* Match grid gap */
-  width: 30px; /* Fixed width for alignment */
+  gap: 3px;
+  width: 30px;
   flex-shrink: 0;
-  padding-top: 0; 
   padding-right: 8px;
-  /* margin-top removed */
   font-size: 10px; 
-  color: var(--color-text);
-  opacity: 0.7;
-  line-height: 12px; /* Match cell height */
+  color: var(--color-text-secondary);
+  line-height: 12px;
 }
 
 .weekdays-col span {
   height: 12px;
-  display: block; /* Ensure height applies */
+  display: block;
 }
 
 .columns-container {
@@ -711,37 +695,21 @@ onMounted(() => {
 .day-cell {
     width: 12px;
     height: 12px;
-    background: var(--color-border); /* level 0 */
     border-radius: 2px;
     box-sizing: border-box;
-    border: 1px solid rgba(27, 31, 35, 0.06);
-    transition: all 0.1s;
+    transition: transform 0.15s ease;
 }
 .day-cell:hover {
-  border-color: rgba(0,0,0,0.3);
-  transform: scale(1.2);
+  transform: scale(1.3);
+  outline: 1px solid var(--color-accent);
 }
 
-.day-cell.level-0 { background: #ebedf0; border-color: rgba(27,31,35,0.06); }
-[data-theme='dark'] .day-cell.level-0 { background: #161b22; border-color: rgba(240,246,252,0.1); }
-
-.day-cell.level-1 { background: #9be9a8; border-color: rgba(27,31,35,0.06); }
-.day-cell.level-2 { background: #40c463; border-color: rgba(27,31,35,0.06); }
-.day-cell.level-3 { background: #30a14e; border-color: rgba(27,31,35,0.06); }
-.day-cell.level-4 { background: #216e39; border-color: rgba(27,31,35,0.06); }
-
-/* Theme color override (Teal) - Light Mode (越多越深) */
-.day-cell.level-1 { background: #b1f1ee !important; }
-.day-cell.level-2 { background: #5eead4 !important; }
-.day-cell.level-3 { background: #2dd4bf !important; }
-.day-cell.level-4 { background: #0f766e !important; }
-
-/* Dark Mode Theme Override (Teal) - Dark Mode (越多越亮) */
-[data-theme='dark'] .day-cell.level-1 { background: #134e4a !important; border-color: rgba(255,255,255,0.05); }
-[data-theme='dark'] .day-cell.level-2 { background: #115e59 !important; border-color: rgba(255,255,255,0.05); }
-[data-theme='dark'] .day-cell.level-3 { background: #2dd4bf !important; border-color: rgba(255,255,255,0.05); }
-[data-theme='dark'] .day-cell.level-4 { background: #5eead4 !important; border-color: rgba(255,255,255,0.05); }
-
+/* Light mode heatmap */
+.day-cell.level-0 { background: var(--color-background-mute); border: 1px solid var(--color-border); }
+.day-cell.level-1 { background: color-mix(in srgb, var(--color-accent) 20%, var(--color-background)); }
+.day-cell.level-2 { background: color-mix(in srgb, var(--color-accent) 40%, var(--color-background)); }
+.day-cell.level-3 { background: color-mix(in srgb, var(--color-accent) 65%, var(--color-background)); }
+.day-cell.level-4 { background: var(--color-accent); }
 
 .calendar-footer {
   display: flex;
@@ -751,8 +719,7 @@ onMounted(() => {
   width: 100%;
   margin-top: 8px;
   font-size: 10px;
-  color: var(--color-text);
-  opacity: 0.8;
+  color: var(--color-text-secondary);
 }
 .legend-scale {
   display: flex;
@@ -767,29 +734,184 @@ onMounted(() => {
     align-items: flex-start;
 }
 
-/* Sticky Nav */
+/* Timeline */
+.timeline {
+  flex: 1;
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--color-accent), var(--color-border));
+}
+
+.timeline-year {
+  margin-bottom: 40px;
+}
+
+.year-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.year-title::before {
+  content: '';
+  position: absolute;
+  left: -29px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  background: var(--color-accent);
+  border-radius: 50%;
+  border: 3px solid var(--color-background);
+  box-shadow: 0 0 0 2px var(--color-accent);
+}
+
+.year-badge {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
+.year-count {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  background: var(--color-background-soft);
+  padding: 2px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+}
+
+.timeline-month {
+  margin-left: 10px;
+  margin-bottom: 24px;
+}
+
+.month-title {
+  font-size: 16px;
+  color: var(--color-text);
+  margin-bottom: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.month-count {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+
+.timeline-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.25s ease;
+}
+
+.timeline-item:hover {
+  background: var(--color-background-soft);
+  transform: translateX(4px);
+}
+
+.date-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-border);
+  flex-shrink: 0;
+  transition: background 0.25s;
+}
+
+.timeline-item:hover .date-dot {
+  background: var(--color-accent);
+}
+
+.date {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  min-width: 36px;
+}
+
+.title {
+  color: var(--color-heading);
+  text-decoration: none;
+  font-size: 15px;
+  transition: color 0.25s;
+  line-height: 1.5;
+}
+
+.title:hover {
+  color: var(--color-accent);
+}
+
+/* Sticky Year Nav */
 .year-nav {
-    width: 60px;
+    width: 56px;
     position: sticky;
-    top: 100px; /* Adjust based on your header height */
+    top: 100px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding-left: 20px;
-    border-left: 2px solid var(--color-border-soft, #eee);
+    gap: 4px;
+    padding-left: 16px;
+    border-left: 2px solid var(--color-border);
 }
 
 .year-nav-item {
     cursor: pointer;
-    font-size: 14px;
-    color: var(--color-text-light, #999);
-    transition: all 0.2s;
-    font-family: inherit;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    transition: all 0.25s;
     font-weight: 500;
+    padding: 4px 0;
+    position: relative;
 }
+
+.year-nav-item::before {
+  content: '';
+  position: absolute;
+  left: -19px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: var(--color-accent);
+  transition: all 0.25s;
+}
+
 .year-nav-item:hover {
-    color: #06bac7ff;
-    transform: translateX(5px) scale(1.1);
+    color: var(--color-accent);
+    transform: translateX(3px);
+}
+
+.year-nav-item.active {
+    color: var(--color-accent);
+    font-weight: 700;
+}
+
+.year-nav-item.active::before {
+  width: 8px;
+  height: 8px;
 }
 
 /* Empty State */
@@ -805,20 +927,40 @@ onMounted(() => {
 .empty-state p {
     margin-top: 15px;
     font-size: 16px;
-    opacity: 0.8;
+    color: var(--color-text-secondary);
+}
+
+/* Loading */
+.loading-state {
+  text-align: center;
+  padding: 60px 40px;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* List Transitions */
 .list-move,
 .list-enter-active,
 .list-leave-active {
-  transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+  transition: all 0.4s cubic-bezier(0.55, 0, 0.1, 1);
 }
 
 .list-enter-from,
 .list-leave-to {
   opacity: 0;
-  transform: translateY(30px);
+  transform: translateY(20px);
 }
 
 .list-leave-active {
@@ -826,62 +968,152 @@ onMounted(() => {
   width: 100%;
 }
 
-.loading-state {
-  text-align: center;
-  padding: 40px;
+/* Load More */
+.load-more-section {
+  display: flex;
+  justify-content: center;
+  padding: 30px 0 10px;
 }
 
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--color-border);
-  border-top-color: #04aa94ff;
+.see-more-button {
+  padding: 10px 28px;
+  background: var(--color-accent);
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  color: white;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+.see-more-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent) 50%, transparent);
+}
+
+.loading-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.mini-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 15px;
+  animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.no-more-hint {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  padding: 8px 0;
 }
-/* 响应式适配 */
+
+.filter-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.filter-tag {
+  background: var(--color-accent);
+  color: white;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.clear-filter {
+  color: var(--color-accent);
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.clear-filter:hover {
+  opacity: 0.8;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
+  .archive-page {
+    padding: 20px 15px;
+  }
+
+  .page-header h1 {
+    font-size: 22px;
+  }
+  
   .tag-list {
     justify-content: flex-start;
     overflow-x: auto;
-    padding-bottom: 10px;
-    flex-wrap: nowrap; /* 不换行，横向滚动 */
+    padding-bottom: 8px;
+    flex-wrap: nowrap;
     white-space: nowrap;
-    -webkit-overflow-scrolling: touch; /* 流畅滚动 */
+    -webkit-overflow-scrolling: touch;
   }
   
   .tag-item {
     flex-shrink: 0;
   }
 
-  /* 隐藏收起更多按钮，因为变成横向滚动了 */
   .tag-toggle {
     display: none; 
   }
 
   .contribution-section {
     flex-direction: column;
-    padding: 15px;
+    padding: 16px;
+    gap: 16px;
   }
   
   .contrib-stats {
     width: 100%;
-    margin-right: 0;
-    margin-bottom: 20px;
     border-right: none;
     border-bottom: 1px solid var(--color-border);
-    padding-bottom: 15px;
+    padding-right: 0;
+    padding-bottom: 14px;
     flex-direction: row;
     justify-content: space-around;
+    min-width: unset;
   }
-  
-  .stat-item {
-    margin-bottom: 0;
+
+  .stat-number {
+    font-size: 18px;
+  }
+
+  .timeline {
+    padding-left: 20px;
+  }
+
+  .timeline::before {
+    left: 4px;
+  }
+
+  .year-title::before {
+    left: -22px;
+    width: 10px;
+    height: 10px;
+  }
+
+  .year-nav {
+    display: none;
+  }
+
+  .archive-content {
+    gap: 0;
   }
 }
 </style>

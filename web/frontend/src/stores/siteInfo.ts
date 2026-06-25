@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { apiClient } from '@/services/api'
 import axios from 'axios'
 import yaml from 'js-yaml'
 
@@ -190,7 +191,7 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
       let configContent: string | null = null
 
       try {
-        const apiResponse = await axios.get(`/api/v1/frontend/config?t=${new Date().getTime()}`)
+        const apiResponse = await apiClient.get(`/frontend/config?t=${new Date().getTime()}`)
         if (apiResponse.data && apiResponse.data.status === 200 && apiResponse.data.data) {
           configContent = apiResponse.data.data
           // console.log('Loaded config from API')
@@ -200,11 +201,11 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
       }
 
       if (!configContent) {
-        const fileResponse = await axios.get(`/config.yaml?t=${new Date().getTime()}`)
+        const fileResponse = await axios.get(`/config.yaml?t=${new Date().getTime()}`) // 配置文件不走 apiClient，直接请求静态资源
         if (fileResponse.data) {
           configContent = fileResponse.data
           // console.log('Loaded config from static file')
-       }
+        }
       }
 
       if (configContent) {
@@ -221,12 +222,12 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
     if (typeof window === 'undefined') return
 
     const hostname = window.location.hostname
-    const isLocal = hostname === 'localhost' || 
-                    hostname === '127.0.0.1' || 
-                    hostname.startsWith('192.168.') || 
-                    hostname.startsWith('10.') || 
-                    hostname.endsWith('.local')
-    
+    const isLocal = hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('10.') ||
+      hostname.endsWith('.local')
+
     if (isLocal) {
       config.admin_url = '/admin'
     }
@@ -235,7 +236,7 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
   const updateConfig = async (newConfig: SiteInfo): Promise<boolean> => {
     try {
       const yamlContent = yaml.dump(newConfig)
-      const response = await axios.put('/api/v1/frontend/config', { content: yamlContent })
+      const response = await apiClient.put('/frontend/config', { content: yamlContent })
       if (response.data && response.data.status === 200) {
         siteInfo.value = newConfig
         return true

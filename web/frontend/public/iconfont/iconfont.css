@@ -1,8 +1,11 @@
 @font-face {
-  font-family: "iconfont"; /* Project id 4924439 */
+  font-family: "iconfont";
+  /* Project id 4924439 */
+  font-display: swap;
+  /* 优化字体加载，避免阻塞渲染 */
   src: url('iconfont.woff2?t=1766583206533') format('woff2'),
-       url('iconfont.woff?t=1766583206533') format('woff'),
-       url('iconfont.ttf?t=1766583206533') format('truetype');
+    url('iconfont.woff?t=1766583206533') format('woff'),
+    url('iconfont.ttf?t=1766583206533') format('truetype');
 }
 
 .iconfont {
@@ -80,4 +83,3 @@
 .icon-bilibili-line:before {
   content: "\ea96";
 }
-

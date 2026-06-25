@@ -18,4 +18,11 @@ app.use(router)
 app.use(ElementPlus)
 app.directive('lazy', lazy)
 
+// 全局错误处理：防止子组件异常导致白屏
+app.config.errorHandler = (err, instance, info) => {
+  console.error('全局错误捕获:', err)
+  console.error('错误组件:', instance?.$options?.name || '未知')
+  console.error('错误信息:', info)
+}
+
 app.mount('#app')

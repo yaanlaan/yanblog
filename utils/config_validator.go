@@ -28,8 +28,9 @@ func ValidateConfig() error {
 	// 验证 JWT 密钥：空密钥仅警告，自动生成临时密钥
 	jwtKey := ServerConfig.JwtKey
 	if jwtKey == "" {
-		warnings = append(warnings, "⚠️  JWT 密钥未设置，已自动生成临时密钥。请尽快设置永久密钥！")
 		ServerConfig.JwtKey = generateTempKey()
+		warnings = append(warnings, "⚠️  JWT 密钥未设置，已自动生成临时密钥（本次运行有效，重启后将重新生成）。请尽快在配置文件中设置永久 JwtKey！")
+		fmt.Printf("  临时JWT密钥: %s\n", ServerConfig.JwtKey)
 	} else if len(jwtKey) < 32 {
 		warnings = append(warnings, fmt.Sprintf("⚠️  JWT 密钥长度不足（当前 %d 位），建议使用 64 位随机密钥", len(jwtKey)))
 	}
@@ -37,6 +38,16 @@ func ValidateConfig() error {
 	// 验证服务器配置
 	if ServerConfig.Server.HttpPort == "" {
 		errors = append(errors, "服务器端口 (server.HttpPort) 不能为空")
+	}
+
+	// 验证 SiteUrl（生产环境必须配置）
+	if ServerConfig.Server.SiteUrl == "" {
+		warnings = append(warnings, "⚠️  SiteUrl 未配置，CORS 将允许所有来源（仅适用于开发环境）。生产环境请设置站点 URL！")
+	} else {
+		// 验证 URL 格式
+		if !strings.HasPrefix(ServerConfig.Server.SiteUrl, "http://") && !strings.HasPrefix(ServerConfig.Server.SiteUrl, "https://") {
+			errors = append(errors, "SiteUrl 必须以 http:// 或 https:// 开头")
+		}
 	}
 
 	// 打印警告信息（不阻止启动）
@@ -73,10 +84,10 @@ func PrintStartupInfo() {
 		ServerConfig.Database.DbName)
 
 	// 天气配置
-	if ServerConfig.Weather.ApiKey != "" {
-		fmt.Printf("🌤️  天气服务：已启用 (%s)\n", ServerConfig.Weather.DefaultCity)
+	if ServerConfig.Weather.DefaultCity != "" {
+		fmt.Printf("🌤️  天气服务：已启用 (%s) [Open-Meteo]\n", ServerConfig.Weather.DefaultCity)
 	} else {
-		fmt.Println("🌤️  天气服务：未启用")
+		fmt.Println("🌤️  天气服务：未配置默认城市")
 	}
 
 	fmt.Println("===========================================")

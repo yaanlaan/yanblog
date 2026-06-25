@@ -1,7 +1,6 @@
 package routers
 
 import (
-	_ "net/http"
 	"os"
 	v1 "yanblog/api/v1"
 	middleware "yanblog/middlewares"
@@ -40,59 +39,62 @@ func InitRouter() {
 	auth := r.Group("api/v1")
 	auth.Use(middleware.JwtToken())
 
+	// 管理员权限分组（仅超级管理员和管理员可操作）
+	admin := r.Group("api/v1")
+	admin.Use(middleware.JwtToken())
+	admin.Use(middleware.AdminRequired())
+
 	{
 		// 用户模块的路由接口
-		auth.POST("user/add", v1.AddUser) // 添加用户（需认证）
-		auth.PUT("user/:id", v1.EditUser)
-		auth.DELETE("user/:id", v1.DeleteUser)
+		admin.POST("user/add", v1.AddUser) // 添加用户（需管理员权限）
+		admin.PUT("user/:id", v1.EditUser)
+		admin.DELETE("user/:id", v1.DeleteUser)
 		auth.GET("users", v1.GetUsers)           // 查询用户列表（需认证）
 		auth.GET("users/search", v1.SearchUsers) // 搜索用户（需认证）
 		// 分类模块的路由接口
-		auth.POST("category/add", v1.AddCategory)
-		auth.PUT("category/:id", v1.EditCate)
-		auth.DELETE("category/:id", v1.DeleteCate)
+		admin.POST("category/add", v1.AddCategory)
+		admin.PUT("category/:id", v1.EditCate)
+		admin.DELETE("category/:id", v1.DeleteCate)
 		// 文章模块的路由接口
-		auth.POST("article/add", v1.AddArticle)
-		auth.POST("article/zip", v1.UploadArticleZip)       // 上传单个ZIP发布文章
-		auth.POST("article/zip/batch", v1.UploadArticleZipBatch) // 批量上传ZIP
-		auth.PUT("article/:id", v1.EditArt)
+		admin.POST("article/add", v1.AddArticle)
+		admin.POST("article/zip", v1.UploadArticleZip)       // 上传单个ZIP发布文章
+		admin.POST("article/zip/batch", v1.UploadArticleZipBatch) // 批量上传ZIP
+		admin.PUT("article/:id", v1.EditArt)
 
-		auth.DELETE("article/:id", v1.DeleteArt)
-		auth.POST("article/batch-delete", v1.BatchDeleteArt)
+		admin.DELETE("article/:id", v1.DeleteArt)
+		admin.POST("article/batch-delete", v1.BatchDeleteArt)
 		// 标签模块
-		auth.POST("tags/add", v1.AddTag)
-		auth.PUT("tags/:id", v1.EditTag)
-		auth.DELETE("tags/:id", v1.DeleteTag)
+		admin.POST("tags/add", v1.AddTag)
+		admin.PUT("tags/:id", v1.EditTag)
+		admin.DELETE("tags/:id", v1.DeleteTag)
 		// 上传文件
-		auth.POST("upload", v1.UpLoad)
+		admin.POST("upload", v1.UpLoad)
 		// 文件管理
 		auth.GET("files", v1.GetFileList)
-		auth.DELETE("files", v1.DeleteFile)
-		auth.POST("files/folder", v1.CreateDir)     // 创建目录
-		auth.PUT("files", v1.RenameFile)            // 重命名
-		auth.POST("files/move", v1.MoveFile)        // 移动文件/目录
-		auth.POST("files/copy", v1.CopyFile)        // 复制文件
-		auth.POST("files/batch-delete", v1.BatchDeleteFiles) // 批量删除
-		auth.POST("files/batch-upload", v1.BatchUploadFiles) // 批量上传
+		admin.DELETE("files", v1.DeleteFile)
+		admin.POST("files/folder", v1.CreateDir)     // 创建目录
+		admin.PUT("files", v1.RenameFile)            // 重命名
+		admin.POST("files/move", v1.MoveFile)        // 移动文件/目录
+		admin.POST("files/copy", v1.CopyFile)        // 复制文件
+		admin.POST("files/batch-delete", v1.BatchDeleteFiles) // 批量删除
+		admin.POST("files/batch-upload", v1.BatchUploadFiles) // 批量上传
 		auth.GET("files/stats", v1.GetStorageStats) // 获取存储统计
-		// 前端配置管理（更新需要认证）
-		auth.PUT("frontend/config", v1.UpdateFrontEndConfig)
+		// 前端配置管理（更新需要管理员权限）
+		admin.PUT("frontend/config", v1.UpdateFrontEndConfig)
 		// 后端配置管理
-		auth.GET("backend/config", v1.GetBackendConfig)
-		auth.PUT("backend/config", v1.UpdateBackendConfig)
-		auth.POST("config/reload", v1.ReloadConfig)
-		auth.GET("config/all", v1.GetAllConfig)
+		admin.GET("backend/config", v1.GetBackendConfig)
+		admin.PUT("backend/config", v1.UpdateBackendConfig)
+		admin.POST("config/reload", v1.ReloadConfig)
+		admin.GET("config/all", v1.GetAllConfig)
+		admin.GET("system/status", v1.GetSystemStatus) // 获取系统状态信息（需管理员权限）
 		// 关于页面内容管理
-		auth.PUT("about", v1.UpdateAboutContent)
+		admin.PUT("about", v1.UpdateAboutContent)
 	}
 
 	// 公共路由分组
 	router := r.Group("api/v1")
 
 	{
-		// router.POST("user/add", v1.AddUser) // 移至认证组
-		// router.GET("users", v1.GetUsers) // 移至认证组
-		// router.GET("users/search", v1.SearchUsers) // 移至认证组
 		router.GET("about", v1.GetAboutContent) // 获取关于页面内容 (公开接口，虽然前端直接读取静态文件，但提供 API 更统一)
 		router.GET("category", v1.GetCate)
 		router.GET("category/search", v1.SearchCate)    // 搜索分类
@@ -102,12 +104,13 @@ func InitRouter() {
 		router.GET("article/top", v1.GetTopArt)             // 获取置顶文章
 		router.GET("article/hot", v1.GetHotArt)             // 获取热门文章
 		router.GET("article/related/:id", v1.GetRelatedArt) // 获取相关文章
+		router.GET("article/random", v1.GetRandomArt)       // 随机获取一篇文章
+		router.GET("article/adjacent/:id", v1.GetAdjacentArt) // 获取相邻文章
 		router.GET("article/archive", v1.GetArchive)        // 归档
 		router.GET("article/list/:id", v1.GetCateArt)
 		router.GET("article/info/:id", v1.GetArtInfo)
 		router.GET("tags", v1.GetTags)                  // 获取标签列表
 		router.GET("weather", v1.GetWeather)            // 获取天气信息
-		router.GET("system/status", v1.GetSystemStatus) // 获取系统状态信息
 		router.GET("health", v1.HealthCheck)            // 健康检查（公开接口）
 		router.GET("frontend/config", v1.GetFrontEndConfig) // 获取前端配置（公开接口）
 		router.POST("login", middleware.LoginRateLimit(), v1.Login)

@@ -20,20 +20,31 @@ type Weather struct {
 	WindSpeed   float64 `json:"wind_speed"`
 }
 
-// OpenWeatherMapResponse OpenWeatherMap API响应结构体
-type OpenWeatherMapResponse struct {
-	Main struct {
-		Temp     float64 `json:"temp"`
-		Humidity int     `json:"humidity"`
-	} `json:"main"`
-	Weather []struct {
-		Description string `json:"description"`
-	} `json:"weather"`
-	Wind struct {
-		Speed float64 `json:"speed"`
-	} `json:"wind"`
-	Name string `json:"name"`
-	Cod  int    `json:"cod"`
+// OpenMeteo 天气 API 响应结构体
+type OpenMeteoCurrentWeather struct {
+	Time                string  `json:"time"`
+	Temperature2m       float64 `json:"temperature_2m"`
+	RelativeHumidity2m  int     `json:"relative_humidity_2m"`
+	WeatherCode         int     `json:"weather_code"`
+	WindSpeed10m        float64 `json:"wind_speed_10m"`
+}
+
+type OpenMeteoWeatherResponse struct {
+	Current OpenMeteoCurrentWeather `json:"current"`
+}
+
+// OpenMeteo 地理编码 API 响应结构体
+type OpenMeteoGeoResult struct {
+	ID        int     `json:"id"`
+	Name      string  `json:"name"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	Country   string  `json:"country"`
+	Admin1    string  `json:"admin1"`
+}
+
+type OpenMeteoGeoResponse struct {
+	Results []OpenMeteoGeoResult `json:"results"`
 }
 
 // 城市名称映射，将中文城市名映射为英文名
@@ -54,7 +65,7 @@ var cityMapping = map[string]string{
 	"合肥": "Hefei",
 }
 
-// GetWeather 获取天气信息
+// GetWeather 获取天气信息（使用 Open-Meteo 免费 API，无需密钥）
 func GetWeather(city string) (*Weather, error) {
 	// 如果没有指定城市，则使用配置文件中的默认城市
 	if city == "" {
@@ -67,84 +78,139 @@ func GetWeather(city string) (*Weather, error) {
 		cityName = mappedName
 	}
 
-	// 从配置文件获取API密钥
-	apiKey := utils.ServerConfig.Weather.ApiKey
-	if apiKey == "" {
-		// 没有API密钥时返回模拟数据，避免博客报错
-		return getSimulatedWeather(cityName), nil
-	}
-
-	// 构建API请求URL
-	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric&lang=zh_cn", cityName, apiKey)
-
-	// 创建带超时的HTTP客户端
+	// 创建带超时的 HTTP 客户端
 	client := &http.Client{
-		Timeout: 10 * time.Second, // 设置10秒超时
+		Timeout: 10 * time.Second,
 	}
 
-	// 创建带超时的上下文
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// 创建请求
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	// 第一步：通过地理编码 API 获取城市经纬度
+	lat, lon, displayName, err := geocodeCity(ctx, client, cityName)
 	if err != nil {
-		return nil, fmt.Errorf("创建天气API请求失败: %v", err)
+		return nil, fmt.Errorf("地理编码失败: %v", err)
 	}
 
-	// 发送HTTP请求
+	// 第二步：通过 Open-Meteo 天气 API 获取当前天气
+	url := fmt.Sprintf(
+		"https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m",
+		lat, lon,
+	)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("创建天气请求失败: %v", err)
+	}
+
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("请求天气API失败: %v", err)
+		return nil, fmt.Errorf("请求天气 API 失败: %v", err)
 	}
 	defer resp.Body.Close()
 
-	// 读取响应体
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("读取天气API响应失败: %v", err)
+		return nil, fmt.Errorf("读取天气响应失败: %v", err)
 	}
 
-	// 检查HTTP状态码
 	if resp.StatusCode != http.StatusOK {
-		// 特殊处理API密钥错误
-		if resp.StatusCode == http.StatusUnauthorized {
-			return nil, fmt.Errorf("天气API密钥无效，请检查config.yaml中的ApiKey配置")
-		}
-		return nil, fmt.Errorf("天气API请求失败，状态码: %d, 响应: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("天气 API 请求失败，状态码: %d, 响应: %s", resp.StatusCode, string(body))
 	}
 
-	// 解析JSON响应
-	var apiResponse OpenWeatherMapResponse
-	if err := json.Unmarshal(body, &apiResponse); err != nil {
-		return nil, fmt.Errorf("解析天气API响应失败: %v", err)
+	var weatherResp OpenMeteoWeatherResponse
+	if err := json.Unmarshal(body, &weatherResp); err != nil {
+		return nil, fmt.Errorf("解析天气响应失败: %v", err)
 	}
 
-	// 检查API返回的状态码
-	if apiResponse.Cod != 200 {
-		return nil, fmt.Errorf("天气API返回错误状态，cod: %d, 响应: %s", apiResponse.Cod, string(body))
-	}
-
-	// 构建返回的天气信息
+	current := weatherResp.Current
 	weather := &Weather{
-		City:        apiResponse.Name,
-		Temperature: apiResponse.Main.Temp,
-		Description: "晴", // 默认值
-		Humidity:    apiResponse.Main.Humidity,
-		WindSpeed:   apiResponse.Wind.Speed,
-	}
-
-	// 如果有天气描述，使用API返回的描述
-	if len(apiResponse.Weather) > 0 {
-		weather.Description = apiResponse.Weather[0].Description
+		City:        displayName,
+		Temperature: current.Temperature2m,
+		Description: wmoCodeToDescription(current.WeatherCode),
+		Humidity:    current.RelativeHumidity2m,
+		WindSpeed:   current.WindSpeed10m,
 	}
 
 	return weather, nil
 }
 
-// getSimulatedWeather 无 API 密钥时返回模拟天气数据
+// geocodeCity 通过 Open-Meteo 地理编码 API 获取城市坐标
+func geocodeCity(ctx context.Context, client *http.Client, cityName string) (float64, float64, string, error) {
+	url := fmt.Sprintf("https://geocoding-api.open-meteo.com/v1/search?name=%s&count=1&language=zh", cityName)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return 0, 0, "", fmt.Errorf("创建地理编码请求失败: %v", err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, 0, "", fmt.Errorf("请求地理编码 API 失败: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, 0, "", fmt.Errorf("读取地理编码响应失败: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return 0, 0, "", fmt.Errorf("地理编码 API 请求失败，状态码: %d", resp.StatusCode)
+	}
+
+	var geoResp OpenMeteoGeoResponse
+	if err := json.Unmarshal(body, &geoResp); err != nil {
+		return 0, 0, "", fmt.Errorf("解析地理编码响应失败: %v", err)
+	}
+
+	if len(geoResp.Results) == 0 {
+		return 0, 0, "", fmt.Errorf("未找到城市: %s", cityName)
+	}
+
+	result := geoResp.Results[0]
+	displayName := result.Name
+	if result.Admin1 != "" && result.Admin1 != result.Name {
+		displayName = result.Name
+	}
+
+	return result.Latitude, result.Longitude, displayName, nil
+}
+
+// wmoCodeToDescription 将 WMO 天气代码转换为中文描述
+func wmoCodeToDescription(code int) string {
+	switch {
+	case code == 0:
+		return "晴"
+	case code == 1:
+		return "大部晴朗"
+	case code == 2:
+		return "多云"
+	case code == 3:
+		return "阴"
+	case code == 45 || code == 48:
+		return "雾"
+	case code >= 51 && code <= 57:
+		return "毛毛雨"
+	case code >= 61 && code <= 65:
+		return "雨"
+	case code == 66 || code == 67:
+		return "冻雨"
+	case code >= 71 && code <= 77:
+		return "雪"
+	case code >= 80 && code <= 82:
+		return "阵雨"
+	case code == 85 || code == 86:
+		return "阵雪"
+	case code >= 95:
+		return "雷暴"
+	default:
+		return "未知"
+	}
+}
+
+// getSimulatedWeather 无网络时返回模拟天气数据（保留作为降级方案）
 func getSimulatedWeather(city string) *Weather {
-	// 基于城市名和月份生成模拟数据
 	month := time.Now().Month()
 	var temp, humidity int
 	var desc string
@@ -188,3 +254,4 @@ func hashCity(s string) int {
 	}
 	return h
 }
+

@@ -97,10 +97,10 @@ const splitTags = (tags: string) => {
   /* 对角线高亮效果 */
   background-repeat: no-repeat;
   background-image: 
-    linear-gradient(#42b883, #42b883), /* 上边框 */
-    linear-gradient(#42b883, #42b883), /* 右边框 */
-    linear-gradient(#42b883, #42b883), /* 下边框 */
-    linear-gradient(#42b883, #42b883); /* 左边框 */
+    linear-gradient(var(--color-accent), var(--color-accent)), /* 上边框 */
+    linear-gradient(var(--color-accent), var(--color-accent)), /* 右边框 */
+    linear-gradient(var(--color-accent), var(--color-accent)), /* 下边框 */
+    linear-gradient(var(--color-accent), var(--color-accent)); /* 左边框 */
     
   /* 初始大小为0 */
   background-size: 0% 2px, 2px 0%, 0% 2px, 2px 0%;
@@ -111,7 +111,7 @@ const splitTags = (tags: string) => {
 
 .article-item:hover {
   background-size: 100% 2px, 2px 100%, 100% 2px, 2px 100%;
-  background-color: rgba(66, 184, 131, 0.01);
+  background-color: color-mix(in srgb, var(--color-accent) 5%, transparent);
 }
 
 /* 左侧内容区 */

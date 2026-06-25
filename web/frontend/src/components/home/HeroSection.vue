@@ -51,15 +51,13 @@ const { siteInfo } = storeToRefs(siteInfoStore)
 
 const handleRandomVisit = async () => {
   try {
-    const res = await articleApi.getArticles({ pagesize: -1, pagenum: -1 })
+    const res = await articleApi.getRandomArticle()
     const { data, status } = res.data
-    if (status === 200 && data && data.length > 0) {
-      const randomIndex = Math.floor(Math.random() * data.length)
-      const randomArticle = data[randomIndex]
-      router.push({ name: 'article-detail', params: { id: randomArticle.ID } })
+    if (status === 200 && data) {
+      router.push({ name: 'article-detail', params: { id: data.ID || data.id } })
     }
   } catch (error) {
-    console.error('Failed to fetch articles for random visit:', error)
+    console.error('Failed to fetch random article:', error)
   }
 }
 </script>
@@ -156,7 +154,7 @@ const handleRandomVisit = async () => {
 
 /* 模拟图标位置和颜色 */
 .icon-js { background: #f7df1e; color: #323330; top: 20%; right: 40%; width: 70px; height: 70px; z-index: 2; animation-delay: 0s; }
-.icon-vue { background: #42b883; top: 50%; right: 20%; width: 80px; height: 80px; z-index: 3; animation-delay: 1s; }
+.icon-vue { background: var(--color-accent); top: 50%; right: 20%; width: 80px; height: 80px; z-index: 3; animation-delay: 1s; }
 .icon-react { background: #61dafb; color: #20232a; top: 10%; right: 10%; animation-delay: 2s; }
 .icon-html { background: #e34f26; bottom: 10%; right: 45%; animation-delay: 3s; }
 .icon-css { background: #1572b6; bottom: 20%; right: 5%; animation-delay: 4s; }

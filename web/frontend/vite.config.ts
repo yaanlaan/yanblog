@@ -34,6 +34,25 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // 核心框架
+          'vendor-vue': ['vue', 'vue-router', 'pinia'],
+          // Markdown 渲染（核心依赖）
+          'vendor-markdown': ['marked'],
+          // 代码高亮（按需加载）
+          'vendor-highlight': ['highlight.js'],
+          // 数学公式（KaTeX 体积大，仅文章详情页需要）
+          'vendor-katex': ['katex'],
+          // Mermaid 图表（最大的依赖，仅文章详情页需要）
+          'vendor-mermaid': ['mermaid'],
+        }
+      }
+    },
+    chunkSizeWarningLimit: 500 // 降低阈值，促进代码分割
+  },
   server: {
     allowedHosts: allowedHosts,
     host: '127.0.0.1',

@@ -117,7 +117,7 @@ const splitTags = (tags: string) => {
 }
 
 .meta-item:hover {
-  color: #42b883;
+  color: var(--color-accent);
 }
 
 .meta-item svg {
@@ -263,8 +263,8 @@ const splitTags = (tags: string) => {
 
 .category-badge {
   padding: 2px 10px;
-  border: 1px solid #42b883;
-  color: #42b883;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
   border-radius: 4px;
   font-size: 12px;
   transition: all 0.3s;
@@ -272,18 +272,18 @@ const splitTags = (tags: string) => {
 }
 
 .category-badge:hover {
-  background-color: #42b883;
+  background-color: var(--color-accent);
   color: white;
 }
 
 .top-badge {
   padding: 2px 10px;
-  background: linear-gradient(45deg, #42b883, #66c798);
+  background: linear-gradient(45deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 70%, white));
   color: white;
   border-radius: 4px;
   font-size: 12px;
   font-weight: bold;
-  box-shadow: 0 2px 6px rgba(66, 184, 131, 0.3);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 /* 右侧封面图 */
@@ -320,7 +320,7 @@ const splitTags = (tags: string) => {
     width: 100%;
     height: 4px;
     bottom: auto;
-    background: linear-gradient(90deg, #42b883 0%, #35495e 100%);
+    background: linear-gradient(90deg, var(--color-accent) 0%, #35495e 100%);
   }
 
   .article-cover {

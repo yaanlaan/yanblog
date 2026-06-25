@@ -42,19 +42,12 @@ func CreateTag(data *Tag) int {
 }
 
 // GetTags 获取标签列表 (带文章计数)
+// 注意：默认值处理已统一由 API 层的 ParsePageParams 处理
 func GetTags(pageSize int, pageNum int) ([]Tag, int64) {
 	var tags []Tag
 	var total int64
 
-	// 处理默认值
-	if pageSize <= 0 {
-		pageSize = -1
-	}
-	if pageNum <= 0 {
-		pageNum = -1
-	}
-
-	// 计算总数
+	// 先计算总数
 	db.Model(&Tag{}).Count(&total)
 
 	var err error

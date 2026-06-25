@@ -177,7 +177,7 @@ watch(() => props.articles, () => {
   width: 20px;
   height: 20px;
   border: 2px solid var(--color-border);
-  border-top-color: var(--color-primary, #42b883);
+  border-top-color: var(--color-accent, #6cccc0);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

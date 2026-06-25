@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"io/ioutil"
+	"os"
 	"net/http"
 	"yanblog/utils/errmsg"
 
@@ -13,7 +13,7 @@ const AboutFilePath = "./web/frontend/public/static/about.md"
 
 // GetAboutContent 获取关于页面内容
 func GetAboutContent(c *gin.Context) {
-	content, err := ioutil.ReadFile(AboutFilePath)
+	content, err := os.ReadFile(AboutFilePath)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  errmsg.ERROR,
@@ -44,7 +44,7 @@ func UpdateAboutContent(c *gin.Context) {
 	}
 
 	// 写入文件
-	err := ioutil.WriteFile(AboutFilePath, []byte(data.Content), 0644)
+	err := os.WriteFile(AboutFilePath, []byte(data.Content), 0644)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  errmsg.ERROR,

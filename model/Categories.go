@@ -9,9 +9,9 @@ import (
 
 type Category struct {
 	gorm.Model
-	Name string `gorm:"type:varchar(20);not null" json:"name"`
+	Name string `gorm:"type:varchar(20);not null;uniqueIndex" json:"name"` // 添加唯一索引
 	Img  string `gorm:"type:varchar(255)" json:"img"`
-	Top  int    `gorm:"type:int;not null;default:0" json:"top"`
+	Top  int    `gorm:"type:int;not null;default:0;index" json:"top"` // 添加索引，优化置顶查询
 	// 添加文章计数字段（使用gorm:"-"标记，表示不直接映射到数据库字段，保证数据一致性）
 	ArticleCount int `gorm:"-" json:"article_count"`
 }
@@ -64,7 +64,6 @@ func CreateCate(data *Category) int {
 func SearchCategory(keyword string, pageSize int, pageNum int) ([]Category, int64) {
 	var cate []Category
 	var total int64
-	var err error
 
 	// 构建查询条件
 	query := db
@@ -75,11 +74,15 @@ func SearchCategory(keyword string, pageSize int, pageNum int) ([]Category, int6
 		query = query.Where("LOWER(name) LIKE ?", searchTerm)
 	}
 
+	// 先查询总数（性能优化：分离 Count 和 Find）
+	query.Model(&Category{}).Count(&total)
+
 	// 执行查询，按置顶等级排序
+	var err error
 	if pageSize == -1 && pageNum == -1 {
-		err = query.Order("top ASC").Find(&cate).Count(&total).Error
+		err = query.Order("top ASC").Find(&cate).Error
 	} else {
-		err = query.Order("top ASC").Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&cate).Count(&total).Error
+		err = query.Order("top ASC").Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&cate).Error
 	}
 
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -95,14 +98,19 @@ func SearchCategory(keyword string, pageSize int, pageNum int) ([]Category, int6
 func GetCate(pageSize int, pageNum int) ([]Category, int64) {
 	var cate []Category
 	var total int64
-	var err error
 
+	query := db.Order("top ASC")
+
+	// 先查询总数（性能优化：分离 Count 和 Find）
+	query.Model(&Category{}).Count(&total)
+
+	var err error
 	if pageSize == -1 && pageNum == -1 {
 		// 查询所有分类，按置顶等级排序（0表示不置顶，其他值越小等级越高）
-		err = db.Order("top ASC").Find(&cate).Count(&total).Error
+		err = query.Find(&cate).Error
 	} else {
 		// 分页查询，按置顶等级排序
-		err = db.Order("top ASC").Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&cate).Count(&total).Error
+		err = query.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&cate).Error
 	}
 
 	if err != nil && err != gorm.ErrRecordNotFound {

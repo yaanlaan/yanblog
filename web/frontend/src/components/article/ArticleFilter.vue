@@ -168,12 +168,12 @@ onUnmounted(() => {
 
 .tab-item:hover {
   color: var(--color-accent);
-  background-color: rgba(66, 184, 131, 0.05); /* Usually accent color with opacity is fine */
+  background-color: color-mix(in srgb, var(--color-accent) 8%, transparent); /* Usually accent color with opacity is fine */
 }
 
 .tab-item.active {
   color: var(--color-accent);
-  background-color: rgba(66, 184, 131, 0.1);
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
   font-weight: 600;
 }
 
@@ -251,7 +251,7 @@ onUnmounted(() => {
 
 .search-box input:focus {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(66, 184, 131, 0.1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 12%, transparent);
   width: 240px;
 }
 

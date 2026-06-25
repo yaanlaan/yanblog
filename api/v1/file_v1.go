@@ -2,7 +2,6 @@ package v1
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -65,7 +64,7 @@ func GetFileList(c *gin.Context) {
 		return
 	}
 
-	files, err := ioutil.ReadDir(reqPath)
+	files, err := os.ReadDir(reqPath)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  errmsg.ERROR,
@@ -77,6 +76,10 @@ func GetFileList(c *gin.Context) {
 
 	fileList := make([]FileInfo, 0)
 	for _, f := range files {
+		info, err := f.Info()
+		if err != nil {
+			continue
+		}
 		fullPath := filepath.Join(reqPath, f.Name())
 		relPath, err := filepath.Rel("uploads", fullPath)
 		if err != nil {
@@ -91,9 +94,9 @@ func GetFileList(c *gin.Context) {
 			Name:    f.Name(),
 			IsDir:   f.IsDir(),
 			Path:    relPath,
-			Size:    f.Size(),
+			Size:    info.Size(),
 			Ext:     ext,
-			ModTime: f.ModTime(),
+			ModTime: info.ModTime(),
 			IsImage: isImage,
 		}
 
@@ -136,8 +139,15 @@ func DeleteFile(c *gin.Context) {
 		return
 	}
 
-	targetPath := filepath.Join("uploads", path)
-	targetPath = filepath.Clean(targetPath)
+	// 安全路径验证，防止路径遍历攻击
+	targetPath, ok := safeUploadPath(path)
+	if !ok {
+		c.JSON(http.StatusForbidden, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "非法路径",
+		})
+		return
+	}
 
 	if _, err := os.Stat(targetPath); os.IsNotExist(err) {
 		c.JSON(http.StatusOK, gin.H{
@@ -184,6 +194,17 @@ func CreateDir(c *gin.Context) {
 	targetPath := filepath.Join("uploads", data.Path, data.Name)
 	targetPath = filepath.Clean(targetPath)
 
+	// 安全路径验证，防止路径遍历攻击
+	absBase, _ := filepath.Abs("uploads")
+	absTarget, _ := filepath.Abs(targetPath)
+	if !strings.HasPrefix(absTarget, absBase) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "非法路径",
+		})
+		return
+	}
+
 	if _, err := os.Stat(targetPath); !os.IsNotExist(err) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  errmsg.ERROR,
@@ -192,7 +213,7 @@ func CreateDir(c *gin.Context) {
 		return
 	}
 
-	if err := os.MkdirAll(targetPath, os.ModePerm); err != nil {
+	if err := os.MkdirAll(targetPath, 0755); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  errmsg.ERROR,
 			"message": "创建目录失败: " + err.Error(),
@@ -234,6 +255,18 @@ func RenameFile(c *gin.Context) {
 
 	oldPath = filepath.Clean(oldPath)
 	newPath = filepath.Clean(newPath)
+
+	// 安全路径验证，防止路径遍历攻击
+	absBase, _ := filepath.Abs("uploads")
+	absOld, _ := filepath.Abs(oldPath)
+	absNew, _ := filepath.Abs(newPath)
+	if !strings.HasPrefix(absOld, absBase) || !strings.HasPrefix(absNew, absBase) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "非法路径",
+		})
+		return
+	}
 
 	if err := os.Rename(oldPath, newPath); err != nil {
 		c.JSON(http.StatusOK, gin.H{
@@ -277,6 +310,18 @@ func MoveFile(c *gin.Context) {
 	source = filepath.Clean(source)
 	targetDir = filepath.Clean(targetDir)
 
+	// 安全路径验证，防止路径遍历攻击
+	absBase, _ := filepath.Abs("uploads")
+	absSrc, _ := filepath.Abs(source)
+	absDst, _ := filepath.Abs(targetDir)
+	if !strings.HasPrefix(absSrc, absBase) || !strings.HasPrefix(absDst, absBase) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "非法路径",
+		})
+		return
+	}
+
 	if _, err := os.Stat(source); os.IsNotExist(err) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  errmsg.ERROR,
@@ -286,7 +331,7 @@ func MoveFile(c *gin.Context) {
 	}
 
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
-		if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
+		if err := os.MkdirAll(targetDir, 0755); err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"status":  errmsg.ERROR,
 				"message": "创建目标目录失败: " + err.Error(),
@@ -348,6 +393,18 @@ func CopyFile(c *gin.Context) {
 	source = filepath.Clean(source)
 	targetDir = filepath.Clean(targetDir)
 
+	// 安全路径验证，防止路径遍历攻击
+	absBase, _ := filepath.Abs("uploads")
+	absSrc, _ := filepath.Abs(source)
+	absDst, _ := filepath.Abs(targetDir)
+	if !strings.HasPrefix(absSrc, absBase) || !strings.HasPrefix(absDst, absBase) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "非法路径",
+		})
+		return
+	}
+
 	sourceInfo, err := os.Stat(source)
 	if os.IsNotExist(err) {
 		c.JSON(http.StatusOK, gin.H{
@@ -366,7 +423,7 @@ func CopyFile(c *gin.Context) {
 	}
 
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
-		if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
+		if err := os.MkdirAll(targetDir, 0755); err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"status":  errmsg.ERROR,
 				"message": "创建目标目录失败: " + err.Error(),
@@ -444,8 +501,14 @@ func BatchDeleteFiles(c *gin.Context) {
 	var failMessages []string
 
 	for _, path := range data.Paths {
-		targetPath := filepath.Join("uploads", path)
-		targetPath = filepath.Clean(targetPath)
+		// 安全路径验证
+		safePath, ok := safeUploadPath(path)
+		if !ok {
+			failCount++
+			failMessages = append(failMessages, path+": 非法路径")
+			continue
+		}
+		targetPath := safePath
 
 		if err := os.RemoveAll(targetPath); err != nil {
 			failCount++
@@ -489,11 +552,20 @@ func BatchUploadFiles(c *gin.Context) {
 		targetDir = ""
 	}
 
-	targetPath := filepath.Join("uploads", targetDir)
+	// 安全路径验证
+	safeTargetDir, ok := safeUploadPath(targetDir)
+	if !ok {
+		c.JSON(http.StatusForbidden, gin.H{
+			"status":  errmsg.ERROR,
+			"message": "非法路径",
+		})
+		return
+	}
+	targetPath := safeTargetDir
 	targetPath = filepath.Clean(targetPath)
 
 	if _, err := os.Stat(targetPath); os.IsNotExist(err) {
-		if err := os.MkdirAll(targetPath, os.ModePerm); err != nil {
+		if err := os.MkdirAll(targetPath, 0755); err != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"status":  errmsg.ERROR,
 				"message": "创建目录失败: " + err.Error(),
@@ -508,7 +580,19 @@ func BatchUploadFiles(c *gin.Context) {
 
 	for _, file := range files {
 		fileName := file.Filename
-		ext := filepath.Ext(fileName)
+		ext := strings.ToLower(filepath.Ext(fileName))
+
+		// 校验文件扩展名
+		if !allowedExtensions[ext] && ext != "" {
+			failCount++
+			results = append(results, map[string]interface{}{
+				"name":    fileName,
+				"success": false,
+				"error":   "不支持的文件类型: " + ext,
+			})
+			continue
+		}
+
 		newFileName := strconv.FormatInt(time.Now().UnixNano(), 10) + ext
 		dstPath := filepath.Join(targetPath, newFileName)
 

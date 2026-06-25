@@ -158,7 +158,10 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { articleApi } from '@/services/api'
+import { mapArticle, mapArticleList } from '@/utils/dataMapper'
+import { BREAKPOINTS } from '@/utils/constants'
 import { useDefaultCover } from '@/utils/defaults'
+import type { Article } from '@/types'
 import MainLayout from '@/components/layout/MainLayout.vue'
 import ArticleHeader from '@/components/article/ArticleHeader.vue'
 import ArticleContent from '@/components/article/ArticleContent.vue'
@@ -168,23 +171,6 @@ import ShareCard from '@/components/ShareCard.vue'
 
 // 默认封面（优先使用后台配置，缺失时回退内置图）
 const defaultImage = useDefaultCover()
-
-// 类型定义
-interface Article {
-  id: number
-  title: string
-  categoryId: number
-  categoryName: string
-  desc: string
-  content: string
-  img: string
-  tags: string
-  views: number
-  type?: number
-  pdf_url?: string
-  createdAt: string
-  updatedAt: string
-}
 
 // 路由信息
 const route = useRoute()
@@ -197,7 +183,7 @@ const previousArticle = ref<Article | null>(null)
 const nextArticle = ref<Article | null>(null)
 const relatedArticles = ref<Article[]>([])
 // 默认在大屏时展开，小屏时收起
-const isTocOpen = ref(window.innerWidth > 1450)
+const isTocOpen = ref(window.innerWidth > BREAKPOINTS.DESKTOP)
 
 // 图片查看器相关
 const showImageViewer = ref(false)
@@ -245,22 +231,8 @@ const getArticleDetail = async (id: number) => {
     }
 
     const data = response.data.data
-    
-    article.value = {
-      id: data.ID,
-      title: data.title,
-      categoryId: data.cid,
-      categoryName: data.Category?.name || '未分类',
-      desc: data.desc,
-      content: data.content,
-      img: data.img,
-      tags: data.tags || '',
-      views: data.views || 0,
-      type: data.type,
-      pdf_url: data.pdf_url,
-      createdAt: data.CreatedAt || data.created_at,
-      updatedAt: data.UpdatedAt || data.updated_at
-    }
+
+    article.value = mapArticle(data)
     
     // 获取相邻文章
     await getAdjacentArticles(id)
@@ -311,61 +283,35 @@ const getRelatedArticles = async (id: number) => {
   try {
     const response = await articleApi.getRelatedArticles(id)
     if (response.data.status === 200) {
-       relatedArticles.value = response.data.data.map((item: any) => ({
-        id: item.ID,
-        title: item.title,
-        img: item.img,
-        createdAt: item.CreatedAt || item.created_at,
-       }))
+       relatedArticles.value = mapArticleList(response.data.data)
     }
   } catch (error) {
     console.error('获取相关文章失败:', error)
   }
 }
 
-// 获取相邻文章
+// 获取相邻文章（使用后端专用接口）
 const getAdjacentArticles = async (currentId: number) => {
   try {
-    // 由于后端没有提供专门的API，我们通过获取文章列表来模拟相邻文章功能
-    // 这里只是简单实现，实际项目中应该由后端提供专门的API
-    
-    // 获取所有文章列表
-    const response = await articleApi.getArticles({
-      pagesize: -1,
-      pagenum: -1
-    })
-    
+    const response = await articleApi.getAdjacentArticle(currentId)
+
     if (response.data.status !== 200) {
+      console.error('获取相邻文章失败:', response.data.message)
       return
     }
 
-    const articles = response.data.data.map((item: any) => ({
-      id: item.ID,
-      title: item.title,
-      categoryId: item.cid,
-      categoryName: item.Category?.name || '未分类',
-      desc: item.desc,
-      content: item.content,
-      img: item.img,
-      createdAt: item.CreatedAt || item.created_at,
-      updatedAt: item.UpdatedAt || item.updated_at
-    }))
-    
-    // 按ID排序（实际项目中应该按创建时间排序）
-    articles.sort((a: Article, b: Article) => a.id - b.id)
-    
-    // 查找当前文章的索引
-    const currentIndex = articles.findIndex((article: Article) => article.id === currentId)
-    
-    // 设置上一篇和下一篇文章
-    if (currentIndex > 0) {
-      previousArticle.value = articles[currentIndex - 1]
+    const { data } = response.data
+    const prev = data.previous as any
+    const next = data.next as any
+
+    if (prev && prev.ID) {
+      previousArticle.value = mapArticle(prev)
     } else {
       previousArticle.value = null
     }
-    
-    if (currentIndex < articles.length - 1) {
-      nextArticle.value = articles[currentIndex + 1]
+
+    if (next && next.ID) {
+      nextArticle.value = mapArticle(next)
     } else {
       nextArticle.value = null
     }
@@ -398,7 +344,7 @@ const closeImageViewer = () => {
 
 // 监听 isTocOpen 变化，控制 body 滚动（仅在移动端）
 watch(isTocOpen, (val) => {
-  if (window.innerWidth <= 1450) {
+  if (window.innerWidth <= BREAKPOINTS.DESKTOP) {
     document.body.style.overflow = val ? 'hidden' : ''
   } else {
     document.body.style.overflow = ''
@@ -465,22 +411,22 @@ const prevWidth = ref(window.innerWidth)
 const handleResize = () => {
   const currentWidth = window.innerWidth
   // 从小屏变大屏：自动展开目录
-  if (prevWidth.value <= 1450 && currentWidth > 1450) {
+  if (prevWidth.value <= BREAKPOINTS.DESKTOP && currentWidth > BREAKPOINTS.DESKTOP) {
     isTocOpen.value = true
   }
   // 从大屏变小屏：自动收起目录，避免遮挡内容
-  if (prevWidth.value > 1450 && currentWidth <= 1450) {
+  if (prevWidth.value > BREAKPOINTS.DESKTOP && currentWidth <= BREAKPOINTS.DESKTOP) {
     isTocOpen.value = false
   }
-  
+
   // 确保大屏下允许滚动
-  if (currentWidth > 1450) {
+  if (currentWidth > BREAKPOINTS.DESKTOP) {
     document.body.style.overflow = ''
   } else {
     // 小屏下根据状态决定
     document.body.style.overflow = isTocOpen.value ? 'hidden' : ''
   }
-  
+
   prevWidth.value = currentWidth
 }
 
@@ -490,13 +436,13 @@ onMounted(() => {
   if (articleId) {
     getArticleDetail(articleId)
   }
-  
+
   // 添加事件监听
   window.addEventListener('keydown', handleKeydown)
   window.addEventListener('resize', handleResize)
-  
+
   // 初始化目录状态
-  isTocOpen.value = window.innerWidth > 1450
+  isTocOpen.value = window.innerWidth > BREAKPOINTS.DESKTOP
 })
 
 // 组件卸载时移除事件监听

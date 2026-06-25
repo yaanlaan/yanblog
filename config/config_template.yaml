@@ -22,8 +22,6 @@ database:
 JwtKey:
 
 weather:
-  Provider: openweathermap
-  ApiKey:
   DefaultCity: Hefei
 
 # 前端配置文件路径

@@ -202,7 +202,7 @@ const highlightText = (text: string) => {
 }
 
 .meta-item:hover {
-  color: #42b883;
+  color: var(--color-accent);
 }
 
 .meta-item svg {
