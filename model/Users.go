@@ -11,9 +11,9 @@ import (
 // User 用户模型结构体
 type User struct {
 	gorm.Model
-	Username string `gorm:"type:varchar(20);not null " json:"username" validate:"required,min=4,max=12" label:"用户名"` // 用户名（4-12位）
+	Username string `gorm:"type:varchar(20);not null;uniqueIndex" json:"username" validate:"required,min=4,max=12" label:"用户名"` // 用户名（4-12位），唯一索引
 	Password string `gorm:"type:varchar(100);not null" json:"password"` // 密码（6-20位）
-	Role     int    `gorm:"type:int;DEFAULT:2" json:"role" validate:"required,gte=1" label:"角色码"`                    // 角色码（1:超级管理员, 2:管理员, 3:普通用户）
+	Role     int    `gorm:"type:int;DEFAULT:2;index" json:"role" validate:"required,gte=1" label:"角色码"`                    // 角色码（1:超级管理员, 2:管理员, 3:普通用户），添加索引
 }
 
 // applyRoleFilter 根据用户角色应用权限过滤条件（公共函数，消除重复代码）

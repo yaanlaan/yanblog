@@ -11,16 +11,16 @@ import (
 type Article struct {
 	Category Category `gorm:"foreignkey:Cid"`
 	gorm.Model
-	Title     string `gorm:"type:varchar(100);not null" json:"title"`
-	Cid       int    `gorm:"type:int;not null" json:"cid"`
+	Title     string `gorm:"type:varchar(100);not null;index" json:"title"` // 添加索引，优化搜索性能
+	Cid       int    `gorm:"type:int;not null;index" json:"cid"`           // 添加索引，优化分类筛选
 	Desc      string `gorm:"type:varchar(200)" json:"desc"`
 	Content   string `gorm:"type:longtext" json:"content"`
 	Img       string `gorm:"type:varchar(100)" json:"img"`
 	Type      int    `gorm:"type:int;default:1" json:"type"` // 1: Markdown, 2: PDF
 	PdfUrl    string `gorm:"type:varchar(200)" json:"pdf_url"`
-	Top       int    `gorm:"type:int;default:0" json:"top"`   // 0表示不置顶，其他数字1-6表示置顶等级，数字越小等级越高
-	Views     int    `gorm:"type:int;default:0" json:"views"` // 阅读量
-	Tags      string `gorm:"type:varchar(200)" json:"tags"`
+	Top       int    `gorm:"type:int;default:0;index" json:"top"`   // 添加索引，优化置顶查询
+	Views     int    `gorm:"type:int;default:0;index" json:"views"` // 添加索引，优化热门文章查询
+	Tags      string `gorm:"type:varchar(200);index" json:"tags"`   // 添加索引，优化标签搜索
 	TagModels []Tag  `gorm:"many2many:article_tags" json:"tag_models"`
 }
 

@@ -9,9 +9,9 @@ import (
 
 type Category struct {
 	gorm.Model
-	Name string `gorm:"type:varchar(20);not null" json:"name"`
+	Name string `gorm:"type:varchar(20);not null;uniqueIndex" json:"name"` // 添加唯一索引
 	Img  string `gorm:"type:varchar(255)" json:"img"`
-	Top  int    `gorm:"type:int;not null;default:0" json:"top"`
+	Top  int    `gorm:"type:int;not null;default:0;index" json:"top"` // 添加索引，优化置顶查询
 	// 添加文章计数字段（使用gorm:"-"标记，表示不直接映射到数据库字段，保证数据一致性）
 	ArticleCount int `gorm:"-" json:"article_count"`
 }
