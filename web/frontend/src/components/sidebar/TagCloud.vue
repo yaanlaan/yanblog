@@ -2,10 +2,15 @@
   <div class="sidebar-card tag-cloud">
     <div class="card-header">
       <h3><i class="iconfont icon-tags tag-icon"></i> 标签云</h3>
-      <div class="view-switch" @click="toggleView" :title="is3DView ? '切换到列表视图' : '切换到3D视图'">
-        <span class="switch-label">{{ is3DView ? '3D' : '列表' }}</span>
-        <div class="switch-track" :class="{ 'active': is3DView }">
-          <div class="switch-thumb"></div>
+      <div class="header-actions">
+        <div class="zoom-indicator" v-if="is3DView && Math.abs(zoomLevel - 1.0) > 0.01">
+          <span>{{ Math.round(zoomLevel * 100) }}%</span>
+        </div>
+        <div class="view-switch" @click="toggleView" :title="is3DView ? '切换到列表视图' : '切换到3D视图'">
+          <span class="switch-label">{{ is3DView ? '3D' : '列表' }}</span>
+          <div class="switch-track" :class="{ 'active': is3DView }">
+            <div class="switch-thumb"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -55,6 +60,7 @@
         @touchstart="handleTouchStart"
         @touchmove="handleTouchMove"
         @touchend="handleTouchEnd"
+        @wheel="handleWheel"
       >
         <canvas class="connections-canvas" ref="canvasRef"></canvas>
         <div class="tags-3d-wrapper" ref="wrapperRef">
@@ -68,6 +74,12 @@
           >
             {{ tag.name }} <span class="tag-count">({{ tag.count }})</span>
           </router-link>
+        </div>
+        
+        <!-- 操作提示 -->
+        <div class="zoom-hint">
+          <span class="hint-icon">🔍</span>
+          <span class="hint-text">滚轮缩放 · 拖拽旋转</span>
         </div>
       </div>
 
@@ -115,7 +127,8 @@ const wrapperRef = ref<HTMLElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let animationId: number | null = null
 let resizeObserver: ResizeObserver | null = null
-const radius = 100 // 球体半径
+const baseRadius = 100 // 基础球体半径
+let radius = 100 // 当前球体半径（可动态调整）
 const baseSpeed = 0.005 // 基础旋转速度
 let angleX = baseSpeed
 let angleY = baseSpeed
@@ -124,6 +137,7 @@ let mouseY = 0
 let isDragging = false
 let lastX = 0
 let lastY = 0
+let zoomLevel = 1.0 // 缩放级别（0.5 - 2.0）
 
 // 缓存主题色，避免每帧都读取 DOM
 let cachedAccentColor = ''
@@ -204,6 +218,21 @@ const setupResizeObserver = () => {
 // 初始化 3D 坐标 (斐波那契球分布)
 const init3D = () => {
   const len = tags.value.length
+  
+  // 根据标签数量动态调整半径
+  if (len <= 10) {
+    radius = baseRadius * 0.8 // 标签少时缩小
+  } else if (len <= 30) {
+    radius = baseRadius // 标准大小
+  } else if (len <= 60) {
+    radius = baseRadius * 1.3 // 标签多时扩大
+  } else {
+    radius = baseRadius * 1.6 // 标签很多时更大
+  }
+  
+  // 应用用户缩放级别
+  radius = radius * zoomLevel
+  
   tags3D.value = tags.value.map((tag, i) => {
     const phi = Math.acos(-1 + (2 * i + 1) / len)
     const theta = Math.sqrt(len * Math.PI) * phi
@@ -385,6 +414,17 @@ const handleTouchEnd = () => {
   }
 }
 
+// 鼠标滚轮缩放
+const handleWheel = (e: WheelEvent) => {
+  e.preventDefault()
+  
+  const delta = e.deltaY > 0 ? -0.1 : 0.1
+  zoomLevel = Math.max(0.5, Math.min(2.0, zoomLevel + delta))
+  
+  // 重新初始化 3D 布局
+  init3D()
+}
+
 // 获取标签列表
 const fetchTags = async () => {
   try {
@@ -509,6 +549,22 @@ onBeforeUnmount(() => {
   height: 16px;
   background: var(--color-accent);
   border-radius: 2px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.zoom-indicator {
+  padding: 2px 8px;
+  background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  border-radius: 12px;
+  font-size: 11px;
+  color: var(--color-accent);
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
 .view-switch {
@@ -652,6 +708,39 @@ onBeforeUnmount(() => {
   color: var(--color-accent) !important;
   z-index: 1000 !important;
   text-shadow: 0 2px 4px var(--color-shadow);
+}
+
+/* 缩放提示 */
+.zoom-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--color-background) 80%, transparent);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+}
+
+.tags-3d-container:hover .zoom-hint {
+  opacity: 0;
+}
+
+.hint-icon {
+  font-size: 14px;
+}
+
+.hint-text {
+  font-weight: 500;
 }
 
 .empty-state {
