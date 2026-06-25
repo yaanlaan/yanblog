@@ -49,9 +49,9 @@ func InitRateLimiter(dbPath string) error {
 
 	loginLimiter = &rateLimiter{
 		db:       db,
-		maxTries: 5,               // 最多尝试次数
+		maxTries: 5,              // 最多尝试次数
 		window:   15 * time.Minute, // 时间窗口
-		banTime:  30 * time.Minute, // 封禁时间
+		banTime:  5 * time.Minute,  // 封禁时间（5分钟）
 	}
 
 	// 定期清理过期记录
@@ -105,7 +105,7 @@ func LoginRateLimit() gin.HandlerFunc {
 			if now.Sub(attempt.FirstTime) < loginLimiter.banTime {
 				c.JSON(http.StatusTooManyRequests, gin.H{
 					"status":  429,
-					"message": "登录尝试过于频繁，请30分钟后再试",
+					"message": "登录尝试过于频繁，请5分钟后再试",
 				})
 				c.Abort()
 				return
