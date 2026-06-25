@@ -40,6 +40,16 @@ func ValidateConfig() error {
 		errors = append(errors, "服务器端口 (server.HttpPort) 不能为空")
 	}
 
+	// 验证 SiteUrl（生产环境必须配置）
+	if ServerConfig.Server.SiteUrl == "" {
+		warnings = append(warnings, "⚠️  SiteUrl 未配置，CORS 将允许所有来源（仅适用于开发环境）。生产环境请设置站点 URL！")
+	} else {
+		// 验证 URL 格式
+		if !strings.HasPrefix(ServerConfig.Server.SiteUrl, "http://") && !strings.HasPrefix(ServerConfig.Server.SiteUrl, "https://") {
+			errors = append(errors, "SiteUrl 必须以 http:// 或 https:// 开头")
+		}
+	}
+
 	// 打印警告信息（不阻止启动）
 	for _, w := range warnings {
 		fmt.Println(w)

@@ -93,7 +93,7 @@ func initMySQL() (*gorm.DB, error) {
 		)
 		db, dbErr = gorm.Open(mysql.Open(dsn), &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Silent),
-			DisableForeignKeyConstraintWhenMigrating: true,
+			DisableForeignKeyConstraintWhenMigrating: false, // 启用外键约束，保证数据完整性
 			SkipDefaultTransaction: true,
 			NamingStrategy: schema.NamingStrategy{
 				SingularTable: true,
@@ -134,7 +134,7 @@ func initSQLite() (*gorm.DB, error) {
 
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
-		DisableForeignKeyConstraintWhenMigrating: true,
+		DisableForeignKeyConstraintWhenMigrating: false, // 启用外键约束，保证数据完整性
 		SkipDefaultTransaction: true,
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,

@@ -40,16 +40,18 @@ export default defineConfig({
         manualChunks: {
           // 核心框架
           'vendor-vue': ['vue', 'vue-router', 'pinia'],
-          // Markdown 渲染
-          'vendor-markdown': ['marked', 'highlight.js'],
-          // 数学公式（KaTeX 体积大）
+          // Markdown 渲染（核心依赖）
+          'vendor-markdown': ['marked'],
+          // 代码高亮（按需加载）
+          'vendor-highlight': ['highlight.js'],
+          // 数学公式（KaTeX 体积大，仅文章详情页需要）
           'vendor-katex': ['katex'],
-          // Mermaid 图表（最大的依赖）
+          // Mermaid 图表（最大的依赖，仅文章详情页需要）
           'vendor-mermaid': ['mermaid'],
         }
       }
     },
-    chunkSizeWarningLimit: 600
+    chunkSizeWarningLimit: 500 // 降低阈值，促进代码分割
   },
   server: {
     allowedHosts: allowedHosts,

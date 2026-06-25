@@ -26,6 +26,12 @@ func main() {
 	// 初始化数据库
 	model.InitDB()
 
+	// 初始化登录限流器（基于 SQLite 持久化）
+	if err := middlewares.InitRateLimiter("./data/rate_limit.db"); err != nil {
+		fmt.Fprintf(os.Stderr, "⚠️  限流器初始化失败: %v\n", err)
+		fmt.Println("将继续运行，但登录限流功能不可用")
+	}
+
 	// 初始化路由
 	routers.InitRouter()
 }
