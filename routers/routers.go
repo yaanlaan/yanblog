@@ -64,6 +64,14 @@ func InitRouter() {
 		admin.POST("article/zip/batch/optimized", v1.UploadArticleZipBatchOptimized)
 		admin.GET("article/upload/:id", v1.GetUploadProgress)  // 获取上传进度
 		admin.DELETE("article/upload/:id", v1.CancelUpload)    // 取消上传任务
+		// V2 增强版上传（WebSocket实时推送 + 断点续传 + 历史记录）
+		admin.POST("article/zip/v2", v1.UploadArticleZipV2)           // V2上传
+		admin.GET("article/upload/v2/:id", v1.GetUploadProgressV2)    // V2进度查询
+		admin.DELETE("article/upload/v2/:id", v1.CancelUploadV2)      // V2取消
+		admin.GET("article/upload/v2/:id/ws", v1.WebSocketProgress)   // WebSocket进度
+		admin.POST("article/upload/v2/:id/retry", v1.RetryFailedUpload) // 重试失败文件
+		admin.GET("article/upload/history", v1.GetUploadHistory)      // 上传历史
+		admin.DELETE("article/upload/history", v1.ClearUploadHistory) // 清空历史
 		admin.PUT("article/:id", v1.EditArt)
 
 		admin.DELETE("article/:id", v1.DeleteArt)

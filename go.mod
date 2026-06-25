@@ -22,6 +22,7 @@ require (
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/jonboulle/clockwork v0.2.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lestrrat-go/strftime v1.0.6 // indirect
