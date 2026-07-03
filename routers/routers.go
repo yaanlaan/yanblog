@@ -64,6 +64,14 @@ func InitRouter() {
 		admin.POST("article/zip/batch/optimized", v1.UploadArticleZipBatchOptimized)
 		admin.GET("article/upload/:id", v1.GetUploadProgress)  // 获取上传进度
 		admin.DELETE("article/upload/:id", v1.CancelUpload)    // 取消上传任务
+		// V2 增强版上传（WebSocket实时推送 + 断点续传 + 历史记录）
+		admin.POST("article/zip/v2", v1.UploadArticleZipV2)           // V2上传
+		admin.GET("article/upload/v2/:id", v1.GetUploadProgressV2)    // V2进度查询
+		admin.DELETE("article/upload/v2/:id", v1.CancelUploadV2)      // V2取消
+		admin.GET("article/upload/v2/:id/ws", v1.WebSocketProgress)   // WebSocket进度
+		admin.POST("article/upload/v2/:id/retry", v1.RetryFailedUpload) // 重试失败文件
+		admin.GET("article/upload/history", v1.GetUploadHistory)      // 上传历史
+		admin.DELETE("article/upload/history", v1.EmptyRecycleBin) // 清空历史
 		admin.PUT("article/:id", v1.EditArt)
 
 		admin.DELETE("article/:id", v1.DeleteArt)
@@ -84,6 +92,18 @@ func InitRouter() {
 		admin.POST("files/batch-delete", v1.BatchDeleteFiles) // 批量删除
 		admin.POST("files/batch-upload", v1.BatchUploadFiles) // 批量上传
 		auth.GET("files/stats", v1.GetStorageStats) // 获取存储统计
+		// V2 增强文件管理
+		auth.GET("files/v2/stats", v1.GetFileStats)              // 详细统计
+		auth.GET("files/v2/search", v1.SearchFiles)              // 搜索文件
+		admin.POST("files/v2/compress", v1.CompressFiles)        // 压缩
+		admin.POST("files/v2/extract", v1.ExtractZip)            // 解压
+		admin.POST("files/v2/recycle", v1.MoveToRecycleBin)      // 删除到回收站
+		auth.GET("files/v2/recycle", v1.GetRecycleBin)           // 回收站列表
+		admin.POST("files/v2/recycle/restore", v1.RestoreFromRecycleBin) // 恢复
+		admin.DELETE("files/v2/recycle", v1.EmptyRecycleBin)     // 清空回收站
+		auth.GET("files/v2/preview", v1.GetFilePreview)          // 文件预览
+		admin.PUT("files/v2/metadata", v1.SaveFileMetadata)      // 保存元数据
+		auth.GET("files/v2/metadata", v1.GetFileMetadata)        // 获取元数据
 		// 前端配置管理（更新需要管理员权限）
 		admin.PUT("frontend/config", v1.UpdateFrontEndConfig)
 		// 后端配置管理
