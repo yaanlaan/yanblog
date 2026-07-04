@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -14,6 +15,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+var unsafePathPattern = regexp.MustCompile(`(\.\.|/|\\)`)
+
+func sanitizeTitle(title string) string {
+	title = strings.TrimSpace(title)
+	title = unsafePathPattern.ReplaceAllString(title, "_")
+	if len(title) > 200 {
+		title = title[:200]
+	}
+	return title
+}
 
 // 添加文章
 func AddArticle(c *gin.Context) {
@@ -201,8 +213,8 @@ func EditArt(c *gin.Context) {
 	// 获取旧文章信息，检查标题是否变更
 	oldArt, code := model.GetArtInfo(id)
 	if code == errmsg.SUCCESS && oldArt.Title != data.Title {
-		oldTitleClean := filepath.Clean(oldArt.Title)
-		newTitleClean := filepath.Clean(data.Title)
+		oldTitleClean := sanitizeTitle(oldArt.Title)
+		newTitleClean := sanitizeTitle(data.Title)
 
 		oldDir := filepath.Join("uploads", "articles", oldTitleClean)
 		newDir := filepath.Join("uploads", "articles", newTitleClean)
@@ -236,7 +248,7 @@ func DeleteArt(c *gin.Context) {
 	// 获取文章信息以找到对应的文件夹
 	data, code := model.GetArtInfo(id)
 	if code == errmsg.SUCCESS && data.Title != "" {
-		targetDir := filepath.Join("uploads", "articles", filepath.Clean(data.Title))
+		targetDir := filepath.Join("uploads", "articles", sanitizeTitle(data.Title))
 		_ = os.RemoveAll(targetDir)
 	}
 
@@ -258,7 +270,7 @@ func BatchDeleteArt(c *gin.Context) {
 	for _, id := range data.Ids {
 		art, code := model.GetArtInfo(id)
 		if code == errmsg.SUCCESS && art.Title != "" {
-			targetDir := filepath.Join("uploads", "articles", filepath.Clean(art.Title))
+			targetDir := filepath.Join("uploads", "articles", sanitizeTitle(art.Title))
 			_ = os.RemoveAll(targetDir)
 		}
 	}

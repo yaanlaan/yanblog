@@ -309,9 +309,9 @@ func CompressFiles(c *gin.Context) {
 			if err != nil {
 				return err
 			}
-			defer file.Close()
 			
 			_, err = io.Copy(writer, file)
+			file.Close()
 			if err != nil {
 				return err
 			}

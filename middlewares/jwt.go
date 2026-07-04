@@ -8,11 +8,16 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var JwtKey = []byte(utils.ServerConfig.JwtKey)
+var JwtKey []byte
+
+func InitJwtKey(key string) {
+	JwtKey = []byte(key)
+}
 
 // RefreshJwtKey 在配置重载后刷新 JWT 密钥
 func RefreshJwtKey() {
@@ -82,14 +87,14 @@ func AdminRequired() gin.HandlerFunc {
 		}
 
 		role := model.GetUserRole(username.(string))
-		if role > 2 {
-			c.JSON(http.StatusOK, gin.H{
-				"status":  errmsg.ERROR_USER_NO_RIGHT,
-				"message": "无权执行此操作，需要管理员权限",
-			})
-			c.Abort()
-			return
-		}
+	if role > 2 {
+		c.JSON(http.StatusForbidden, gin.H{
+			"status":  errmsg.ERROR_USER_NO_RIGHT,
+			"message": "无权执行此操作，需要管理员权限",
+		})
+		c.Abort()
+		return
+	}
 
 		c.Next()
 	}

@@ -56,7 +56,8 @@ func init() {
 			configPath = "config/config_template.yaml"
 			file, err = os.ReadFile(configPath)
 			if err != nil {
-				log.Fatalf("读取配置文件失败，请从 config/config_template.yaml 创建 config/backend/config.yaml。错误信息：%s", err)
+				log.Printf("读取配置文件失败，使用默认值。错误信息：%s", err)
+				return
 			}
 		}
 	}
@@ -142,8 +143,9 @@ func ReloadConfig() error {
 		return err
 	}
 	LoadConfig(file)
-	// 通知 JWT 中间件刷新密钥（通过 model 包间接调用）
-	// 注意：middlewares.RefreshJwtKey() 需要在路由初始化后调用
+	if OnConfigReloaded != nil {
+		OnConfigReloaded()
+	}
 	return nil
 }
 

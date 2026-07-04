@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"net/http"
 	"sync"
 	"time"
@@ -8,6 +9,26 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+)
+
+type apiRateLimit struct {
+	tokens     int
+	maxTokens  int
+	rate       time.Duration
+	lastAccess time.Time
+	mu         sync.Mutex
+}
+
+var apiRateLimits sync.Map
+
+const (
+	defaultAPIRateLimit    = 100
+	defaultAPIRateInterval = time.Minute
+)
+
+var (
+	shutdownCtx    context.Context
+	shutdownCancel context.CancelFunc
 )
 
 // LoginAttempt 登录尝试记录（数据库模型）
@@ -42,7 +63,6 @@ func InitRateLimiter(dbPath string) error {
 		return err
 	}
 
-	// 自动迁移表结构
 	if err := db.AutoMigrate(&LoginAttempt{}); err != nil {
 		return err
 	}
@@ -54,22 +74,27 @@ func InitRateLimiter(dbPath string) error {
 		banTime:  5 * time.Minute,  // 封禁时间（5分钟）
 	}
 
-	// 定期清理过期记录
+	shutdownCtx, shutdownCancel = context.WithCancel(context.Background())
+
 	go cleanupExpiredRecords()
 
 	return nil
 }
 
-// cleanupExpiredRecords 定期清理过期记录
 func cleanupExpiredRecords() {
 	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		loginLimiter.mu.Lock()
-		cutoffTime := time.Now().Add(-loginLimiter.banTime)
-		loginLimiter.db.Where("first_time < ?", cutoffTime).Delete(&LoginAttempt{})
-		loginLimiter.mu.Unlock()
+	for {
+		select {
+		case <-ticker.C:
+			loginLimiter.mu.Lock()
+			cutoffTime := time.Now().Add(-loginLimiter.banTime)
+			loginLimiter.db.Where("first_time < ?", cutoffTime).Delete(&LoginAttempt{})
+			loginLimiter.mu.Unlock()
+		case <-shutdownCtx.Done():
+			return
+		}
 	}
 }
 
@@ -134,5 +159,75 @@ func LoginRateLimit() gin.HandlerFunc {
 		}
 
 		c.Next()
+	}
+}
+
+// APIRateLimit 通用 API 限流中间件（基于令牌桶算法）
+// 默认每分钟 100 次请求限制
+func APIRateLimit() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ip := c.ClientIP()
+
+		item, _ := apiRateLimits.LoadOrStore(ip, &apiRateLimit{
+			tokens:     defaultAPIRateLimit,
+			maxTokens:  defaultAPIRateLimit,
+			rate:       defaultAPIRateInterval,
+			lastAccess: time.Now(),
+		})
+
+		limit := item.(*apiRateLimit)
+		limit.mu.Lock()
+		defer limit.mu.Unlock()
+
+		now := time.Now()
+		elapsed := now.Sub(limit.lastAccess)
+
+		if elapsed >= limit.rate {
+			limit.tokens = limit.maxTokens
+			limit.lastAccess = now
+		}
+
+		if limit.tokens > 0 {
+			limit.tokens--
+			limit.lastAccess = now
+			c.Next()
+		} else {
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"status":  429,
+				"message": "请求过于频繁，请稍后再试",
+			})
+			c.Abort()
+		}
+	}
+}
+
+func CleanupAPIRateLimits() {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			now := time.Now()
+			apiRateLimits.Range(func(key, value interface{}) bool {
+				limit := value.(*apiRateLimit)
+				limit.mu.Lock()
+				if now.Sub(limit.lastAccess) > 10*time.Minute {
+					limit.mu.Unlock()
+					apiRateLimits.Delete(key)
+				} else {
+					limit.mu.Unlock()
+				}
+				return true
+			})
+		case <-shutdownCtx.Done():
+			return
+		}
+	}
+}
+
+func Shutdown() {
+	if shutdownCancel != nil {
+		shutdownCancel()
 	}
 }

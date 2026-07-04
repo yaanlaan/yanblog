@@ -1,4 +1,5 @@
-import axios, { AxiosRequestConfig } from 'axios'
+import axios from 'axios'
+import type { AxiosRequestConfig } from 'axios'
 
 export const apiClient = axios.create({
   baseURL: '/api/v1',

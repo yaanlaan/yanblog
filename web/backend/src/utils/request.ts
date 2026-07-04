@@ -1,4 +1,5 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import axios from 'axios'
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 
 // 创建axios实例
 const service: AxiosInstance = axios.create({
@@ -31,7 +32,7 @@ service.interceptors.response.use(
   (response: AxiosResponse) => {
     // 对响应数据做些什么
     const res = response.data
-    
+
     // 根据后端约定的状态码进行处理
     if (res.status === 200) {
       return res

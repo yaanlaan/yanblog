@@ -55,12 +55,60 @@ func ErrorWithMessage(c *gin.Context, code int, message string) {
 
 // BadRequest 参数错误
 func BadRequest(c *gin.Context, message string) {
-	ErrorWithMessage(c, errmsg.ERROR, message)
+	c.JSON(http.StatusBadRequest, gin.H{
+		"status":  errmsg.ERROR,
+		"data":    nil,
+		"message": message,
+	})
 }
 
 // NotFound 资源不存在
 func NotFound(c *gin.Context, message string) {
-	ErrorWithMessage(c, errmsg.ERROR_ART_NOT_EXIST, message)
+	c.JSON(http.StatusNotFound, gin.H{
+		"status":  errmsg.ERROR_ART_NOT_EXIST,
+		"data":    nil,
+		"message": message,
+	})
+}
+
+// Forbidden 权限拒绝
+func Forbidden(c *gin.Context, message string) {
+	c.JSON(http.StatusForbidden, gin.H{
+		"status":  errmsg.ERROR_USER_NO_RIGHT,
+		"data":    nil,
+		"message": message,
+	})
+}
+
+// SuccessWithStatus 返回成功响应（自定义 HTTP 状态码）
+func SuccessWithStatus(c *gin.Context, data interface{}, httpCode int) {
+	c.JSON(httpCode, gin.H{
+		"status":  httpCode,
+		"data":    data,
+		"message": errmsg.GetErrMsg(httpCode),
+	})
+}
+
+// ErrorWithStatus 返回错误响应（自定义 HTTP 状态码）
+func ErrorWithStatus(c *gin.Context, code int, httpCode int, message string) {
+	c.JSON(httpCode, gin.H{
+		"status":  code,
+		"data":    nil,
+		"message": message,
+	})
+}
+
+// SuccessWithMeta 返回成功响应（带自定义元数据）
+func SuccessWithMeta(c *gin.Context, data interface{}, meta map[string]interface{}) {
+	response := gin.H{
+		"status":  200,
+		"data":    data,
+		"message": errmsg.GetErrMsg(200),
+	}
+	for k, v := range meta {
+		response[k] = v
+	}
+	c.JSON(http.StatusOK, response)
 }
 
 // ParsePageParams 从查询参数解析分页信息

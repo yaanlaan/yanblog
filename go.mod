@@ -1,12 +1,13 @@
 module yanblog
 
-go 1.24.0
+go 1.25.3
 
 require (
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-contrib/gzip v1.2.5
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt/v5 v5.2.3
+	github.com/gorilla/websocket v1.5.3
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
 	github.com/shirou/gopsutil/v3 v3.24.5
@@ -22,7 +23,6 @@ require (
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/jonboulle/clockwork v0.2.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lestrrat-go/strftime v1.0.6 // indirect

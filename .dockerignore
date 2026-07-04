@@ -12,9 +12,9 @@ Dockerfile
 node_modules
 **/node_modules
 
-# Build outputs (built in Docker)
-dist
-**/dist
+# Build outputs (built locally for Dockerfile.local)
+# dist
+# **/dist
 
 # IDE
 .idea

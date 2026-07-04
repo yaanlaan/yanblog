@@ -189,9 +189,12 @@ func DeleteUser(id int) int {
 // BeforeSave GORM钩子函数，在保存用户前自动执行
 // 用于在保存用户前对密码进行加密
 func (u *User) BeforeSave(tx *gorm.DB) (err error) {
+	if strings.HasPrefix(u.Password, "$2a$") || strings.HasPrefix(u.Password, "$2b$") {
+		return nil
+	}
 	hash, err := EncryptPassword(u.Password)
 	if err != nil {
-		return err // 加密失败时阻止保存
+		return err
 	}
 	u.Password = hash
 	return
@@ -201,7 +204,7 @@ func (u *User) BeforeSave(tx *gorm.DB) (err error) {
 // 参数: password - 明文密码
 // 返回: 加密后的密码和错误信息
 func EncryptPassword(password string) (string, error) {
-	const cost = 10 // 负载值
+	const cost = 12 // 负载值
 
 	HashPw, err := bcrypt.GenerateFromPassword([]byte(password), cost)
 	if err != nil {
@@ -209,6 +212,12 @@ func EncryptPassword(password string) (string, error) {
 	}
 
 	return string(HashPw), nil
+}
+
+// CheckPassword 验证密码是否正确
+func CheckPassword(password string, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 // CheckLogin 验证用户登录

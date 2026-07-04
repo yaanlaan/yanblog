@@ -17,8 +17,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 刷新 JWT 密钥（ValidateConfig 可能生成了临时密钥）
-	middlewares.RefreshJwtKey()
+	// 初始化 JWT 密钥
+	middlewares.InitJwtKey(utils.ServerConfig.JwtKey)
+	// 注册配置重载回调
+	utils.OnConfigReloaded = middlewares.RefreshJwtKey
 
 	// 打印启动信息
 	utils.PrintStartupInfo()
@@ -31,6 +33,9 @@ func main() {
 		fmt.Fprintf(os.Stderr, "⚠️  限流器初始化失败: %v\n", err)
 		fmt.Println("将继续运行，但登录限流功能不可用")
 	}
+
+	// 启动 API 限流清理
+	go middlewares.CleanupAPIRateLimits()
 
 	// 初始化路由
 	routers.InitRouter()

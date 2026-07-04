@@ -6,16 +6,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
+	"yanblog/model"
 	"yanblog/utils/errmsg"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"gopkg.in/yaml.v3"
 )
 
 // UploadTaskV2 增强版上传任务
@@ -337,9 +341,9 @@ func GetUploadHistory(c *gin.Context) {
 	})
 }
 
-// UploadArticleZipV2 增强版ZIP上传
+// UploadArticleZipV2 增强版ZIP上传（支持单个和批量上传）
 func UploadArticleZipV2(c *gin.Context) {
-	file, err := c.FormFile("file")
+	form, err := c.MultipartForm()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  errmsg.ERROR,
@@ -348,7 +352,45 @@ func UploadArticleZipV2(c *gin.Context) {
 		return
 	}
 
-	// 创建任务
+	files := form.File["files"]
+	if len(files) == 0 {
+		file, err := c.FormFile("file")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status":  errmsg.ERROR,
+				"message": "文件上传失败，请使用 file 或 files 字段",
+			})
+			return
+		}
+		files = []*multipart.FileHeader{file}
+	}
+
+	if len(files) == 1 {
+		result := processSingleZipFileSync(c, files[0])
+		c.JSON(http.StatusOK, result)
+		return
+	}
+
+	results := make([]gin.H, 0, len(files))
+	totalSuccess := 0
+
+	for _, file := range files {
+		result := processSingleZipFileSync(c, file)
+		results = append(results, result)
+		if result["status"] == errmsg.SUCCESS {
+			totalSuccess++
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  errmsg.SUCCESS,
+		"total":   len(files),
+		"success": totalSuccess,
+		"results": results,
+	})
+}
+
+func processSingleZipFileSync(c *gin.Context, file *multipart.FileHeader) gin.H {
 	taskID := fmt.Sprintf("upload_v2_%d", time.Now().UnixNano())
 	task := &UploadTaskV2{
 		ID:         taskID,
@@ -360,63 +402,45 @@ func UploadArticleZipV2(c *gin.Context) {
 		MaxRetries: 3,
 		Clients:    make([]*websocket.Conn, 0),
 	}
-	
+
 	tasksMuV2.Lock()
 	uploadTasksV2[taskID] = task
 	tasksMuV2.Unlock()
-	
-	// 并发控制
-	select {
-	case semaphoreV2 <- struct{}{}:
-		defer func() { <-semaphoreV2 }()
-	default:
-		c.JSON(http.StatusTooManyRequests, gin.H{
-			"status":  errmsg.ERROR_UPLOAD_BUSY,
-			"message": fmt.Sprintf("上传任务繁忙，最多支持 %d 个并发任务", maxConcurrentV2),
-		})
-		return
-	}
 
-	// 打开文件
 	src, err := file.Open()
 	if err != nil {
 		updateTaskFailed(task, "打开文件失败: "+err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{
+		return gin.H{
 			"status":  errmsg.ERROR,
 			"message": "打开文件失败",
-		})
-		return
+			"file":    file.Filename,
+		}
 	}
 	defer src.Close()
 
-	// 保存 ZIP 文件（用于重试）
-	zipPath := fmt.Sprintf("./temp_zip/%s.zip", taskID)
+	zipPath := fmt.Sprintf("./temp_zip/%s.zip", task.ID)
 	os.MkdirAll("./temp_zip", 0755)
-	
+
 	outFile, err := os.Create(zipPath)
 	if err != nil {
 		updateTaskFailed(task, "保存文件失败")
-		c.JSON(http.StatusInternalServerError, gin.H{
+		return gin.H{
 			"status":  errmsg.ERROR,
 			"message": "保存文件失败",
-		})
-		return
+			"file":    file.Filename,
+		}
 	}
-	
-	// 复制文件内容
+
 	io.Copy(outFile, src)
 	outFile.Close()
-	src.Close()
-	
-	// 重新打开用于处理
+
 	src, _ = os.Open(zipPath)
 	defer src.Close()
-	
-	tempDir := fmt.Sprintf("./temp_zip/%s", taskID)
+
+	tempDir := fmt.Sprintf("./temp_zip/%s", task.ID)
 	os.MkdirAll(tempDir, 0755)
 	defer os.RemoveAll(tempDir)
-	
-	// 流式处理
+
 	startTime := time.Now()
 	successCount, errors := processZipStreamV2(c.Request.Context(), src, file.Size, tempDir, task, startTime)
 	
@@ -458,20 +482,28 @@ func UploadArticleZipV2(c *gin.Context) {
 	if task.Status == "completed" && task.Failed == 0 {
 		os.Remove(zipPath)
 	}
-	
-	// 返回结果
-	c.JSON(http.StatusOK, gin.H{
+
+	if task.Status == "failed" && task.Failed == task.TotalFiles {
+		return gin.H{
+			"status":  errmsg.ERROR,
+			"message": "上传失败",
+			"file":    file.Filename,
+			"errors":  task.Errors,
+		}
+	}
+
+	return gin.H{
 		"status":  errmsg.SUCCESS,
-		"task_id": taskID,
 		"message": fmt.Sprintf("上传完成，成功 %d/%d", task.Success, task.TotalFiles),
+		"file":    file.Filename,
 		"data": gin.H{
-			"total":       task.TotalFiles,
-			"success":     task.Success,
-			"failed":      task.Failed,
-			"errors":      task.Errors,
-			"zip_saved":   task.Failed > 0, // 如果有失败，保留了 ZIP 用于重试
+			"total":    task.TotalFiles,
+			"success":  task.Success,
+			"failed":   task.Failed,
+			"errors":   task.Errors,
+			"task_id":  task.ID,
 		},
-	})
+	}
 }
 
 // processZipStreamV2 增强版流式处理
@@ -690,4 +722,190 @@ func max(a, b int) int {
 		return a
 	}
 	return b
+}
+
+type ArticleFrontMatter struct {
+	Title    string   `yaml:"title"`
+	Date     string   `yaml:"date"`
+	Tags     []string `yaml:"tags"`
+	Category string   `yaml:"category"`
+	Desc     string   `yaml:"desc"`
+	Cover    string   `yaml:"cover"`
+}
+
+func parseDate(s string) (time.Time, error) {
+	formats := []string{
+		"2006-01-02 15:04:05",
+		"2006-01-02T15:04:05Z",
+		"2006-01-02T15:04:05+08:00",
+		"2006-01-02 15:04",
+		"2006-01-02",
+		"2006/01/02 15:04:05",
+		"2006/01/02",
+		"2006-1-2 15:04:05",
+		"2006-1-2",
+	}
+	for _, f := range formats {
+		if t, err := time.Parse(f, s); err == nil {
+			return t, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("无法解析日期: %s", s)
+}
+
+func extractZipFile(zipFile *zip.File, destPath string) error {
+	outFile, err := os.OpenFile(destPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, zipFile.Mode())
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	rc, err := zipFile.Open()
+	if err != nil {
+		return err
+	}
+	defer rc.Close()
+
+	_, err = io.Copy(outFile, rc)
+	return err
+}
+
+func processZipArticle(unzipDir string) (*model.Article, int) {
+	var mdPath string
+	filepath.Walk(unzipDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && strings.HasSuffix(strings.ToLower(info.Name()), ".md") {
+			mdPath = path
+			return io.EOF
+		}
+		return nil
+	})
+
+	if mdPath == "" {
+		return nil, errmsg.ERROR
+	}
+
+	contentBytes, err := os.ReadFile(mdPath)
+	if err != nil {
+		return nil, errmsg.ERROR
+	}
+	contentStr := string(contentBytes)
+
+	var frontMatter ArticleFrontMatter
+	var bodyContent string
+
+	if strings.HasPrefix(contentStr, "---") {
+		parts := strings.SplitN(contentStr, "---", 3)
+		if len(parts) >= 3 {
+			if err := yaml.Unmarshal([]byte(parts[1]), &frontMatter); err != nil {
+				bodyContent = contentStr
+			} else {
+				bodyContent = parts[2]
+			}
+		} else {
+			bodyContent = contentStr
+		}
+	} else {
+		bodyContent = contentStr
+	}
+
+	if frontMatter.Title == "" {
+		base := filepath.Base(mdPath)
+		frontMatter.Title = strings.TrimSuffix(base, filepath.Ext(base))
+	}
+
+	imgRegex := regexp.MustCompile(`!\[(.*?)\]\((.*?)\)`)
+	matches := imgRegex.FindAllStringSubmatch(bodyContent, -1)
+	processedContent := bodyContent
+
+	for _, match := range matches {
+		originalPath := match[2]
+		if strings.HasPrefix(originalPath, "http") || strings.HasPrefix(originalPath, "//") {
+			continue
+		}
+		mdDir := filepath.Dir(mdPath)
+		imageFullPath := filepath.Join(mdDir, originalPath)
+		if _, err := os.Stat(imageFullPath); err == nil {
+			newURL, err := uploadLocalFile(imageFullPath, "article")
+			if err == nil {
+				processedContent = strings.Replace(processedContent, originalPath, newURL, -1)
+			}
+		}
+	}
+
+	if frontMatter.Cover != "" && !strings.HasPrefix(frontMatter.Cover, "http") {
+		mdDir := filepath.Dir(mdPath)
+		coverFullPath := filepath.Join(mdDir, frontMatter.Cover)
+		if _, err := os.Stat(coverFullPath); err == nil {
+			newCoverURL, err := uploadLocalFile(coverFullPath, "cover")
+			if err == nil {
+				frontMatter.Cover = newCoverURL
+			}
+		}
+	}
+
+	var cid int
+	if frontMatter.Category != "" {
+		cid = model.GetOrCreateCategory(frontMatter.Category)
+	} else {
+		cid = 1
+	}
+
+	article := &model.Article{
+		Title:   frontMatter.Title,
+		Cid:     cid,
+		Desc:    frontMatter.Desc,
+		Content: processedContent,
+		Img:     frontMatter.Cover,
+		Tags:    strings.Join(frontMatter.Tags, ","),
+	}
+
+	if frontMatter.Date != "" {
+		if t, err := parseDate(frontMatter.Date); err == nil {
+			article.CreatedAt = t
+		}
+	}
+
+	code := model.CreateArt(article)
+	return article, code
+}
+
+func uploadLocalFile(path string, uploadType string) (string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	baseDir := "./uploads"
+	targetDir := filepath.Join(baseDir, "article", "content", time.Now().Format("200601"))
+	if uploadType == "cover" {
+		targetDir = filepath.Join(baseDir, "article", "cover")
+	}
+
+	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
+		_ = os.MkdirAll(targetDir, 0755)
+	}
+
+	ext := filepath.Ext(path)
+	newFileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
+	newFilePath := filepath.Join(targetDir, newFileName)
+
+	out, err := os.Create(newFilePath)
+	if err != nil {
+		return "", err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, file)
+	if err != nil {
+		return "", err
+	}
+
+	relPath, _ := filepath.Rel(".", newFilePath)
+	url := "/" + filepath.ToSlash(relPath)
+
+	return url, nil
 }

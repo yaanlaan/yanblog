@@ -1,7 +1,12 @@
 package routers
 
 import (
+	"context"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 	v1 "yanblog/api/v1"
 	middleware "yanblog/middlewares"
 	"yanblog/utils"
@@ -38,11 +43,13 @@ func InitRouter() {
 	// 用户路由分组
 	auth := r.Group("api/v1")
 	auth.Use(middleware.JwtToken())
+	auth.Use(middleware.APIRateLimit())
 
 	// 管理员权限分组（仅超级管理员和管理员可操作）
 	admin := r.Group("api/v1")
 	admin.Use(middleware.JwtToken())
 	admin.Use(middleware.AdminRequired())
+	admin.Use(middleware.APIRateLimit())
 
 	{
 		// 用户模块的路由接口
@@ -57,21 +64,12 @@ func InitRouter() {
 		admin.DELETE("category/:id", v1.DeleteCate)
 		// 文章模块的路由接口
 		admin.POST("article/add", v1.AddArticle)
-		admin.POST("article/zip", v1.UploadArticleZip)       // 上传单个ZIP发布文章
-		admin.POST("article/zip/batch", v1.UploadArticleZipBatch) // 批量上传ZIP
-		// 优化的ZIP上传（支持进度跟踪、断点续传、并发控制）
-		admin.POST("article/zip/optimized", v1.UploadArticleZipOptimized)
-		admin.POST("article/zip/batch/optimized", v1.UploadArticleZipBatchOptimized)
-		admin.GET("article/upload/:id", v1.GetUploadProgress)  // 获取上传进度
-		admin.DELETE("article/upload/:id", v1.CancelUpload)    // 取消上传任务
-		// V2 增强版上传（WebSocket实时推送 + 断点续传 + 历史记录）
-		admin.POST("article/zip/v2", v1.UploadArticleZipV2)           // V2上传
-		admin.GET("article/upload/v2/:id", v1.GetUploadProgressV2)    // V2进度查询
-		admin.DELETE("article/upload/v2/:id", v1.CancelUploadV2)      // V2取消
-		admin.GET("article/upload/v2/:id/ws", v1.WebSocketProgress)   // WebSocket进度
-		admin.POST("article/upload/v2/:id/retry", v1.RetryFailedUpload) // 重试失败文件
-		admin.GET("article/upload/history", v1.GetUploadHistory)      // 上传历史
-		admin.DELETE("article/upload/history", v1.EmptyRecycleBin) // 清空历史
+		admin.POST("article/zip", v1.UploadArticleZipV2)                // ZIP上传（V2）
+		admin.GET("article/upload/:id", v1.GetUploadProgressV2)       // 获取上传进度
+		admin.DELETE("article/upload/:id", v1.CancelUploadV2)        // 取消上传任务
+		admin.GET("article/upload/:id/ws", v1.WebSocketProgress)     // WebSocket进度
+		admin.POST("article/upload/:id/retry", v1.RetryFailedUpload) // 重试失败文件
+		admin.GET("article/upload/history", v1.GetUploadHistory)     // 上传历史
 		admin.PUT("article/:id", v1.EditArt)
 
 		admin.DELETE("article/:id", v1.DeleteArt)
@@ -142,5 +140,30 @@ func InitRouter() {
 		router.GET("sitemap.xml", v1.GetSitemap) // 站点地图
 	}
 
-	_ = r.Run(utils.ServerConfig.Server.HttpPort) // 启动服务，监听端口
+	srv := &http.Server{
+		Addr:           utils.ServerConfig.Server.HttpPort,
+		Handler:        r,
+		ReadTimeout:    30 * time.Second,
+		WriteTimeout:   30 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			panic("listen: " + err.Error())
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	middleware.Shutdown()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		panic("Server forced to shutdown: " + err.Error())
+	}
 }
