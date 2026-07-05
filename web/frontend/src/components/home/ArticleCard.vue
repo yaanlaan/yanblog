@@ -34,7 +34,7 @@
 
     <div class="article-cover">
       <router-link :to="`/article/${article.id}`">
-        <img v-lazy="article.img || defaultImage" :alt="article.title" />
+        <img v-lazy="article.img" :data-default-src="defaultImage" :alt="article.title" />
       </router-link>
     </div>
   </div>

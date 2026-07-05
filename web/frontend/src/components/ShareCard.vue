@@ -27,7 +27,7 @@
               <div class="author-info">
                 <div class="left">
                     <!-- 假设默认头像，实际可替换 -->
-                  <img :src="defaultAvatar" alt="avatar" class="avatar" @error="(e: Event) => (e.target as HTMLImageElement).src = '/favicon.ico'" />
+                  <img :src="defaultAvatar" alt="avatar" class="avatar" @error="(e: Event) => (e.target as HTMLImageElement).src = '/assets/default-avatar.jpg'" />
                   <span class="nickname">YanBlog</span>
                 </div>
                 <div class="right logo">

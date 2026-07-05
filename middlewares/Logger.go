@@ -18,19 +18,11 @@ import (
 func Logger() gin.HandlerFunc {
 	filePath := "log/log"
 
-	// 确保 log 目录存在
 	if err := os.MkdirAll("log", 0755); err != nil {
 		fmt.Println("err: 无法创建日志目录:", err)
 	}
 
-	scr, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0755)
-	if err != nil {
-		fmt.Println("err:", err)
-	}
 	logger := logrus.New()
-
-	logger.Out = scr
-
 	logger.SetLevel(logrus.DebugLevel)
 
 	logWriter, err := retalog.New(

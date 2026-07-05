@@ -2,7 +2,7 @@ services:
   yanblog:
     build:
       context: .
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile
     ports:
       - "3002:80"
     volumes:

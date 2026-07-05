@@ -20,7 +20,7 @@
       </div>
 
       <!-- 右侧：欢迎图与推荐 -->
-      <div class="hero-card welcome-card" :style="{ '--welcome-bg': `url(${siteInfo.hero?.welcome_image || '/src/assets/img/1412.jpg'})` }">
+      <div class="hero-card welcome-card" :style="{ '--welcome-bg': `url(${siteInfo.hero?.welcome_image || '/static/img/1412.jpg'})` }">
         <div class="welcome-overlay"></div>
         <div class="welcome-content">
           <h2 class="welcome-title" v-html="siteInfo.hero?.welcome || 'Welcome to<br>Yaan\'s Blog'"></h2>

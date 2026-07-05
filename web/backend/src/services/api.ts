@@ -190,7 +190,7 @@ export const articleApi = {
 
   // 批量上传ZIP
   uploadZipBatch: (formData: FormData) => {
-    return apiClient.post('/v1/article/zip/batch', formData, {
+    return apiClient.post('/v1/article/zip', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
   },

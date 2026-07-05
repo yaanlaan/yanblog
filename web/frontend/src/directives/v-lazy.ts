@@ -7,7 +7,16 @@ interface LazyImageElement extends HTMLImageElement {
 
 const lazy: Directive = {
   mounted(el: LazyImageElement, binding: DirectiveBinding) {
-    el._lazySrc = binding.value
+    const src = binding.value
+    const defaultSrc = el.getAttribute('data-default-src') || '/assets/img/无封面.jpg'
+    
+    if (!src || src.trim() === '') {
+      el.src = defaultSrc
+      el.style.opacity = '1'
+      return
+    }
+    
+    el._lazySrc = src
 
     const placeholder = document.createElement('div')
     placeholder.className = 'lazy-placeholder'
@@ -39,6 +48,7 @@ const lazy: Directive = {
             }
             img.onerror = () => {
               placeholder.remove()
+              el.src = defaultSrc
               el.style.opacity = '1'
               observer.unobserve(el)
             }

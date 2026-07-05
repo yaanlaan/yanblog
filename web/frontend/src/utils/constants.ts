@@ -24,7 +24,7 @@ export const ARTICLE = {
   HOT_COUNT: 5,           // 热门文章数量
   TOP_COUNT: 6,           // 置顶文章数量
   RELATED_COUNT: 5,       // 相关文章数量
-  DEFAULT_COVER: '/assets/img/default-cover.jpg'
+  DEFAULT_COVER: '/assets/img/无封面.jpg'
 } as const
 
 // 动画时长（毫秒）
