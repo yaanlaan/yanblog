@@ -60,12 +60,7 @@
 
 <script setup lang="ts">
 import { onUnmounted } from 'vue'
-
-// 定义Props
-interface Category {
-  id: number
-  name: string
-}
+import type { Category } from '@/types'
 
 interface Props {
   categories: Category[]

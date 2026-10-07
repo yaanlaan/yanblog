@@ -1,9 +1,10 @@
 <template>
   <div class="layout-container">
     <!-- 侧边栏 -->
-    <el-aside width="200px" class="sidebar">
+    <el-aside :width="isCollapse ? '64px' : '200px'" class="sidebar">
       <div class="logo">
-        <h2>博客管理系统</h2>
+        <h2 v-if="!isCollapse">博客管理系统</h2>
+        <el-icon v-else :size="22" color="#fff"><Management /></el-icon>
       </div>
       <el-menu
         :default-active="activeMenu"
@@ -11,6 +12,8 @@
         background-color="#304156"
         text-color="#bfcbd9"
         active-text-color="#409eff"
+        :collapse="isCollapse"
+        :collapse-transition="false"
         router
       >
         <el-menu-item index="/dashboard">
@@ -61,6 +64,17 @@
       <!-- 顶部栏 -->
       <el-header class="header">
         <div class="header-left">
+          <el-button 
+            link 
+            class="collapse-btn" 
+            @click="isCollapse = !isCollapse"
+            :title="isCollapse ? '展开侧边栏' : '折叠侧边栏'"
+          >
+            <el-icon :size="20">
+              <component :is="isCollapse ? Expand : Fold" />
+            </el-icon>
+          </el-button>
+
           <el-breadcrumb separator="/">
             <el-breadcrumb-item 
               v-for="item in breadcrumbItems" 
@@ -70,14 +84,30 @@
             </el-breadcrumb-item>
           </el-breadcrumb>
         </div>
+
         <div class="header-right">
+          <!-- 快捷浏览前台入口 -->
+          <el-button 
+            type="primary" 
+            plain 
+            size="small" 
+            :icon="View" 
+            @click="openBlog" 
+            class="visit-blog-btn"
+          >
+            浏览前台 ↗
+          </el-button>
+
           <el-dropdown @command="handleCommand">
             <span class="user-info">
+              <el-avatar :size="26" :icon="User" class="user-avatar" />
               <span class="username">{{ username }}</span>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+                <el-dropdown-item command="toConfig">前台配置</el-dropdown-item>
+                <el-dropdown-item command="toStatus">系统监控</el-dropdown-item>
+                <el-dropdown-item divided command="logout" style="color: #f56c6c;">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -86,10 +116,10 @@
       
       <!-- 内容区域 -->
       <el-main class="main">
-        <router-view v-slot="{ Component, route }">
-          <keep-alive>
-             <component :is="Component" :key="route.fullPath" />
-          </keep-alive>
+        <router-view v-slot="{ Component }">
+          <transition name="fade-transform" mode="out-in">
+            <component :is="Component" />
+          </transition>
         </router-view>
       </el-main>
     </el-container>
@@ -100,11 +130,17 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Odometer, User, Folder, Document, Picture, Setting, Collection } from '@element-plus/icons-vue'
+import { 
+  Odometer, User, Folder, Document, Picture, 
+  Setting, Collection, Fold, Expand, View, Management 
+} from '@element-plus/icons-vue'
 
-// 获取路由实例
+// 路由实例
 const route = useRoute()
 const router = useRouter()
+
+// 侧边栏折叠状态
+const isCollapse = ref(false)
 
 // 用户名
 const username = ref('')
@@ -136,7 +172,12 @@ const getUsernameFromToken = () => {
       return payload.username
     }
   }
-  return '未知用户'
+  return '管理员'
+}
+
+// 打开前台
+const openBlog = () => {
+  window.open('/', '_blank')
 }
 
 // 面包屑导航项
@@ -151,7 +192,6 @@ const breadcrumbItems = computed(() => {
 // 激活菜单项
 const activeMenu = computed(() => {
   const { meta, path } = route
-  // 如果当前路由设置了activeMenu，则使用它
   if (meta?.activeMenu) {
     return meta.activeMenu as string
   }
@@ -161,17 +201,19 @@ const activeMenu = computed(() => {
 // 处理下拉菜单命令
 const handleCommand = (command: string) => {
   if (command === 'logout') {
-    // 清除本地存储的token
     localStorage.removeItem('token')
-    // 跳转到登录页
+    localStorage.removeItem('user')
     router.push('/login')
-    ElMessage.success('已退出登录')
+    ElMessage.success('已安全退出登录')
+  } else if (command === 'toConfig') {
+    router.push('/system/config')
+  } else if (command === 'toStatus') {
+    router.push('/system/status')
   }
 }
 
 // 组件挂载时获取用户信息
 onMounted(() => {
-  // 从token解析获取用户名
   username.value = getUsernameFromToken()
 })
 </script>
@@ -185,8 +227,9 @@ onMounted(() => {
 .sidebar {
   background-color: #304156;
   color: #fff;
-  transition: width 0.28s;
+  transition: width 0.25s ease;
   box-shadow: 2px 0 6px rgba(0, 21, 41, 0.35);
+  overflow-x: hidden;
 }
 
 .logo {
@@ -195,12 +238,14 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   background-color: #253342;
+  transition: all 0.25s;
 }
 
 .logo h2 {
   color: #fff;
-  font-size: 18px;
+  font-size: 16px;
   margin: 0;
+  white-space: nowrap;
 }
 
 .sidebar-menu {
@@ -210,7 +255,7 @@ onMounted(() => {
 
 .header {
   background-color: #fff;
-  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.12);
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -218,28 +263,77 @@ onMounted(() => {
 }
 
 .header-left {
-  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.collapse-btn {
+  color: #606266;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.collapse-btn:hover {
+  background-color: #f2f3f5;
+  color: #409eff;
 }
 
 .header-right {
   display: flex;
   align-items: center;
+  gap: 16px;
+}
+
+.visit-blog-btn {
+  font-size: 12px;
 }
 
 .user-info {
   display: flex;
   align-items: center;
+  gap: 8px;
   cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.user-info:hover {
+  background-color: #f5f7fa;
+}
+
+.user-avatar {
+  background-color: #409eff;
+  color: #fff;
 }
 
 .username {
-  margin-left: 10px;
-  font-size: 14px;
-  color: #666;
+  font-size: 13px;
+  color: #606266;
+  font-weight: 500;
 }
 
 .main {
   background-color: #f0f2f5;
   padding: 20px;
+  overflow-y: auto;
+}
+
+/* 页面切换动画 */
+.fade-transform-leave-active,
+.fade-transform-enter-active {
+  transition: all 0.2s ease;
+}
+
+.fade-transform-enter-from {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.fade-transform-leave-to {
+  opacity: 0;
+  transform: translateX(10px);
 }
 </style>

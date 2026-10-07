@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,7 +18,6 @@ import (
 )
 
 var db *gorm.DB
-var err error
 
 func GetDB() *gorm.DB {
 	return db
@@ -129,7 +129,7 @@ func initSQLite() (*gorm.DB, error) {
 
 	// 确保数据库文件所在目录存在
 	if dir := filepath.Dir(dbPath); dir != "." {
-		os.MkdirAll(dir, 0755)
+		if err := os.MkdirAll(dir, 0755); err != nil { log.Printf("创建数据库目录失败: %v", err) }
 	}
 
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
@@ -150,7 +150,7 @@ func initSQLite() (*gorm.DB, error) {
 		return nil, err
 	}
 	
-	if err = sqlDB.Ping(); err != nil {
+	if err := sqlDB.Ping(); err != nil {
 		return nil, err
 	}
 
@@ -160,8 +160,7 @@ func initSQLite() (*gorm.DB, error) {
 
 func migrateTags() {
 	var count int64
-	err := db.Model(&Tag{}).Count(&count).Error
-	if err != nil {
+	if err := db.Model(&Tag{}).Count(&count).Error; err != nil {
 		fmt.Println("Check tag count failed:", err)
 		return
 	}

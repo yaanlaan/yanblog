@@ -44,7 +44,7 @@ type Config struct {
 var ServerConfig = Config{}
 var configMutex sync.RWMutex
 
-func init() {
+func InitConfig() {
 	configPath := getConfigPath("config/backend/config.yaml")
 	file, err := os.ReadFile(configPath)
 	if err != nil {
@@ -61,7 +61,9 @@ func init() {
 			}
 		}
 	}
-	LoadConfig(file)
+	if err := LoadConfig(file); err != nil {
+		log.Printf("加载配置失败: %v", err)
+	}
 }
 
 func GetConfigPath(defaultPath string) string {
@@ -75,7 +77,7 @@ func getConfigPath(defaultPath string) string {
 	return defaultPath
 }
 
-func LoadConfig(file []byte) {
+func LoadConfig(file []byte) error {
 	configMutex.Lock()
 	defer configMutex.Unlock()
 
@@ -84,7 +86,7 @@ func LoadConfig(file []byte) {
 
 	err := yaml.Unmarshal([]byte(content), &ServerConfig)
 	if err != nil {
-		log.Fatalf("解析数据库配置失败，错误信息：%s", err)
+		return fmt.Errorf("解析配置失败: %w", err)
 	}
 	fmt.Printf("数据库配置加载成功: %s@%s:%d/%s\n",
 		ServerConfig.Database.DbUser,
@@ -96,6 +98,7 @@ func LoadConfig(file []byte) {
 	} else {
 		fmt.Println("⚠️  数据库密码仍为默认值或未配置，建议修改！")
 	}
+	return nil
 }
 
 func replaceEnvVars(content string) string {
@@ -118,15 +121,15 @@ func replaceEnvVars(content string) string {
 }
 
 func SaveConfig() error {
-	configMutex.RLock()
+	configMutex.Lock()
 	data, err := yaml.Marshal(&ServerConfig)
-	configMutex.RUnlock()
+	configMutex.Unlock()
 	if err != nil {
 		return err
 	}
 	configPath := getConfigPath("config/backend/config.yaml")
 	// 确保目录存在（Docker 容器中可能没有 config/backend/ 子目录）
-	_ = os.MkdirAll(filepath.Dir(configPath), 0755)
+	if err := os.MkdirAll(filepath.Dir(configPath), 0755); err != nil { log.Printf("创建配置目录失败: %v", err) }
 	return os.WriteFile(configPath, data, 0644)
 }
 
@@ -142,7 +145,9 @@ func ReloadConfig() error {
 	if err != nil {
 		return err
 	}
-	LoadConfig(file)
+	if err := LoadConfig(file); err != nil {
+		return err
+	}
 	if OnConfigReloaded != nil {
 		OnConfigReloaded()
 	}

@@ -114,7 +114,7 @@
         
         <el-col :span="6">
           <ArticlePublishForm
-            v-model="publishForm"
+            :model-value="publishForm"
             :categories="categories"
             :is-edit="isEdit"
             :submit-loading="submitLoading"

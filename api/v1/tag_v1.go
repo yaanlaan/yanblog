@@ -12,7 +12,10 @@ import (
 // AddTag 添加标签
 func AddTag(c *gin.Context) {
 	var data model.Tag
-	_ = c.ShouldBindJSON(&data)
+	if err := c.ShouldBindJSON(&data); err != nil {
+		utils.ErrorWithMessage(c, errmsg.ERROR, "请求数据格式错误")
+		return
+	}
 	code := model.CheckTagExist(data.Name)
 	if code == errmsg.SUCCESS {
 		model.CreateTag(&data)

@@ -43,18 +43,7 @@
 
 <script setup lang="ts">
 import ArticleCard from './ArticleCard.vue'
-
-interface Article {
-  id: number
-  title: string
-  categoryId: number
-  categoryName: string
-  desc: string
-  content: string
-  img: string
-  createdAt: string
-  updatedAt: string
-}
+import type { Article } from '@/types'
 
 interface Props {
   articles: Article[]

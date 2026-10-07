@@ -189,25 +189,25 @@ import { PAGINATION } from '@/utils/constants'
 
 const ARCHIVE_PAGE_SIZE = PAGINATION.ARCHIVE_PAGE_SIZE
 
-interface Article {
+interface ArchiveArticle {
   id?: number
   ID?: number
   title: string
   createdAt?: string
   CreatedAt?: string
-  tags?: string // "tag1, tag2"
+  tags?: string
   tag_models?: { id: number; name: string }[]
 }
 
-interface Tag {
+interface TagCount {
   name: string
   count: number
 }
 
 const loading = ref(false)
 const loadingMore = ref(false)
-const articles = ref<Article[]>([])
-const tags = ref<Tag[]>([])
+const articles = ref<ArchiveArticle[]>([])
+const tags = ref<TagCount[]>([])
 const totalArticles = ref(0)
 const selectedTag = ref('')
 const isTagsExpanded = ref(false)
@@ -399,7 +399,7 @@ const filteredArticles = computed(() => {
 
 // 按年月分组
 const groupedArticles = computed(() => {
-  const groups: Record<string, Record<string, Article[]>> = {}
+  const groups: Record<string, Record<string, ArchiveArticle[]>> = {}
   
   filteredArticles.value.forEach(article => {
     const dateStr = article.createdAt || article.CreatedAt
@@ -420,7 +420,7 @@ const groupedArticles = computed(() => {
     groups[year][month].push(article)
   })
   
-  const sortedGroups: Record<string, Record<string, Article[]>> = {}
+  const sortedGroups: Record<string, Record<string, ArchiveArticle[]>> = {}
   Object.keys(groups).sort((a, b) => Number(b) - Number(a)).forEach(year => {
     sortedGroups[year] = {}
     Object.keys(groups[year]).sort((a, b) => Number(b) - Number(a)).forEach(month => {
@@ -431,7 +431,7 @@ const groupedArticles = computed(() => {
   return sortedGroups
 })
 
-const getYearCount = (group: Record<string, Article[]>) => {
+const getYearCount = (group: Record<string, ArchiveArticle[]>) => {
   return Object.values(group).reduce((sum, arts) => sum + arts.length, 0)
 }
 

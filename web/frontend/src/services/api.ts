@@ -1,68 +1,32 @@
 import axios from 'axios'
-import type { AxiosRequestConfig } from 'axios'
+import type { AxiosPromise, AxiosRequestConfig } from 'axios'
 
 export const apiClient = axios.create({
   baseURL: '/api/v1',
-  timeout: 15000, // 设置15秒超时
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  timeout: 15000
 })
 
-// 请求取消管理器
-export const createAbortController = () => {
+type CancelablePromise<T> = AxiosPromise<T> & { abort: () => void }
+
+const requestWithCancel = <T>(config: AxiosRequestConfig): CancelablePromise<T> => {
   const controller = new AbortController()
-  return {
-    signal: controller.signal,
-    abort: () => controller.abort()
-  }
+  const promise = apiClient({ ...config, signal: controller.signal }) as CancelablePromise<T>
+  promise.abort = () => controller.abort()
+  return promise
 }
 
-// 封装带取消功能的请求方法
-const requestWithCancel = <T>(config: AxiosRequestConfig) => {
-  const { signal, abort } = createAbortController()
-  const promise = apiClient({ ...config, signal })
-    ; (promise as any).abort = abort
-  return promise as T & { abort: () => void }
-}
-
-// 添加请求拦截器
-apiClient.interceptors.request.use(
-  (config) => {
-    // 在发送请求之前做些什么
-    // console.log('API Request:', config.method?.toUpperCase(), config.url);
-    return config;
-  },
-  (error) => {
-    // 对请求错误做些什么
-    console.error('API Request Error:', error);
-    return Promise.reject(error);
-  }
-);
-
-// 添加响应拦截器
 apiClient.interceptors.response.use(
-  (response) => {
-    // console.log('API Response:', response.status, response.config.url);
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (error.code === 'ECONNABORTED') {
-      // console.error('API Timeout:', error.config?.url || 'unknown');
-      return Promise.reject(new Error('请求超时，请稍后重试'));
+      return Promise.reject(new Error('请求超时，请稍后重试'))
     }
-
     if (!error.response) {
-      const url = error.config?.url || 'unknown';
-      const message = error.message || '网络连接错误';
-      // console.error(`API Network Error [${message}]: ${url}`);
-      return Promise.reject(new Error('网络连接错误，请检查后端服务是否启动'));
+      return Promise.reject(new Error('网络连接错误，请检查后端服务是否启动'))
     }
-
-    // console.error('API Error:', error.response.status, error.response.config.url);
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
 
 // 文章相关API
 export const articleApi = {

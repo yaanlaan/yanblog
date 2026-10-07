@@ -439,7 +439,7 @@ onMounted(() => {
 
   // 添加事件监听
   window.addEventListener('keydown', handleKeydown)
-  window.addEventListener('resize', handleResize)
+  window.addEventListener('resize', handleResize, { passive: true })
 
   // 初始化目录状态
   isTocOpen.value = window.innerWidth > BREAKPOINTS.DESKTOP

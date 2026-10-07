@@ -268,7 +268,7 @@ const handleSearch = () => {
 
 // 添加滚动事件监听器
 onMounted(() => {
-  window.addEventListener('scroll', handleScroll)
+  window.addEventListener('scroll', handleScroll, { passive: true })
 })
 
 // 移除滚动事件监听器

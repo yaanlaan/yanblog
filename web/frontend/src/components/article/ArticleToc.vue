@@ -140,7 +140,7 @@ watch(() => props.content, () => {
 
 onMounted(() => {
   extractHeaders()
-  window.addEventListener('scroll', handleScroll)
+  window.addEventListener('scroll', handleScroll, { passive: true })
 })
 
 onBeforeUnmount(() => {

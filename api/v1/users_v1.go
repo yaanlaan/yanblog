@@ -18,7 +18,10 @@ func AddUser(c *gin.Context) {
 	var msg string
 	var code int
 
-	_ = c.ShouldBindJSON(&data)
+	if err := c.ShouldBindJSON(&data); err != nil {
+		utils.ErrorWithMessage(c, errmsg.ERROR, "请求数据格式错误")
+		return
+	}
 
 	// 获取当前操作用户的用户名和角色
 	currentUsername, _ := c.Get("username")
@@ -134,7 +137,10 @@ func EditUser(c *gin.Context) {
 	if !ok {
 		return
 	}
-	_ = c.ShouldBindJSON(&data)
+	if err := c.ShouldBindJSON(&data); err != nil {
+		utils.ErrorWithMessage(c, errmsg.ERROR, "请求数据格式错误")
+		return
+	}
 
 	// 调试日志
 	// fmt.Printf("EditUser received data: %+v\n", data)
@@ -144,8 +150,7 @@ func EditUser(c *gin.Context) {
 	currentUserRole := model.GetUserRole(currentUsername.(string))
 
 	// 获取目标用户的信息
-	var targetUser model.User
-	model.GetDB().Where("id = ?", id).First(&targetUser)
+	targetUser, _ := model.GetUserByID(id)
 
 	// 权限检查
 	// 1. 超级管理员(1)可以修改任何人，但不能修改自己的角色
@@ -248,8 +253,7 @@ func DeleteUser(c *gin.Context) {
 	currentUserRole := model.GetUserRole(currentUsername.(string))
 
 	// 获取目标用户的信息
-	var targetUser model.User
-	model.GetDB().Where("id = ?", id).First(&targetUser)
+	targetUser, _ := model.GetUserByID(id)
 
 	// 权限检查
 	if currentUserRole == 1 {

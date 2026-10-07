@@ -68,3 +68,33 @@ export interface SearchParams extends PaginationParams {
   keyword?: string
   cid?: number
 }
+
+// 后端 API 原始文章数据格式（未映射前）
+export interface RawArticle {
+  ID: number
+  title: string
+  cid: number
+  Category?: { name: string }
+  desc: string
+  content: string
+  img: string
+  top: number
+  tags: string
+  views: number
+  type?: number
+  pdf_url?: string
+  CreatedAt?: string
+  created_at?: string
+  UpdatedAt?: string
+  updated_at?: string
+}
+
+// 后端 API 原始分类数据格式
+export interface RawCategory {
+  ID: number
+  name: string
+  img?: string
+  article_count?: number
+  top?: number
+  created_at?: string
+}

@@ -4,13 +4,9 @@
  * 消除各组件中重复的映射代码
  */
 
-import type { Article, Category } from '@/types'
+import type { Article, Category, RawArticle, RawCategory } from '@/types'
 
-/**
- * 映射文章数据
- * 将后端返回的原始文章数据转换为前端 Article 类型
- */
-export const mapArticle = (item: any): Article => ({
+export const mapArticle = (item: RawArticle): Article => ({
   id: item.ID,
   title: item.title,
   categoryId: item.cid,
@@ -23,27 +19,17 @@ export const mapArticle = (item: any): Article => ({
   views: item.views || 0,
   type: item.type,
   pdf_url: item.pdf_url,
-  createdAt: item.CreatedAt || item.created_at,
-  updatedAt: item.UpdatedAt || item.updated_at
+  createdAt: item.CreatedAt || item.created_at || '',
+  updatedAt: item.UpdatedAt || item.updated_at || ''
 })
 
-/**
- * 映射分类数据
- * 将后端返回的原始分类数据转换为前端 Category 类型
- */
-export const mapCategory = (item: any): Category => ({
+export const mapCategory = (item: RawCategory): Category => ({
   id: item.ID,
   name: item.name
 })
 
-/**
- * 批量映射文章列表
- */
-export const mapArticleList = (items: any[]): Article[] =>
+export const mapArticleList = (items: RawArticle[]): Article[] =>
   items.map(mapArticle)
 
-/**
- * 批量映射分类列表
- */
-export const mapCategoryList = (items: any[]): Category[] =>
+export const mapCategoryList = (items: RawCategory[]): Category[] =>
   items.map(mapCategory)

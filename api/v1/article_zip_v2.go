@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -15,6 +16,7 @@ import (
 	"sync"
 	"time"
 	"yanblog/model"
+	"yanblog/utils"
 	"yanblog/utils/errmsg"
 
 	"github.com/gin-gonic/gin"
@@ -69,7 +71,15 @@ type UploadHistory struct {
 // WebSocket 升级器
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		return true // 生产环境应该检查 Origin
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			return true
+		}
+		siteUrl := utils.GetConfig().Server.SiteUrl
+		if siteUrl == "" {
+			return true
+		}
+		return strings.HasPrefix(origin, siteUrl)
 	},
 }
 
@@ -134,6 +144,12 @@ func WebSocketProgress(c *gin.Context) {
 	}()
 	
 	// 读取消息（可选，用于接收取消命令）
+	conn.SetReadLimit(1024)
+	conn.SetPongHandler(func(string) error {
+		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		return nil
+	})
+	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	for {
 		_, _, err := conn.ReadMessage()
 		if err != nil {
@@ -419,7 +435,7 @@ func processSingleZipFileSync(c *gin.Context, file *multipart.FileHeader) gin.H 
 	defer src.Close()
 
 	zipPath := fmt.Sprintf("./temp_zip/%s.zip", task.ID)
-	os.MkdirAll("./temp_zip", 0755)
+	if err := os.MkdirAll("./temp_zip", 0755); err != nil { log.Printf("创建临时zip目录失败: %v", err) }
 
 	outFile, err := os.Create(zipPath)
 	if err != nil {
@@ -438,7 +454,7 @@ func processSingleZipFileSync(c *gin.Context, file *multipart.FileHeader) gin.H 
 	defer src.Close()
 
 	tempDir := fmt.Sprintf("./temp_zip/%s", task.ID)
-	os.MkdirAll(tempDir, 0755)
+	if err := os.MkdirAll(tempDir, 0755); err != nil { log.Printf("创建临时目录失败: %v", err) }
 	defer os.RemoveAll(tempDir)
 
 	startTime := time.Now()
@@ -556,7 +572,7 @@ func processZipStreamV2(ctx context.Context, reader io.ReaderAt, size int64, tem
 		
 		// 提取文件
 		fileDir := filepath.Join(tempDir, filepath.Dir(zipFile.Name))
-		os.MkdirAll(fileDir, 0755)
+		if err := os.MkdirAll(fileDir, 0755); err != nil { log.Printf("创建文件目录失败: %v", err) }
 		
 		destPath := filepath.Join(tempDir, zipFile.Name)
 		if err := extractZipFile(zipFile, destPath); err != nil {
@@ -679,7 +695,7 @@ func persistHistory() {
 	data, _ := json.Marshal(uploadHistory)
 	historyMu.RUnlock()
 	
-	os.MkdirAll(filepath.Dir(historyFile), 0755)
+	if err := os.MkdirAll(filepath.Dir(historyFile), 0755); err != nil { log.Printf("创建历史记录目录失败: %v", err) }
 	os.WriteFile(historyFile, data, 0644)
 }
 
@@ -886,7 +902,7 @@ func uploadLocalFile(path string, uploadType string) (string, error) {
 	}
 
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
-		_ = os.MkdirAll(targetDir, 0755)
+		if err := os.MkdirAll(targetDir, 0755); err != nil { log.Printf("创建目标目录失败: %v", err) }
 	}
 
 	ext := filepath.Ext(path)

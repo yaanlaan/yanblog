@@ -16,7 +16,10 @@ import (
 func AddCategory(c *gin.Context) {
 	var data model.Category
 	var code int
-	_ = c.ShouldBindJSON(&data)
+	if err := c.ShouldBindJSON(&data); err != nil {
+		utils.ErrorWithMessage(c, errmsg.ERROR, "请求数据格式错误")
+		return
+	}
 	code = model.CheckCategory(data.Name)
 	if code == errmsg.SUCCESS {
 		// 仅设置top字段的默认值
@@ -24,9 +27,6 @@ func AddCategory(c *gin.Context) {
 			data.Top = 0
 		}
 		model.CreateCate(&data)
-	}
-	if code == errmsg.ERROR_CATENAME_USED {
-		code = errmsg.ERROR_CATENAME_USED
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -90,7 +90,10 @@ func EditCate(c *gin.Context) {
 	if !ok {
 		return
 	}
-	_ = c.ShouldBindJSON(&data)
+	if err := c.ShouldBindJSON(&data); err != nil {
+		utils.ErrorWithMessage(c, errmsg.ERROR, "请求数据格式错误")
+		return
+	}
 
 	code = model.CheckCategoryWithID(id, data.Name)
 

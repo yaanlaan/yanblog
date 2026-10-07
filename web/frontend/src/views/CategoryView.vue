@@ -56,7 +56,7 @@ import { useDefaultCover } from '@/utils/defaults'
 // import { ElPagination } from 'element-plus'
 
 // 定义分类类型
-interface Category {
+interface CategoryData {
   id: number
   name: string
   img: string

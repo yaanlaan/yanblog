@@ -11,7 +11,8 @@ import (
 
 // 分页相关常量
 const (
-	MaxPageSize = 100 // 单页最大记录数上限
+	MaxPageSize  = 100  // 单页最大记录数上限
+	MaxPageNum   = 1000 // 最大页码（防止 OFFSET 过大导致 DoS）
 )
 
 // Response 统一 API 响应封装，消除各 handler 中重复的 c.JSON(gin.H{...}) 模式
@@ -35,9 +36,33 @@ func SuccessWithTotal(c *gin.Context, data interface{}, total int64) {
 	})
 }
 
-// Error 返回错误响应
+// httpStatusFromCode 根据业务状态码返回对应的 HTTP 状态码
+func httpStatusFromCode(code int) int {
+	switch {
+	case code >= 5000:
+		return http.StatusBadRequest
+	case code >= 4000:
+		return http.StatusNotFound
+	case code >= 3000:
+		return http.StatusBadRequest
+	case code >= 2000:
+		return http.StatusNotFound
+	case code >= 1000 && code <= 1003:
+		return http.StatusUnauthorized
+	case code >= 1004 && code <= 1007:
+		return http.StatusUnauthorized
+	case code == 1008:
+		return http.StatusForbidden
+	case code == errmsg.ERROR:
+		return http.StatusInternalServerError
+	default:
+		return http.StatusOK
+	}
+}
+
+// Error 返回错误响应（使用业务状态码 + 合适的 HTTP 状态码）
 func Error(c *gin.Context, code int) {
-	c.JSON(http.StatusOK, gin.H{ // 使用 200 + status 字段，保持前后端一致
+	c.JSON(httpStatusFromCode(code), gin.H{
 		"status":  code,
 		"data":    nil,
 		"message": errmsg.GetErrMsg(code),
@@ -46,7 +71,7 @@ func Error(c *gin.Context, code int) {
 
 // ErrorWithMessage 返回错误响应（自定义消息）
 func ErrorWithMessage(c *gin.Context, code int, message string) {
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(httpStatusFromCode(code), gin.H{
 		"status":  code,
 		"data":    nil,
 		"message": message,
@@ -125,9 +150,12 @@ func ParsePageParams(c *gin.Context) (pageSize int, pageNum int, isAll bool) {
 		pageNum = -1
 	}
 
-	// 限制单页最大数量，防止恶意请求
+	// 限制单页最大数量和最大页码，防止恶意请求导致大 OFFSET
 	if pageSize > MaxPageSize {
 		pageSize = MaxPageSize
+	}
+	if pageNum > MaxPageNum {
+		pageNum = MaxPageNum
 	}
 
 	isAll = (pageSize == -1 && pageNum == -1)

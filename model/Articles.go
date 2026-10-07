@@ -55,7 +55,7 @@ func CreateArt(data *Article) int {
 	// 处理标签逻辑：使用公共的解析函数
 	data.TagModels = parseTags(data.Tags)
 
-	err := db.Create(&data).Error
+	err := db.Create(data).Error
 	if err != nil {
 		return errmsg.ERROR // 500
 	}
@@ -313,8 +313,7 @@ func DeleteArt(id int) int {
 	var art Article
 	// 先清理文章-标签关联关系
 	db.Exec("DELETE FROM article_tags WHERE article_id = ?", id)
-	err = db.Where("id = ? ", id).Delete(&art).Error
-	if err != nil {
+	if err := db.Where("id = ? ", id).Delete(&art).Error; err != nil {
 		return errmsg.ERROR
 	}
 	return errmsg.SUCCESS
@@ -322,13 +321,19 @@ func DeleteArt(id int) int {
 
 // BatchDeleteArts 批量删除文章
 func BatchDeleteArts(ids []int) (deleted int, failed int) {
-	for _, id := range ids {
-		if DeleteArt(id) == errmsg.SUCCESS {
-			deleted++
-		} else {
-			failed++
-		}
+	// 批量删除标签关联
+	if err := db.Exec("DELETE FROM article_tags WHERE article_id IN ?", ids).Error; err != nil {
+		failed = len(ids)
+		return
 	}
+	// 批量删除文章
+	result := db.Where("id IN ?", ids).Delete(&Article{})
+	if result.Error != nil {
+		failed = len(ids)
+		return
+	}
+	deleted = int(result.RowsAffected)
+	failed = len(ids) - deleted
 	return
 }
 

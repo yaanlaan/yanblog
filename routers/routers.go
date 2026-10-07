@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"syscall"
+	"path/filepath"
+	"strings"
 	"time"
 	v1 "yanblog/api/v1"
 	middleware "yanblog/middlewares"
@@ -29,10 +30,26 @@ func InitRouter() {
 	r.Use(middleware.Cors())
 
 	// 确保必要的目录存在
-	os.MkdirAll("./uploads", 0755)
+	if err := os.MkdirAll("./uploads", 0755); err != nil {
+		panic("创建 uploads 目录失败: " + err.Error())
+	}
 
-	// 静态文件服务
-	r.Static("/uploads", "./uploads")
+	// 静态文件服务（uploads — 过滤隐藏文件如 .recycle .meta.json）
+	r.GET("/uploads/*filepath", func(c *gin.Context) {
+		requestedPath := c.Param("filepath")
+		if strings.Contains(requestedPath, "/.") || strings.HasPrefix(requestedPath, "/.") {
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+		fullPath := filepath.Join(".", "uploads", requestedPath)
+		if info, err := os.Stat(fullPath); err == nil && !info.IsDir() {
+			if strings.HasPrefix(info.Name(), ".") {
+				c.AbortWithStatus(http.StatusForbidden)
+				return
+			}
+		}
+		c.File(fullPath)
+	})
 	r.Static("/assets", "./web/frontend/public/assets")
 	r.Static("/static", "./web/frontend/public/static")
 	r.Static("/iconfont", "./web/frontend/public/iconfont")
@@ -135,6 +152,7 @@ func InitRouter() {
 		router.GET("tags", v1.GetTags)                  // 获取标签列表
 		router.GET("weather", v1.GetWeather)            // 获取天气信息
 		router.GET("health", v1.HealthCheck)            // 健康检查（公开接口）
+		router.GET("system/health", v1.HealthCheck)     // 系统健康检查（兼容 Docker 健康检查）
 		router.GET("frontend/config", v1.GetFrontEndConfig) // 获取前端配置（公开接口）
 		router.POST("login", middleware.LoginRateLimit(), v1.Login)
 		router.GET("sitemap.xml", v1.GetSitemap) // 站点地图
@@ -155,7 +173,7 @@ func InitRouter() {
 	}()
 
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(quit, os.Interrupt)
 	<-quit
 
 	middleware.Shutdown()

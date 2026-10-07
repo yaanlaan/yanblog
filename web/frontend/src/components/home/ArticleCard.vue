@@ -45,20 +45,7 @@ import { computed } from 'vue'
 import { useSiteInfoStore } from '@/stores/siteInfo'
 import { storeToRefs } from 'pinia'
 import { useDefaultCover } from '@/utils/defaults'
-// 定义Props
-interface Article {
-  id: number
-  title: string
-  categoryId: number
-  categoryName: string
-  desc: string
-  content: string
-  img: string
-  top?: number
-  tags?: string
-  createdAt: string
-  updatedAt: string
-}
+import type { Article } from '@/types'
 
 interface Props {
   article: Article

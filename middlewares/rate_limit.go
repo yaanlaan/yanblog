@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -88,10 +89,10 @@ func cleanupExpiredRecords() {
 	for {
 		select {
 		case <-ticker.C:
-			loginLimiter.mu.Lock()
 			cutoffTime := time.Now().Add(-loginLimiter.banTime)
-			loginLimiter.db.Where("first_time < ?", cutoffTime).Delete(&LoginAttempt{})
-			loginLimiter.mu.Unlock()
+			if err := loginLimiter.db.Where("first_time < ?", cutoffTime).Delete(&LoginAttempt{}).Error; err != nil {
+				log.Printf("清理过期登录记录失败: %v", err)
+			}
 		case <-shutdownCtx.Done():
 			return
 		}
@@ -120,7 +121,9 @@ func LoginRateLimit() gin.HandlerFunc {
 				FirstTime: now,
 				UpdatedAt: now,
 			}
-			loginLimiter.db.Create(&newAttempt)
+			if err := loginLimiter.db.Create(&newAttempt).Error; err != nil {
+				log.Printf("创建登录记录失败: %v", err)
+			}
 			c.Next()
 			return
 		}
@@ -154,8 +157,17 @@ func LoginRateLimit() gin.HandlerFunc {
 				"updated_at": now,
 			})
 		} else {
-			// 窗口内，增加计数
-			loginLimiter.db.Model(&attempt).Update("count", attempt.Count+1)
+			// 窗口内，增加计数 — 检查是否已达上限
+			attempt.Count++
+			loginLimiter.db.Model(&attempt).Update("count", attempt.Count)
+			if attempt.Count >= loginLimiter.maxTries {
+				c.JSON(http.StatusTooManyRequests, gin.H{
+					"status":  429,
+					"message": "登录尝试过于频繁，请5分钟后再试",
+				})
+				c.Abort()
+				return
+			}
 		}
 
 		c.Next()

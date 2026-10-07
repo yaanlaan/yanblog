@@ -18,6 +18,13 @@
       >
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="name" label="标签名称" />
+        <el-table-column label="关联文章数" width="120" align="center">
+          <template #default="scope">
+            <el-tag :type="scope.row.count > 0 ? 'primary' : 'info'" size="small">
+              {{ scope.row.count ?? 0 }} 篇
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="200">
           <template #default="scope">
             <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
@@ -79,6 +86,7 @@ import { tagApi } from '@/services/api'
 interface Tag {
   id: number
   name: string
+  count?: number
 }
 
 const loading = ref(false)

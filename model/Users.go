@@ -111,7 +111,7 @@ func SearchUser(keyword string, role int, pageSize int, pageNum int, currentRole
 // 参数: data - 用户数据指针
 // 返回: 状态码
 func CreateUser(data *User) int {
-	err := db.Create(&data).Error
+	err := db.Create(data).Error
 	if err != nil {
 		return errmsg.ERROR
 	}
@@ -167,8 +167,7 @@ func EditUser(id int, data *User) int {
 		maps["password"] = encryptedPw
 	}
 
-	err = db.Model(&user).Where("id = ? ", id).Updates(maps).Error
-	if err != nil {
+	if err := db.Model(&user).Where("id = ? ", id).Updates(maps).Error; err != nil {
 		return errmsg.ERROR
 	}
 	return errmsg.SUCCESS
@@ -179,8 +178,7 @@ func EditUser(id int, data *User) int {
 // 返回: 状态码
 func DeleteUser(id int) int {
 	var user User
-	err = db.Where("id = ? ", id).Delete(&user).Error
-	if err != nil {
+	if err := db.Where("id = ? ", id).Delete(&user).Error; err != nil {
 		return errmsg.ERROR
 	}
 	return errmsg.SUCCESS
@@ -243,6 +241,15 @@ func CheckLogin(username string, password string) int {
 	}
 
 	return errmsg.SUCCESS
+}
+
+// GetUserByID 根据 ID 获取用户
+func GetUserByID(id int) (User, int) {
+	var user User
+	if err := db.Where("id = ?", id).First(&user).Error; err != nil {
+		return user, errmsg.ERROR_USER_NOT_EXIST
+	}
+	return user, errmsg.SUCCESS
 }
 
 // GetUserRole 获取用户角色

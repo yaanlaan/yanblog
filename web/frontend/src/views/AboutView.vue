@@ -55,6 +55,7 @@ import ProfileCard from '@/components/sidebar/ProfileCard.vue'
 import { useSiteInfoStore } from '@/stores/siteInfo'
 import { storeToRefs } from 'pinia'
 import { useDefaultAvatar } from '@/utils/defaults'
+import { sanitizeHtml } from '@/utils/sanitize'
 
 const siteInfoStore = useSiteInfoStore()
 const defaultAvatarImg = useDefaultAvatar()
@@ -65,11 +66,25 @@ const renderedContent = ref('')
 
 onMounted(async () => {
   try {
-    // 添加时间戳防止缓存
-    const response = await axios.get(`/static/about.md?t=${new Date().getTime()}`)
-    renderedContent.value = marked.parse(response.data) as string
+    let markdown = ''
+    // 优先通过后端动态接口获取（支持后台可视化编辑与持久化存储）
+    try {
+      const res = await axios.get(`/api/v1/about?t=${Date.now()}`)
+      if (res.data?.status === 200 && res.data?.data) {
+        markdown = res.data.data
+      }
+    } catch {
+      // 忽略后端请求失败，走静态回退
+    }
+
+    if (!markdown) {
+      const response = await axios.get(`/static/about.md?t=${Date.now()}`)
+      markdown = response.data
+    }
+
+    renderedContent.value = sanitizeHtml(marked.parse(markdown) as string)
   } catch (error) {
-    console.error('Failed to load about.md:', error)
+    console.error('Failed to load about content:', error)
     renderedContent.value = '<h1>加载失败</h1><p>请检查网络或配置文件。</p>'
   }
 })

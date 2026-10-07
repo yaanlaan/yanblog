@@ -4,6 +4,7 @@ allowed_hosts:
   - localhost
 author_avatar: /uploads/defaults/avatar.jpg
 author_bio: 欢迎光临 (￣▽￣)~*
+background_image: ""
 default_images:
   cover: ""
   avatar: /uploads/defaults/avatar.jpg
@@ -12,6 +13,13 @@ hero:
   subtitle: yaan's blog
   welcome: Welcome to<br>Yaan's Blog
   welcome_image: /uploads/defaults/hero.jpg
+  skills:
+    - JS
+    - Vue
+    - React
+    - HTML5
+    - CSS3
+    - TS
 quotes:
   - 月亮想着我的心事，一只猫吃了我的奶酪
   - 草木山石，日月星辰

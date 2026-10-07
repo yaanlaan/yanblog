@@ -49,20 +49,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { articleApi } from '@/services/api'
-
-// 定义文章接口
-interface Article {
-  id: number
-  title: string
-  categoryId: number
-  categoryName: string
-  desc: string
-  content: string
-  img: string
-  views: number
-  createdAt: string
-  updatedAt: string
-}
+import type { Article } from '@/types'
+import { mapArticle } from '@/utils/dataMapper'
 
 const articles = ref<Article[]>([])
 const loading = ref(false)
@@ -89,18 +77,7 @@ const fetchArticles = async () => {
       return
     }
     
-    articles.value = data.map((item: any) => ({
-      id: item.ID,
-      title: item.title,
-      categoryId: item.cid,
-      categoryName: item.Category?.name || '未分类',
-      desc: item.desc,
-      content: item.content,
-      img: item.img,
-      views: item.views || 0,
-      createdAt: item.CreatedAt || item.created_at,
-      updatedAt: item.UpdatedAt || item.updated_at
-    }))
+    articles.value = data.map(mapArticle)
   } catch (err: any) {
     console.error('获取热门文章错误:', err)
     error.value = '网络请求失败'

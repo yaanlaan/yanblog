@@ -10,6 +10,9 @@ import (
 )
 
 func main() {
+	// 初始化配置
+	utils.InitConfig()
+
 	// 验证配置文件
 	if err := utils.ValidateConfig(); err != nil {
 		fmt.Fprintf(os.Stderr, "❌ 配置错误：%v\n\n", err)

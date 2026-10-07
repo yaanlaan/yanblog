@@ -41,6 +41,8 @@
 import { computed, ref, onMounted, onUpdated, onUnmounted, nextTick } from 'vue'
 import { marked } from 'marked'
 import mermaid from 'mermaid'
+import { sanitizeHtml } from '@/utils/sanitize'
+import type { Article } from '@/types'
 
 const escapeHtml = (unsafe: unknown) => {
   if (typeof unsafe !== 'string') {
@@ -52,20 +54,6 @@ const escapeHtml = (unsafe: unknown) => {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;')
-}
-
-interface Article {
-  id: number
-  title: string
-  categoryId: number
-  categoryName: string
-  desc: string
-  content: string
-  img: string
-  type?: number
-  pdf_url?: string
-  createdAt: string
-  updatedAt: string
 }
 
 interface Props {
@@ -178,7 +166,7 @@ const renderedContent = computed(() => {
   html = renderMath(html)
   html = renderLinkCards(html)
 
-  return html
+  return sanitizeHtml(html)
 })
 
 const addIdsToHeadings = (content: string) => {
@@ -305,7 +293,7 @@ const handleContentClick = async (event: MouseEvent) => {
 
 onMounted(() => {
   renderPostProcess()
-  window.addEventListener('scroll', handleScroll)
+  window.addEventListener('scroll', handleScroll, { passive: true })
 })
 
 onUnmounted(() => {

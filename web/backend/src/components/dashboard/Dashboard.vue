@@ -27,8 +27,11 @@
             <el-button type="primary" @click="$router.push('/article/add')" :icon="Edit">
               新建文章
             </el-button>
-            <el-button type="success" plain :icon="Upload">
+            <el-button type="success" plain :icon="Upload" @click="$router.push('/article?zip=1')">
               ZIP 发布
+            </el-button>
+            <el-button type="primary" plain @click="$router.push('/system/config')" :icon="Setting">
+              前台配置
             </el-button>
             <el-button type="info" plain @click="$router.push('/media')" :icon="Picture">
               媒体库
@@ -145,7 +148,7 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { userApi, articleApi, categoryApi, tagApi, systemApi } from '@/services/api'
 import { ElMessage } from 'element-plus'
-import { Edit, Upload, Picture, View, Monitor, Refresh, ArrowRight } from '@element-plus/icons-vue'
+import { Edit, Upload, Picture, View, Monitor, Refresh, ArrowRight, Setting } from '@element-plus/icons-vue'
 import StatCard from './StatCard.vue'
 import DataChart from './DataChart.vue'
 
@@ -179,10 +182,10 @@ const loadingSystem = ref(false)
 const getStats = async () => {
   try {
     const [userRes, articleRes, categoryRes, tagRes] = await Promise.all([
-      userApi.getUsers({ pagesize: -1, pagenum: -1 }),
-      articleApi.getArticles({ pagesize: -1, pagenum: -1 }),
-      categoryApi.getCategories({ pagesize: -1, pagenum: -1 }),
-      tagApi.getTags({ pagesize: -1, pagenum: -1 })
+      userApi.getUsers({ pagesize: 1, pagenum: 1 }),
+      articleApi.getArticles({ pagesize: 5, pagenum: 1 }),
+      categoryApi.getCategories({ pagesize: 1, pagenum: 1 }),
+      tagApi.getTags({ pagesize: 1, pagenum: 1 })
     ])
     stats.users = userRes.data.total || 0
     stats.articles = articleRes.data.total || 0
@@ -191,8 +194,8 @@ const getStats = async () => {
 
     // 处理最近文章
     const articles = articleRes.data.data || []
-    recentArticles.value = articles.slice(0, 5).map((item: any) => ({
-      id: item.ID,
+    recentArticles.value = articles.map((item: any) => ({
+      id: item.ID || item.id,
       title: item.title,
       categoryName: item.Category?.name || item.category?.name || '未分类',
       createdAt: item.CreatedAt || item.created_at

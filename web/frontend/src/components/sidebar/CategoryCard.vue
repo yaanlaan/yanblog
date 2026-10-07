@@ -24,13 +24,13 @@
 import { ref, onMounted } from 'vue'
 import { categoryApi } from '@/services/api'
 
-interface Category {
+interface CategoryData {
   id: number
   name: string
   count?: number 
 }
 
-const categories = ref<Category[]>([])
+const categories = ref<CategoryData[]>([])
 
 const fetchCategories = async () => {
   try {

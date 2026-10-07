@@ -89,7 +89,7 @@
             {{ formatDateTime(scope.row.updatedAt) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="230">
           <template #default="scope">
             <ArticleActions
               :article="scope.row"
@@ -317,6 +317,9 @@ const updateUrlParams = () => {
 // 从URL参数初始化搜索表单和分页
 const initFromUrlParams = () => {
   const query = route.query
+  if (query.zip) {
+    zipDialogVisible.value = true
+  }
   
   // 初始化搜索表单
   searchForm.title = (query.title as string) || ''

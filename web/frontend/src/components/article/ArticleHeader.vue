@@ -53,6 +53,7 @@
 import { computed } from 'vue'
 import { useSiteInfoStore } from '@/stores/siteInfo'
 import { useDefaultCover } from '@/utils/defaults'
+import type { Article } from '@/types'
 
 const siteInfoStore = useSiteInfoStore()
 const siteInfo = computed(() => siteInfoStore.siteInfo)
@@ -64,22 +65,6 @@ const emit = defineEmits<{
   (e: 'like'): void
   (e: 'subscribe'): void
 }>()
-
-
-// 定义Props
-interface Article {
-  id: number
-  title: string
-  categoryId: number
-  categoryName: string
-  desc: string
-  content: string
-  img: string
-  tags: string
-  views: number
-  createdAt: string
-  updatedAt: string
-}
 
 interface Props {
   article: Article

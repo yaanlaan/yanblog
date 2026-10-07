@@ -6,6 +6,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import ElementPlus from 'unplugin-element-plus/vite'
 
 // 读取 public/config.yaml 中的 allowed_hosts
 let allowedHosts: string[] = []
@@ -28,6 +29,7 @@ export default defineConfig({
     vue(),
     vueJsx(),
     vueDevTools(),
+    ElementPlus({}),
   ],
   resolve: {
     alias: {
@@ -62,7 +64,6 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '/api')
       },
       '/uploads': {
         target: 'http://localhost:8080',

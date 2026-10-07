@@ -10,6 +10,14 @@
             </span>
           </div>
           <div class="header-actions">
+            <el-input
+              v-model="searchQuery"
+              placeholder="筛选当前目录文件..."
+              size="small"
+              clearable
+              :prefix-icon="Search"
+              style="width: 170px;"
+            />
             <el-button @click="toggleViewMode" :icon="viewMode === 'grid' ? List : Grid">
               {{ viewMode === 'grid' ? '列表视图' : '网格视图' }}
             </el-button>
@@ -53,7 +61,7 @@
       <!-- 列表视图 -->
       <el-table 
         v-if="viewMode === 'list'" 
-        :data="files" 
+        :data="displayFiles" 
         style="width: 100%" 
         v-loading="loading"
         @selection-change="handleSelectionChange"
@@ -71,7 +79,7 @@
         <el-table-column prop="size" label="大小" width="120" :formatter="formatSize" />
         <el-table-column prop="ext" label="类型" width="100" />
         <el-table-column prop="modTime" label="修改时间" width="180" :formatter="formatTime" />
-        <el-table-column label="操作" width="280">
+        <el-table-column label="操作" width="340">
           <template #default="scope">
             <el-button 
               v-if="!scope.row.isDir && scope.row.isImage" 
@@ -118,7 +126,7 @@
       <!-- 网格视图 -->
       <div v-else class="grid-view" v-loading="loading">
         <div 
-          v-for="file in files" 
+          v-for="file in displayFiles" 
           :key="file.path"
           class="grid-item"
           :class="{ selected: selectedFiles.includes(file.path) }"
@@ -239,7 +247,7 @@ import { ref, computed, onMounted, onActivated, onDeactivated } from 'vue'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { 
   Folder, FolderOpened, Document, Refresh, Back, FolderAdd, 
-  Upload, Delete, List, Grid 
+  Upload, Delete, List, Grid, Search, Link 
 } from '@element-plus/icons-vue'
 import { fileApi } from '@/services/api'
 
@@ -258,6 +266,34 @@ const loading = ref(false)
 const files = ref<FileInfo[]>([])
 const currentPath = ref('')
 const viewMode = ref<'list' | 'grid'>('grid')
+
+const searchQuery = ref('')
+const displayFiles = computed(() => {
+  if (!searchQuery.value.trim()) return files.value
+  const q = searchQuery.value.toLowerCase().trim()
+  return files.value.filter(f => f.name.toLowerCase().includes(q))
+})
+
+const copyUrl = async (row: FileInfo) => {
+  const url = row.thumbnail || ('/uploads/' + row.path)
+  try {
+    await navigator.clipboard.writeText(url)
+    ElMessage.success('已复制访问链接：' + url)
+  } catch {
+    ElMessage.info('链接：' + url)
+  }
+}
+
+const copyMarkdown = async (row: FileInfo) => {
+  const url = row.thumbnail || ('/uploads/' + row.path)
+  const md = `![${row.name}](${url})`
+  try {
+    await navigator.clipboard.writeText(md)
+    ElMessage.success('已复制 Markdown 引用：' + md)
+  } catch {
+    ElMessage.info('Markdown: ' + md)
+  }
+}
 const previewVisible = ref(false)
 const previewUrl = ref('')
 const previewFileName = ref('')

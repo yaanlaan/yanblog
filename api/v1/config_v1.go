@@ -2,6 +2,7 @@ package v1
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -188,7 +189,7 @@ func UpdateBackendConfig(c *gin.Context) {
 
 	// 3. 写回 YAML（用 yaml tag 输出规范的 camelCase 键名）
 	configPath := utils.GetConfigPath("config/backend/config.yaml")
-	_ = os.MkdirAll(filepath.Dir(configPath), 0755)
+	if err := os.MkdirAll(filepath.Dir(configPath), 0755); err != nil { log.Printf("创建配置目录失败: %v", err) }
 	data, err := yaml.Marshal(&cfg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

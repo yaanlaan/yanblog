@@ -5,17 +5,19 @@
       <!-- 左侧：介绍与技术栈 -->
       <div class="hero-card intro-card">
         <div class="intro-content">
-          <h1 class="blog-title" v-html="siteInfo.hero?.title || '草木山石<br>日月星辰'"></h1>
+          <h1 class="blog-title" v-html="heroTitle"></h1>
           <p class="blog-subtitle">{{ siteInfo.hero?.subtitle || "yaan's blog" }}</p>
         </div>
         <div class="tech-stack-visual">
-          <!-- 装饰性图标背景 -->
-          <div class="tech-icon icon-js">JS</div>
-          <div class="tech-icon icon-vue">Vue</div>
-          <div class="tech-icon icon-react">React</div>
-          <div class="tech-icon icon-html">HTML5</div>
-          <div class="tech-icon icon-css">CSS3</div>
-          <div class="tech-icon icon-ts">TS</div>
+          <!-- 装饰性技术/个性化标签浮动背景（支持在后台热修改） -->
+          <div 
+            v-for="(skill, index) in heroSkills.slice(0, 8)" 
+            :key="index" 
+            class="tech-icon"
+            :class="`tech-icon-${index % 6}`"
+          >
+            {{ skill }}
+          </div>
         </div>
       </div>
 
@@ -23,7 +25,7 @@
       <div class="hero-card welcome-card" :style="{ '--welcome-bg': `url(${siteInfo.hero?.welcome_image || '/static/img/1412.jpg'})` }">
         <div class="welcome-overlay"></div>
         <div class="welcome-content">
-          <h2 class="welcome-title" v-html="siteInfo.hero?.welcome || 'Welcome to<br>Yaan\'s Blog'"></h2>
+          <h2 class="welcome-title" v-html="heroWelcome"></h2>
           <button class="recommend-btn" @click="handleRandomVisit">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
             随便逛逛
@@ -40,14 +42,25 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { articleApi } from '@/services/api'
 import { useSiteInfoStore } from '@/stores/siteInfo'
 import { storeToRefs } from 'pinia'
+import { sanitizeHtml } from '@/utils/sanitize'
 
 const router = useRouter()
 const siteInfoStore = useSiteInfoStore()
 const { siteInfo } = storeToRefs(siteInfoStore)
+
+const heroTitle = computed(() => sanitizeHtml(siteInfo.value.hero?.title || '草木山石<br>日月星辰'))
+const heroWelcome = computed(() => sanitizeHtml(siteInfo.value.hero?.welcome || "Welcome to<br>Yaan's Blog"))
+
+const defaultSkills = ['JS', 'Vue', 'React', 'HTML5', 'CSS3', 'TS']
+const heroSkills = computed(() => {
+  const skills = siteInfo.value.hero?.skills
+  return Array.isArray(skills) && skills.length > 0 ? skills : defaultSkills
+})
 
 const handleRandomVisit = async () => {
   try {
@@ -153,7 +166,12 @@ const handleRandomVisit = async () => {
 }
 
 /* 模拟图标位置和颜色 */
-.icon-js { background: #f7df1e; color: #323330; top: 20%; right: 40%; width: 70px; height: 70px; z-index: 2; animation-delay: 0s; }
+.tech-icon-0, .icon-js { background: #f7df1e; color: #323330; top: 20%; right: 40%; width: 70px; height: 70px; z-index: 2; animation-delay: 0s; }
+.tech-icon-1, .icon-vue { background: var(--color-accent); top: 50%; right: 20%; width: 80px; height: 80px; z-index: 3; animation-delay: 1s; }
+.tech-icon-2, .icon-react { background: #61dafb; color: #20232a; top: 10%; right: 10%; animation-delay: 2s; }
+.tech-icon-3, .icon-html { background: #e34f26; bottom: 10%; right: 45%; animation-delay: 3s; }
+.tech-icon-4, .icon-css { background: #1572b6; bottom: 20%; right: 5%; animation-delay: 4s; }
+.tech-icon-5, .icon-ts { background: #3178c6; top: 40%; right: 55%; width: 50px; height: 50px; animation-delay: 1.5s; }
 .icon-vue { background: var(--color-accent); top: 50%; right: 20%; width: 80px; height: 80px; z-index: 3; animation-delay: 1s; }
 .icon-react { background: #61dafb; color: #20232a; top: 10%; right: 10%; animation-delay: 2s; }
 .icon-html { background: #e34f26; bottom: 10%; right: 45%; animation-delay: 3s; }

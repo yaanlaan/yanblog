@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -39,7 +40,7 @@ func UpLoadFile(file multipart.File, fileHeader *multipart.FileHeader, uploadTyp
 	case "pdf":
 		// PDF文件
 		targetDir = filepath.Join(baseDir, "article", "pdf")
-	case "system":
+	case "system", "background", "logo", "favicon":
 		// 系统配置图片 (Logo, 背景等)
 		targetDir = filepath.Join(baseDir, "system")
 	default:
@@ -49,7 +50,7 @@ func UpLoadFile(file multipart.File, fileHeader *multipart.FileHeader, uploadTyp
 
 	// 确保存储目录存在
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
-		_ = os.MkdirAll(targetDir, 0755)
+		if err := os.MkdirAll(targetDir, 0755); err != nil { log.Printf("创建上传目录失败: %v", err) }
 	}
 
 	// 2. 生成文件名

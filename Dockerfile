@@ -8,7 +8,7 @@ COPY . .
 RUN CGO_ENABLED=1 go build -o server .
 
 # Stage 2: Build Frontend (Public)
-FROM node:20-alpine AS frontend-builder
+FROM node:20-alpine3.21 AS frontend-builder
 WORKDIR /app
 COPY web/frontend/package*.json ./
 RUN npm install
@@ -16,7 +16,7 @@ COPY web/frontend ./
 RUN npm run build
 
 # Stage 3: Build Admin (Backend UI)
-FROM node:20-alpine AS admin-builder
+FROM node:20-alpine3.21 AS admin-builder
 WORKDIR /app
 COPY web/backend/package*.json ./
 RUN npm install
@@ -24,10 +24,9 @@ COPY web/backend ./
 RUN npm run build
 
 # Stage 4: Final Unified Image
-FROM nginx:alpine
+FROM nginx:1.27-alpine3.21
 
-RUN apk add --no-cache ca-certificates tzdata && \
-    sed -i 's/user  nginx;/user root;/' /etc/nginx/nginx.conf
+RUN apk add --no-cache ca-certificates tzdata
 
 WORKDIR /app
 
@@ -65,7 +64,10 @@ RUN chmod -R 755 /usr/share/nginx/html && chmod -R 755 /app
 # --- Nginx Config ---
 COPY nginx.conf.unified /etc/nginx/conf.d/default.conf
 
-EXPOSE 80 81
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=10s \
+  CMD wget -qO- http://localhost:8080/api/v1/system/health || exit 1
 
 # Startup: initialize config on first run, then start services
 # Config is mounted from host at /app/config — changes persist across restarts

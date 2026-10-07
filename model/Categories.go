@@ -51,7 +51,7 @@ func CreateCate(data *Category) int {
 		data.Top = 0
 	}
 
-	err := db.Create(&data).Error
+	err := db.Create(data).Error
 	if err != nil {
 		return errmsg.ERROR
 	}
@@ -117,11 +117,19 @@ func GetCate(pageSize int, pageNum int) ([]Category, int64) {
 		return nil, 0
 	}
 
-	// 为每个分类获取文章数量
+	// 一次性获取所有分类的文章数量
+	type CountResult struct {
+		Cid   uint
+		Count int
+	}
+	var counts []CountResult
+	db.Model(&Article{}).Select("cid, COUNT(*) as count").Group("cid").Scan(&counts)
+	countMap := make(map[uint]int, len(counts))
+	for _, cr := range counts {
+		countMap[cr.Cid] = cr.Count
+	}
 	for i := range cate {
-		var count int64
-		db.Model(&Article{}).Where("cid = ?", cate[i].ID).Count(&count)
-		cate[i].ArticleCount = int(count)
+		cate[i].ArticleCount = countMap[cate[i].ID]
 	}
 
 	return cate, total
@@ -155,8 +163,7 @@ func EditCate(id int, data *Category) int {
 	maps["img"] = data.Img
 	maps["top"] = data.Top
 
-	err = db.Model(&cate).Where("id = ? ", id).Updates(maps).Error
-	if err != nil {
+	if err := db.Model(&cate).Where("id = ? ", id).Updates(maps).Error; err != nil {
 		return errmsg.ERROR
 	}
 	return errmsg.SUCCESS
@@ -172,8 +179,7 @@ func DeleteCate(id int) int {
 	}
 
 	var cate Category
-	err = db.Where("id = ? ", id).Delete(&cate).Error
-	if err != nil {
+	if err := db.Where("id = ? ", id).Delete(&cate).Error; err != nil {
 		return errmsg.ERROR
 	}
 	return errmsg.SUCCESS

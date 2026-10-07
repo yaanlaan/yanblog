@@ -67,21 +67,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import ArticleItem from './ArticleItem.vue'
-
-// 定义Props
-interface Article {
-  id: number
-  title: string
-  categoryId: number
-  categoryName: string
-  desc: string
-  content: string
-  img: string
-  top: number
-  tags: string
-  createdAt: string
-  updatedAt: string
-}
+import type { Article } from '@/types'
 
 interface Props {
   articles: Article[]

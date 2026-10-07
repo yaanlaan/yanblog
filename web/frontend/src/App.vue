@@ -2,7 +2,7 @@
   <div class="app">
     <LoadingSpinner :loading="isLoading" />
     
-    <div class="global-bg"></div>
+    <div class="global-bg" :style="globalBgStyle"></div>
     
     <header class="header" v-show="!isLoading">
       <NavBar />
@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import NavBar from '@/components/NavBar.vue'
 import Footer from '@/components/Footer.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
@@ -32,6 +32,16 @@ import { useSiteInfoStore } from '@/stores/siteInfo'
 
 const isLoading = ref(true)
 const siteInfoStore = useSiteInfoStore()
+
+// 网站自定义全局背景样式（未配置则使用默认 lonelycat 背景）
+const globalBgStyle = computed(() => {
+  if (siteInfoStore.siteInfo.background_image) {
+    return {
+      backgroundImage: `url(${siteInfoStore.siteInfo.background_image})`
+    }
+  }
+  return {}
+})
 
 // 保存原始标题，用于 blur/focus 切换
 let originalTitle = ''
@@ -50,6 +60,40 @@ const handleFocus = () => {
     document.title = originalTitle
   }
 }
+
+// 标签页切换可见性监听（从后台修改切换回前台时，自动热拉取最新配置）
+const handleVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    siteInfoStore.fetchSiteInfo()
+  }
+}
+
+// 监听 Favicon 动态热变动
+watch(
+  () => siteInfoStore.siteInfo.favicon,
+  (newFavicon) => {
+    if (newFavicon) {
+      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement
+      if (!link) {
+        link = document.createElement('link')
+        link.rel = 'icon'
+        document.head.appendChild(link)
+      }
+      link.href = newFavicon
+    }
+  }
+)
+
+// 监听标题动态热变动
+watch(
+  () => siteInfoStore.siteInfo.page_title?.default,
+  (newTitle) => {
+    if (newTitle) {
+      document.title = newTitle
+      originalTitle = newTitle
+    }
+  }
+)
 
 onMounted(async () => {
   await siteInfoStore.fetchSiteInfo()
@@ -95,9 +139,10 @@ onMounted(async () => {
     originalTitle = document.title
   }
 
-  // 使用 addEventListener 替代直接赋值，避免内存泄漏
+  // 事件监听器
   window.addEventListener('blur', handleBlur)
   window.addEventListener('focus', handleFocus)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 
   setTimeout(() => {
     isLoading.value = false
@@ -105,9 +150,9 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  // 清理事件监听器，防止内存泄漏
   window.removeEventListener('blur', handleBlur)
   window.removeEventListener('focus', handleFocus)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 </script>
 
@@ -123,6 +168,7 @@ onUnmounted(() => {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  transition: background-image 0.5s ease;
 }
 
 .global-bg::after {

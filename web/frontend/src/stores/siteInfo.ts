@@ -9,6 +9,7 @@ export interface SiteInfo {
   author_name: string
   author_avatar: string
   author_bio: string
+  background_image?: string
   default_images: {
     cover: string
     avatar: string
@@ -18,6 +19,7 @@ export interface SiteInfo {
     subtitle: string
     welcome: string
     welcome_image: string
+    skills?: string[]
   }
   quotes: string[]
   logo_text: string
@@ -113,6 +115,7 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
     author_name: 'Yaan',
     author_avatar: '',
     author_bio: '',
+    background_image: '',
     default_images: {
       cover: '',
       avatar: ''
@@ -121,7 +124,8 @@ export const useSiteInfoStore = defineStore('siteInfo', () => {
       title: '',
       subtitle: '',
       welcome: '',
-      welcome_image: ''
+      welcome_image: '',
+      skills: []
     },
     quotes: [],
     logo_text: '言盐盐的博客',

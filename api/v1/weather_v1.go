@@ -25,13 +25,16 @@ func GetWeather(c *gin.Context) {
 		err     error
 	}, 1)
 	
-	// 在goroutine中执行天气API调用
+	// 在goroutine中执行天气API调用（传递 ctx 以便及时取消）
 	go func() {
-		weather, err := model.GetWeather(city)
-		resultChan <- struct {
+		weather, err := model.GetWeatherWithContext(ctx, city)
+		select {
+		case resultChan <- struct {
 			weather *model.Weather
 			err     error
-		}{weather, err}
+		}{weather, err}:
+		case <-ctx.Done():
+		}
 	}()
 	
 	// 等待结果或超时

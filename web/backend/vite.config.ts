@@ -6,6 +6,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import ElementPlus from 'unplugin-element-plus/vite'
 
 // 读取前端目录下的 public/config.yaml 中的 allowed_hosts
 let allowedHosts: string[] = []
@@ -38,6 +39,7 @@ export default defineConfig({
     vue(),
     vueJsx(),
     vueDevTools(),
+    ElementPlus({}),
   ],
   resolve: {
     alias: {

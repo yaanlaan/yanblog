@@ -34,7 +34,7 @@ func CheckTagWithID(id int, name string) int {
 
 // CreateTag 新增标签
 func CreateTag(data *Tag) int {
-	err := db.Create(&data).Error
+	err := db.Create(data).Error
 	if err != nil {
 		return errmsg.ERROR // 500
 	}
@@ -61,14 +61,19 @@ func GetTags(pageSize int, pageNum int) ([]Tag, int64) {
 		return nil, 0
 	}
 
-	// 统计每个标签下的文章数
-	// 这里需要利用 association 或者手动 count
-	// 由于 Count 是 gorm:"-"，我们需要手动填充
-	for i, tag := range tags {
-		var count int64
-		// 使用 join 查询 article_tags 表
-		db.Table("article_tags").Where("tag_id = ?", tag.ID).Count(&count)
-		tags[i].Count = int(count)
+	// 一次性统计所有标签下的文章数
+	type CountResult struct {
+		TagID uint
+		Count int
+	}
+	var counts []CountResult
+	db.Table("article_tags").Select("tag_id, COUNT(*) as count").Group("tag_id").Scan(&counts)
+	countMap := make(map[uint]int, len(counts))
+	for _, cr := range counts {
+		countMap[cr.TagID] = cr.Count
+	}
+	for i := range tags {
+		tags[i].Count = countMap[tags[i].ID]
 	}
 
 	return tags, total

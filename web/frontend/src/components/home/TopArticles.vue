@@ -40,20 +40,7 @@
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import TopArticleCard from './TopArticleCard.vue'
-
-// 定义Props
-interface Article {
-  id: number
-  title: string
-  categoryId: number
-  categoryName: string
-  desc: string
-  content: string
-  img: string
-  top: number
-  createdAt: string
-  updatedAt: string
-}
+import type { Article } from '@/types'
 
 interface Props {
   articles: Article[]

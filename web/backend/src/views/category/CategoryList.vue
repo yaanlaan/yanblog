@@ -43,6 +43,13 @@
             </el-image>
           </template>
         </el-table-column>
+        <el-table-column label="文章数" width="100" align="center">
+          <template #default="scope">
+            <el-tag :type="scope.row.article_count > 0 ? 'primary' : 'info'" size="small">
+              {{ scope.row.article_count ?? 0 }} 篇
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="top" label="置顶排序" width="100" />
         <el-table-column prop="createdAt" label="创建时间" width="180">
           <template #default="scope">
@@ -111,6 +118,7 @@ interface Category {
   name: string
   img: string
   top: number
+  article_count?: number
   createdAt: string
 }
 
@@ -202,6 +210,7 @@ const getCategoryList = async () => {
       name: item.name,
       img: item.img,
       top: item.top,
+      article_count: item.article_count || 0,
       createdAt: item.CreatedAt || item.created_at || ''
     }))
     

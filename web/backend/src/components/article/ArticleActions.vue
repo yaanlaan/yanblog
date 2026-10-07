@@ -1,6 +1,9 @@
 <template>
   <div class="article-actions">
     <el-button size="small" @click="handleEdit">编辑</el-button>
+    <el-button size="small" type="primary" link @click="handleView" title="在新窗口打开前台文章详情页">
+      前台查看 ↗
+    </el-button>
     <el-button 
       size="small" 
       type="danger" 
@@ -32,11 +35,20 @@ const handleEdit = () => {
 const handleDelete = () => {
   emit('delete', props.article)
 }
+
+// 查看前台文章
+const handleView = () => {
+  const id = props.article?.id || props.article?.ID
+  if (id) {
+    window.open(`/article/${id}`, '_blank')
+  }
+}
 </script>
 
 <style scoped>
 .article-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 </style>

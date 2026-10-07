@@ -61,22 +61,8 @@ import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ElTooltip } from 'element-plus'
 import { useDefaultCover } from '@/utils/defaults'
-
-// 定义Props
-interface Article {
-  id: number
-  title: string
-  categoryId: number
-  categoryName: string
-  desc: string
-  content: string
-  img: string
-  top: number
-  tags: string
-  views: number
-  createdAt: string
-  updatedAt: string
-}
+import { sanitizeHtml } from '@/utils/sanitize'
+import type { Article } from '@/types'
 
 interface Props {
   article: Article
@@ -110,10 +96,11 @@ const highlightText = (text: string) => {
   const keyword = route.query.search as string
   if (!keyword || !text) return text
   
-  // 转义特殊字符，防止正则错误
+  // 转义特殊字符，防止正则和XSS
   const safeKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const regex = new RegExp(`(${safeKeyword})`, 'gi')
-  return text.replace(regex, '<span class="search-highlight">$1</span>')
+  return sanitizeHtml(text.replace(regex, '<span class="search-highlight">$1</span>'))
 }
 </script>
 

@@ -93,12 +93,12 @@ import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { tagApi } from '@/services/api'
 
 // 定义标签接口
-interface Tag {
+interface TagData {
   name: string
   count: number
 }
 
-interface Tag3D extends Tag {
+interface Tag3D extends TagData {
   x: number
   y: number
   z: number
@@ -108,7 +108,7 @@ interface Tag3D extends Tag {
 // 标签显示上限 (列表视图)
 const TAG_LIMIT = 8
 
-const tags = ref<Tag[]>([])
+const tags = ref<TagData[]>([])
 const tags3D = ref<Tag3D[]>([])
 const loading = ref(false)
 const error = ref('')
@@ -493,6 +493,20 @@ onMounted(() => {
     attributes: true,
     attributeFilter: ['data-theme']
   })
+  // 可视性监听：移出视口时停止动画，节省性能
+  if (containerRef.value) {
+    const visObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          startAnimation()
+        } else {
+          stopAnimation()
+        }
+      })
+    }, { threshold: 0.1 })
+    visObserver.observe(containerRef.value)
+    ;(window as any).__tagcloudVisObserver = visObserver
+  }
 })
 
 onBeforeUnmount(() => {
@@ -502,6 +516,8 @@ onBeforeUnmount(() => {
     resizeObserver = null
   }
   themeObserver.disconnect()
+  ;(window as any).__tagcloudVisObserver?.disconnect()
+  delete (window as any).__tagcloudVisObserver
 })
 </script>
 

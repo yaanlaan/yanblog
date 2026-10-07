@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -395,17 +396,19 @@ func ExtractZip(c *gin.Context) {
 	for _, file := range zipReader.File {
 		destPath := filepath.Join(req.ExtractTo, file.Name)
 		
-		// 防止 Zip Slip
-		if !strings.HasPrefix(destPath, filepath.Clean(req.ExtractTo)+string(os.PathSeparator)) {
+		// 防止 Zip Slip — 使用绝对路径比较
+		absBase, _ := filepath.Abs(req.ExtractTo)
+		absDest, _ := filepath.Abs(destPath)
+		if !strings.HasPrefix(absDest, absBase+string(os.PathSeparator)) && absDest != absBase {
 			continue
 		}
 		
 		if file.FileInfo().IsDir() {
-			os.MkdirAll(destPath, 0755)
+			if err := os.MkdirAll(destPath, 0755); err != nil { log.Printf("创建目录失败: %v", err) }
 			continue
 		}
 		
-		os.MkdirAll(filepath.Dir(destPath), 0755)
+		if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil { log.Printf("创建父目录失败: %v", err); continue }
 		
 		destFile, err := os.OpenFile(destPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
 		if err != nil {
@@ -450,7 +453,7 @@ func MoveToRecycleBin(c *gin.Context) {
 	}
 	
 	recycleDir := "uploads/.recycle"
-	os.MkdirAll(recycleDir, 0755)
+	if err := os.MkdirAll(recycleDir, 0755); err != nil { log.Printf("创建回收站目录失败: %v", err) }
 	
 	movedItems := make([]RecycleBinItem, 0)
 	

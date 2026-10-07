@@ -66,7 +66,7 @@ var cityMapping = map[string]string{
 }
 
 // GetWeather 获取天气信息（使用 Open-Meteo 免费 API，无需密钥）
-func GetWeather(city string) (*Weather, error) {
+func GetWeatherWithContext(ctx context.Context, city string) (*Weather, error) {
 	// 如果没有指定城市，则使用配置文件中的默认城市
 	if city == "" {
 		city = utils.ServerConfig.Weather.DefaultCity
@@ -83,8 +83,13 @@ func GetWeather(city string) (*Weather, error) {
 		Timeout: 10 * time.Second,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	// 如果 outer ctx 没有 deadline，用 10s 兜底
+	_, hasDeadline := ctx.Deadline()
+	if !hasDeadline {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+	}
 
 	// 第一步：通过地理编码 API 获取城市经纬度
 	lat, lon, displayName, err := geocodeCity(ctx, client, cityName)
@@ -253,5 +258,10 @@ func hashCity(s string) int {
 		h = -h
 	}
 	return h
+}
+
+// GetWeather 向后兼容的无上下文版本
+func GetWeather(city string) (*Weather, error) {
+	return GetWeatherWithContext(context.Background(), city)
 }
 

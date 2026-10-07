@@ -42,7 +42,10 @@ func AddArticle(c *gin.Context) {
 		CreatedAt string `json:"createdAt"`
 	}
 	var code int
-	_ = c.ShouldBindJSON(&input)
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.ErrorWithMessage(c, errmsg.ERROR, "请求数据格式错误")
+		return
+	}
 
 	data := model.Article{
 		Title:   input.Title,
@@ -202,7 +205,10 @@ func EditArt(c *gin.Context) {
 	if !ok {
 		return
 	}
-	_ = c.ShouldBindJSON(&data)
+	if err := c.ShouldBindJSON(&data); err != nil {
+		utils.ErrorWithMessage(c, errmsg.ERROR, "请求数据格式错误")
+		return
+	}
 
 	code = model.CheckArtTitleWithId(id, data.Title)
 	if code != errmsg.SUCCESS {
