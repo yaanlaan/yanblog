@@ -33,88 +33,93 @@
         </div>
 
 
-        <div class="page-header">
-          <router-link to="/articles" class="back-link">
-            « 返回文章列表
-          </router-link>
-        </div>
-        
-        <article class="article-content">
-          <!-- 加载状态 -->
-          <div v-if="loading" class="loading-state">
-            <div class="spinner"></div>
-            <p>加载中...</p>
+        <div 
+          class="article-main-container" 
+          :class="{ 'toc-collapsed': !isTocOpen || !article || article.type === 2 }"
+        >
+          <div class="page-header">
+            <router-link to="/articles" class="back-link">
+              « 返回文章列表
+            </router-link>
           </div>
           
-          <!-- 文章内容 -->
-          <div v-else>
-            <ArticleHeader 
-              v-if="article" 
-              :article="article" 
-              @share="handleHeaderShare"
-              @comment="scrollToComments"
-            />
+          <article class="article-content">
+            <!-- 加载状态 -->
+            <div v-if="loading" class="loading-state">
+              <div class="spinner"></div>
+              <p>加载中...</p>
+            </div>
+            
+            <!-- 文章内容 -->
+            <div v-else>
+              <ArticleHeader 
+                v-if="article" 
+                :article="article" 
+                @share="handleHeaderShare"
+                @comment="scrollToComments"
+              />
 
-            <!-- <div class="article-actions" v-if="article"> ... </div> -->
-            
-            <ArticleContent
-              v-if="article" 
-              :article="article" 
-              @image-click="handleImageClick"
-              @share-selection="openShareCard"
-            />
-            
-            <!-- 上一篇/下一篇导航 -->
-            <div class="article-navigation" v-if="article">
-              <div class="nav-item previous" v-if="previousArticle">
-                <router-link :to="`/article/${previousArticle.id}`" class="nav-link">
-                  <div class="nav-cover">
-                    <img :src="previousArticle.img || defaultImage" :alt="previousArticle.title" />
-                  </div>
-                  <span class="nav-label">上一篇</span>
-                  <span class="nav-title">{{ previousArticle.title }}</span>
-                </router-link>
+              <!-- <div class="article-actions" v-if="article"> ... </div> -->
+              
+              <ArticleContent
+                v-if="article" 
+                :article="article" 
+                @image-click="handleImageClick"
+                @share-selection="openShareCard"
+              />
+              
+              <!-- 上一篇/下一篇导航 -->
+              <div class="article-navigation" v-if="article">
+                <div class="nav-item previous" v-if="previousArticle">
+                  <router-link :to="`/article/${previousArticle.id}`" class="nav-link">
+                    <div class="nav-cover">
+                      <img :src="previousArticle.img || defaultImage" :alt="previousArticle.title" />
+                    </div>
+                    <span class="nav-label">上一篇</span>
+                    <span class="nav-title">{{ previousArticle.title }}</span>
+                  </router-link>
+                </div>
+                <div class="nav-item next" v-if="nextArticle">
+                  <router-link :to="`/article/${nextArticle.id}`" class="nav-link">
+                    <div class="nav-cover">
+                      <img :src="nextArticle.img || defaultImage" :alt="nextArticle.title" />
+                    </div>
+                    <span class="nav-label">下一篇</span>
+                    <span class="nav-title">{{ nextArticle.title }}</span>
+                  </router-link>
+                </div>
               </div>
-              <div class="nav-item next" v-if="nextArticle">
-                <router-link :to="`/article/${nextArticle.id}`" class="nav-link">
-                  <div class="nav-cover">
-                    <img :src="nextArticle.img || defaultImage" :alt="nextArticle.title" />
-                  </div>
-                  <span class="nav-label">下一篇</span>
-                  <span class="nav-title">{{ nextArticle.title }}</span>
-                </router-link>
+
+              <!-- 相关文章推荐 -->
+              <div class="related-articles-section" v-if="relatedArticles.length > 0">
+                <h3 class="section-title">✨ 相关推荐</h3>
+                <div class="related-grid">
+                  <router-link 
+                    v-for="item in relatedArticles" 
+                    :key="item.id" 
+                    :to="`/article/${item.id}`" 
+                    class="related-card"
+                  >
+                    <div class="related-cover">
+                      <img :src="item.img || defaultImage" :alt="item.title" loading="lazy" />
+                    </div>
+                    <div class="related-info">
+                      <h4 class="related-item-title">{{ item.title }}</h4>
+                      <span class="related-date">{{ formatDate(item.createdAt) }}</span>
+                    </div>
+                  </router-link>
+                </div>
+              </div>
+
+              <!-- 评论区 -->
+              <GiscusComment />
+              
+              <div class="empty-state" v-if="!article">
+                <p>文章不存在或已被删除</p>
               </div>
             </div>
-
-            <!-- 相关文章推荐 -->
-            <div class="related-articles-section" v-if="relatedArticles.length > 0">
-              <h3 class="section-title">✨ 相关推荐</h3>
-              <div class="related-grid">
-                <router-link 
-                  v-for="item in relatedArticles" 
-                  :key="item.id" 
-                  :to="`/article/${item.id}`" 
-                  class="related-card"
-                >
-                  <div class="related-cover">
-                    <img :src="item.img || defaultImage" :alt="item.title" loading="lazy" />
-                  </div>
-                  <div class="related-info">
-                    <h4 class="related-item-title">{{ item.title }}</h4>
-                    <span class="related-date">{{ formatDate(item.createdAt) }}</span>
-                  </div>
-                </router-link>
-              </div>
-            </div>
-
-            <!-- 评论区 -->
-            <GiscusComment />
-            
-            <div class="empty-state" v-if="!article">
-              <p>文章不存在或已被删除</p>
-            </div>
-          </div>
-        </article>
+          </article>
+        </div>
       </template>
     </MainLayout>
     
@@ -928,33 +933,53 @@ onUnmounted(() => {
   to { opacity: 1; }
 }
 
-/* 调整文章内容容器 */
+/* 调整文章外层自适应容器与内容容器 */
+.article-main-container {
+  width: 100%;
+  margin-left: 340px; /* 大屏下目录展开时留出左侧空间 (40px + 260px + 40px) */
+  margin-right: 40px;
+  max-width: 1600px;
+  transition: margin 0.35s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 当目录收起时，整体平滑过渡并居中展示 */
+.article-main-container.toc-collapsed {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1100px;
+  padding: 0 20px;
+}
+
 .article-content {
   background: transparent;
   border-radius: 0;
   box-shadow: none;
   padding: 0;
-  max-width: 1600px; /* Limit very wide screens */
-  margin-left: 340px; /* Space for TOC (40px + 260px + gap) */
-  margin-right: 40px;
-  width: auto; /* Allow width to flow naturally */
+  width: 100%;
 }
 
 @media (max-width: 1600px) {
-    .article-content {
-        margin-right: 40px; /* Keep consistent right margin */
-    }
+  .article-main-container:not(.toc-collapsed) {
+    margin-right: 40px;
+  }
 }
 
 /* 适配小屏幕：隐藏固定目录，但在打开时作为抽屉显示 */
 @media (max-width: 1450px) {
+  .article-main-container,
+  .article-main-container.toc-collapsed {
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+  }
+
   .article-content {
     margin: 0;
     width: 100%;
     max-width: 100%; 
     padding: 0;
     overflow-x: hidden; 
-    /* removed max-width: 100vw to allow content to fill */
   }
 
   /* 遮罩层 */
